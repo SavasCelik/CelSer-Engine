@@ -7,8 +7,8 @@ public partial class TrackedScanItem : ValueAddress
 {
     [ObservableProperty]
     private bool isFreezed;
-    private byte[]? setValue;
-    public byte[]? SetValue
+    private object? setValue;
+    public object? SetValue
     {
         get
         {

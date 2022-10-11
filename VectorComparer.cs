@@ -37,7 +37,7 @@ namespace CelSerEngine
             return _scanConstraint.ScanContraintType switch
             {
                 ScanContraintType.ExactValue => Vector.AsVectorByte(Vector.Equals(_userInputAsVector, new Vector<T>(bytes))),
-                _ => throw new NotImplementedException("Not implementet")
+                _ => throw new NotImplementedException("Not implemented")
             };
         }
 
@@ -54,11 +54,12 @@ namespace CelSerEngine
                 {
                     var desti = new byte[Vector<byte>.Count];
                     Vector.AsVectorByte(compareResult).CopyTo(desti);
-                    for (var j = 0; j < GetVectorSize(); j += _sizeOfT)
+                    for (var j = 0; j < Vector<byte>.Count; j += _sizeOfT)
                     {
                         if (compareResult[j] != 0)
                         {
-                            var myArry = desti.Skip(j).Take(4).ToArray();
+                            var newIntPtr = (IntPtr)page.BaseAddress + i + j;
+                            var myArry = ConvertBytesToObject(pageValues.AsSpan().Slice(j+i, _sizeOfT).ToArray());
                             yield return new ValueAddress(page.BaseAddress, i + j, myArry, DataType.GetDataType<T>().EnumType);
                         }
                     }
@@ -79,6 +80,21 @@ namespace CelSerEngine
                 EnumDataType.Long => new VectorComparer<long>(scanConstraint),
                 _ => new VectorComparer<int>(scanConstraint)
             };
+        }
+
+        private object ConvertBytesToObject(byte[] bytes)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return BitConverter.ToInt32(bytes);
+            }
+
+            if (typeof(T) == typeof(float))
+            {
+                return BitConverter.ToSingle(bytes);
+            }
+
+            throw new NotImplementedException("Not implemented");
         }
 
     }

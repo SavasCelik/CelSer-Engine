@@ -175,7 +175,7 @@ namespace CelSerEngine.NativeCore
 
                     if (scanConstraint.Comapare(bufferValue))
                     {
-                        yield return new ValueAddress(page.BaseAddress, i, bufferValue, scanConstraint.DataType.EnumType);
+                        yield return new ValueAddress(page.BaseAddress, i, bufferValue.ByteArrayToObject(scanConstraint.DataType.EnumType), scanConstraint.DataType.EnumType);
                     }
                 }
             }
@@ -206,6 +206,7 @@ namespace CelSerEngine.NativeCore
             //        ref bytesWritten);
 
             //    var results = comparer.GetMatchingValueAddresses(page, buffer);
+            //    Debug.WriteLine("");
             //    valueAddressList.AddRange(results);
             //}
 
@@ -257,17 +258,41 @@ namespace CelSerEngine.NativeCore
             }
         }
 
+        public static IEnumerable<ValueAddress> ChangedValue2(IntPtr hProcess, IEnumerable<ValueAddress> virtualAddresses, ScanConstraint scanConstraint, IVectorComparer comparer)
+        {
+            var sizeOfType = scanConstraint.GetSize();
+            foreach (var address in virtualAddresses)
+            {
+                var buffer = new byte[sizeof(int)];
+
+                uint bytesWritten = 0;
+
+                var result = NtReadVirtualMemory(
+                    hProcess,
+                    address.BaseAddress + address.Offset,
+                    buffer,
+                    (uint)sizeOfType,
+                ref bytesWritten);
+                
+                if (scanConstraint.Comapare(buffer))
+                {
+                    address.Value = buffer;
+                    yield return address;
+                }
+            }
+        }
+
         public static void WriteMemory(IntPtr hProcess, TrackedScanItem trackedScanItem)
         {
             var typeSize = trackedScanItem.GetDataTypeSize();
             uint bytesWritten = 0;
 
-            var result = NtWriteVirtualMemory(
-                                        hProcess,
-                                        trackedScanItem.Address,
-                                        trackedScanItem.SetValue!,
-                                        (uint)typeSize,
-                                        ref bytesWritten);
+            //var result = NtWriteVirtualMemory(
+            //                            hProcess,
+            //                            trackedScanItem.Address,
+            //                            trackedScanItem.SetValue!,
+            //                            (uint)typeSize,
+            //                            ref bytesWritten);
         }
 
         public static void UpdateAddresses(IntPtr hProcess, IEnumerable<ValueAddress> virtualAddresses)
@@ -287,7 +312,7 @@ namespace CelSerEngine.NativeCore
                     (uint)typeSize,
                     ref bytesWritten);
 
-                address.Value = buffer;
+                address.Value = buffer.ByteArrayToObject(address.EnumDataType);
             }
         }
 

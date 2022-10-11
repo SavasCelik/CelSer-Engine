@@ -234,7 +234,10 @@ namespace CelSerEngine
             Scanning = true;
             SelectedScanConstraint.DataType = SelectedDataType;
             SelectedScanConstraint.Value = value.StringToValue(SelectedDataType.EnumType);
-            var foundItems = new List<ValueAddress>(MemManagerDInvoke2.ChangedValue(_pHandle, FullScanItems, selectedScanConstraint).ToList());
+            var obj = value.StringToObject(SelectedDataType.EnumType);
+            //var foundItems = new List<ValueAddress>(MemManagerDInvoke2.ChangedValue(_pHandle, FullScanItems, selectedScanConstraint).ToList());
+            MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
+            var foundItems = FullScanItems.Where(i => i.EqualsToValue(obj)).ToList();
             AddFoundItems(foundItems);
             Scanning = false;
         }

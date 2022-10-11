@@ -21,6 +21,19 @@ namespace CelSerEngine
             };
         }
 
+        public static string ValueToString(this object obj, EnumDataType enumDataType)
+        {
+            return enumDataType switch
+            {
+                EnumDataType.Short => ((short)obj).ToString(),
+                EnumDataType.Integer => (unchecked((int)obj)).ToString(),
+                EnumDataType.Float => ((float)obj).ToString(),
+                EnumDataType.Double => ((double)obj).ToString(),
+                EnumDataType.Long => ((long)obj).ToString(),
+                _ => ((int)obj).ToString(),
+            };
+        }
+
         public static byte[] StringToValue(this string value, EnumDataType enumDataType)
         {
             return enumDataType switch
@@ -61,6 +74,32 @@ namespace CelSerEngine
 
 
             return obj;
+        }
+
+        public static object ByteArrayToObject(this byte[] byteArray, EnumDataType enumDataType)
+        {
+            if (EnumDataType.Short == enumDataType)
+            {
+                return BitConverter.ToInt16(byteArray);
+            }
+            if (EnumDataType.Integer == enumDataType)
+            {
+                return BitConverter.ToInt32(byteArray);
+            }
+            if (EnumDataType.Float == enumDataType)
+            {
+                return BitConverter.ToSingle(byteArray);
+            }
+            if (EnumDataType.Double == enumDataType)
+            {
+                return BitConverter.ToDouble(byteArray);
+            }
+            if (EnumDataType.Long == enumDataType)
+            {
+                return BitConverter.ToInt64(byteArray);
+            }
+
+            throw new NotImplementedException("");
         }
     }
 }

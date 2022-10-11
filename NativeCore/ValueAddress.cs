@@ -1,7 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace CelSerEngine.NativeCore
 {
@@ -9,8 +7,8 @@ namespace CelSerEngine.NativeCore
     {
         [ObservableProperty]
         [AlsoNotifyChangeFor(nameof(ValueString))]
-        private byte[] value;
-        public byte[]? PrevoiusValue { get; set; }
+        private object value;
+        public object? PrevoiusValue { get; set; }
         public IntPtr BaseAddress { get; set; }
         public int Offset { get; set; }
         public EnumDataType EnumDataType { get; }
@@ -19,7 +17,7 @@ namespace CelSerEngine.NativeCore
         public string AddressString => ((long)BaseAddress + Offset).ToString("X");
         public IntPtr Address => BaseAddress + Offset;
 
-        public ValueAddress(ulong baseAddress, int offset, byte[] value, EnumDataType enumDataType)
+        public ValueAddress(ulong baseAddress, int offset, object value, EnumDataType enumDataType)
         {
             BaseAddress = (IntPtr)baseAddress;
             Offset = offset;
@@ -46,6 +44,16 @@ namespace CelSerEngine.NativeCore
                 EnumDataType.Long => sizeof(long),
                 _ => sizeof(int),
             };
+        }
+
+        public bool EqualsToValue(object valueToCompare)
+        {
+            if (valueToCompare is int compare)
+            {
+                return compare == (int)Value;
+            }
+
+            return false;
         }
     }
 }
