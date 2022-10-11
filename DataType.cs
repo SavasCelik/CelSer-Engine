@@ -11,9 +11,9 @@ namespace CelSerEngine
         Integer,
         [Display(Name = "8 Bytes")]
         Long,
-        [Display(Name = "Float Bytes")]
+        [Display(Name = "Float")]
         Float,
-        [Display(Name = "Double Bytes")]
+        [Display(Name = "Double")]
         Double,
     }
 

@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using CelSerEngine.NativeCore;
 
 namespace CelSerEngine
@@ -21,10 +22,7 @@ namespace CelSerEngine
         {
             _scanConstraint = scanConstraint;
             _userInputAsVector = new Vector<T>((T)scanConstraint.ValueObj);
-            var bytes = new byte[15];
-            _sizeOfT = Marshal.SizeOf(default(T));
-
-            //var lol = new Vector<T>(bytes.AsSpan());
+            _sizeOfT = Marshal.SizeOf(default(T));;
         }
 
         public int GetVectorSize()
@@ -32,7 +30,7 @@ namespace CelSerEngine
             return Vector<T>.Count;
         }
 
-        public Vector<byte> ComapreTo(ReadOnlySpan<byte> bytes)
+        public Vector<byte> CompareTo(ReadOnlySpan<byte> bytes)
         {
             return _scanConstraint.ScanContraintType switch
             {
@@ -41,33 +39,35 @@ namespace CelSerEngine
             };
         }
 
-        public IEnumerable<ValueAddress> GetMatchingValueAddresses(MEMORY_BASIC_INFORMATION64 page, byte[] pageValues)
+        public IEnumerable<ValueAddress> GetMatchingValueAddresses(ICollection<VirtualMemoryPage> virtualMemoryPages)
         {
-            var remaining = (int)page.RegionSize % GetVectorSize();
-
-            for (var i = 0; i < (int)page.RegionSize - remaining; i += Vector<byte>.Count)
+            foreach (var virtualMemoryPage in virtualMemoryPages)
             {
-                var splitBuffer = pageValues.AsSpan().Slice(i, Vector<byte>.Count);
-                var compareResult = ComapreTo(splitBuffer);
+                var remaining = (int)virtualMemoryPage.Page.RegionSize % GetVectorSize();
 
-                if (!compareResult.Equals(Vector<byte>.Zero))
+                for (var i = 0; i < (int)virtualMemoryPage.Page.RegionSize - remaining; i += Vector<byte>.Count)
                 {
-                    var desti = new byte[Vector<byte>.Count];
-                    Vector.AsVectorByte(compareResult).CopyTo(desti);
-                    for (var j = 0; j < Vector<byte>.Count; j += _sizeOfT)
+                    var splitBuffer = virtualMemoryPage.Bytes.AsSpan().Slice(i, Vector<byte>.Count);
+                    var compareResult = CompareTo(splitBuffer);
+
+                    if (!compareResult.Equals(Vector<byte>.Zero))
                     {
-                        if (compareResult[j] != 0)
+                        var desti = new byte[Vector<byte>.Count];
+                        Vector.AsVectorByte(compareResult).CopyTo(desti);
+                        for (var j = 0; j < Vector<byte>.Count; j += _sizeOfT)
                         {
-                            var newIntPtr = (IntPtr)page.BaseAddress + i + j;
-                            var myArry = ConvertBytesToObject(pageValues.AsSpan().Slice(j+i, _sizeOfT).ToArray());
-                            yield return new ValueAddress(page.BaseAddress, i + j, myArry, DataType.GetDataType<T>().EnumType);
+                            if (compareResult[j] != 0)
+                            {
+                                var newIntPtr = (IntPtr)virtualMemoryPage.Page.BaseAddress + i + j;
+                                var myArry = virtualMemoryPage.Bytes.AsSpan().Slice(j + i, _sizeOfT).ToArray();
+
+                                yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i + j, myArry.ConvertBytesToObject<T>(), DataType.GetDataType<T>().EnumType);
+                            }
                         }
                     }
                 }
-
             }
         }
-
 
         public static IVectorComparer CreateVectorComparer(ScanConstraint scanConstraint)
         {
@@ -81,21 +81,5 @@ namespace CelSerEngine
                 _ => new VectorComparer<int>(scanConstraint)
             };
         }
-
-        private object ConvertBytesToObject(byte[] bytes)
-        {
-            if (typeof(T) == typeof(int))
-            {
-                return BitConverter.ToInt32(bytes);
-            }
-
-            if (typeof(T) == typeof(float))
-            {
-                return BitConverter.ToSingle(bytes);
-            }
-
-            throw new NotImplementedException("Not implemented");
-        }
-
     }
 }

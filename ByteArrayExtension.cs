@@ -26,7 +26,7 @@ namespace CelSerEngine
             return enumDataType switch
             {
                 EnumDataType.Short => ((short)obj).ToString(),
-                EnumDataType.Integer => (unchecked((int)obj)).ToString(),
+                EnumDataType.Integer => ((int)obj).ToString(),
                 EnumDataType.Float => ((float)obj).ToString(),
                 EnumDataType.Double => ((double)obj).ToString(),
                 EnumDataType.Long => ((long)obj).ToString(),
@@ -100,6 +100,26 @@ namespace CelSerEngine
             }
 
             throw new NotImplementedException("");
+        }
+
+        public static object ConvertBytesToObject<T>(this byte[] bytes)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return BitConverter.ToInt32(bytes);
+            }
+
+            if (typeof(T) == typeof(float))
+            {
+                return BitConverter.ToSingle(bytes);
+            }
+
+            if (typeof(T) == typeof(double))
+            {
+                return BitConverter.ToDouble(bytes);
+            }
+
+            throw new NotImplementedException("Not implemented");
         }
     }
 }

@@ -58,26 +58,13 @@ namespace CelSerEngine
             };
         }
 
-        public bool Comapare(byte[] bytes)
+        public bool Compare(byte[] bytes)
         {
             return DataType.EnumType switch
             {
                 EnumDataType.Integer => IntConditionVerifier.MeetsCondition(bytes, Value, ScanContraintType),
                 EnumDataType.Float => FloatConditionVerifier.MeetsCondition(bytes, Value, ScanContraintType),
                 _ => false
-            };
-        }
-
-        public int GetVectorSize()
-        {
-            return DataType.EnumType switch
-            {
-                EnumDataType.Short => Vector<short>.Count,
-                EnumDataType.Integer => Vector<int>.Count,
-                EnumDataType.Float => Vector<float>.Count,
-                EnumDataType.Double => Vector<double>.Count,
-                EnumDataType.Long => Vector<long>.Count,
-                _ => Vector<int>.Count
             };
         }
     }

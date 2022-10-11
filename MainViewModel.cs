@@ -204,12 +204,13 @@ namespace CelSerEngine
                 SelectedScanConstraint.DataType = selectedDataType;
                 SelectedScanConstraint.Value = value.StringToValue(selectedDataType.EnumType);
                 SelectedScanConstraint.ValueObj = value.StringToObject(selectedDataType.EnumType);
-                var comparer = VectorComparer<short>.CreateVectorComparer(SelectedScanConstraint);
+                var comparer = ValueComparer<short>.CreateVectorComparer(SelectedScanConstraint);
                 var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();
+                var foundItems2 = comparer.GetMatchingValueAddresses(pages).ToList();
                 //var foundItems2 = MemManagerDInvoke2.ReadPMV(_pHandle, pages, selectedScanConstraint).ToList();
-                var foundItems2 = MemManagerDInvoke2.ReadPMV2(_pHandle, pages, selectedScanConstraint, comparer).ToList();
+                //var foundItems2 = MemManagerDInvoke2.ReadPMV2(_pHandle, pages, selectedScanConstraint, comparer).ToList();
                 sw.Stop();
                 Debug.WriteLine(sw.Elapsed);
                 // Slower but has visiual effect
