@@ -13,20 +13,24 @@ namespace CelSerEngine
     public class ValueComparer<T> : IScanComparer where T : struct
     {
         private readonly ScanConstraint _scanConstraint;
+        private T _userInput;
         private readonly int _sizeOfT;
 
 
         public ValueComparer(ScanConstraint scanConstraint)
         {
             _scanConstraint = scanConstraint;
+            _userInput = (T)scanConstraint.ValueObj;
             _sizeOfT = Marshal.SizeOf(default(T));
         }
 
-        public bool CompareTo(object bytes)
+        public bool CompareTo(T bytes)
         {
             return _scanConstraint.ScanContraintType switch
             {
-                ScanContraintType.ExactValue => _scanConstraint.ValueObj.Equals(bytes),
+                ScanContraintType.ExactValue => (dynamic)bytes == (dynamic)_userInput,
+                ScanContraintType.SmallerThan => (dynamic)bytes < (dynamic)_userInput,
+                ScanContraintType.BiggerThan => (dynamic)bytes > (dynamic)_userInput,
                 _ => throw new NotImplementedException("Not implemented")
             };
         }
@@ -42,7 +46,7 @@ namespace CelSerEngine
                         break;
                     }
                     var bufferValue = virtualMemoryPage.Bytes.AsSpan().Slice(i, _sizeOfT).ToArray();
-                    var valueObject = bufferValue.ConvertBytesToObject<T>();
+                    var valueObject = bufferValue.ToType<T>();
 
                     if (CompareTo(valueObject))
                     {

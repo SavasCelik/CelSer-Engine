@@ -204,8 +204,8 @@ namespace CelSerEngine
                 SelectedScanConstraint.DataType = selectedDataType;
                 SelectedScanConstraint.Value = value.StringToValue(selectedDataType.EnumType);
                 SelectedScanConstraint.ValueObj = value.StringToObject(selectedDataType.EnumType);
-                var comparer = ComparerFactory.CreateVectorComparer(SelectedScanConstraint);
-                //var comparer = ComparerFactory.CreateValueComparer(SelectedScanConstraint);
+                //var comparer = ComparerFactory.CreateVectorComparer(SelectedScanConstraint);
+                var comparer = ComparerFactory.CreateValueComparer(SelectedScanConstraint);
                 var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();
@@ -236,10 +236,10 @@ namespace CelSerEngine
             Scanning = true;
             SelectedScanConstraint.DataType = SelectedDataType;
             SelectedScanConstraint.Value = value.StringToValue(SelectedDataType.EnumType);
-            var obj = value.StringToObject(SelectedDataType.EnumType);
+            SelectedScanConstraint.ValueObj = value.StringToObject(SelectedDataType.EnumType);
             //var foundItems = new List<ValueAddress>(MemManagerDInvoke2.ChangedValue(_pHandle, FullScanItems, selectedScanConstraint).ToList());
             MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
-            var foundItems = FullScanItems.Where(i => i.EqualsToValue(obj)).ToList();
+            var foundItems = FullScanItems.Where(ScanPredicateFactory.GetScanConstraintPredicate(SelectedScanConstraint)).ToList();
             AddFoundItems(foundItems);
             Scanning = false;
         }

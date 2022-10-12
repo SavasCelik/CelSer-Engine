@@ -56,7 +56,7 @@ namespace CelSerEngine
                 return dataTypes[1];
             }
 
-            return dataTypes[2];
+            throw new NotImplementedException();
         }
     }
 }

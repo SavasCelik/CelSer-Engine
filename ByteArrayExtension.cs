@@ -102,21 +102,21 @@ namespace CelSerEngine
             throw new NotImplementedException("");
         }
 
-        public static object ConvertBytesToObject<T>(this byte[] bytes)
+        public static T ToType<T>(this byte[] bytes) where T : struct
         {
             if (typeof(T) == typeof(int))
             {
-                return BitConverter.ToInt32(bytes);
+                return (T)(object)BitConverter.ToInt32(bytes);
             }
 
             if (typeof(T) == typeof(float))
             {
-                return BitConverter.ToSingle(bytes);
+                return (T)(object)BitConverter.ToSingle(bytes);
             }
 
             if (typeof(T) == typeof(double))
             {
-                return BitConverter.ToDouble(bytes);
+                return (T)(object)BitConverter.ToDouble(bytes);
             }
 
             throw new NotImplementedException("Not implemented");

@@ -34,7 +34,9 @@ namespace CelSerEngine
         {
             return _scanConstraint.ScanContraintType switch
             {
-                ScanContraintType.ExactValue => Vector.AsVectorByte(Vector.Equals(_userInputAsVector, new Vector<T>(bytes))),
+                ScanContraintType.ExactValue => Vector.AsVectorByte(Vector.Equals(new Vector<T>(bytes), _userInputAsVector)),
+                ScanContraintType.SmallerThan => Vector.AsVectorByte(Vector.LessThan(new Vector<T>(bytes), _userInputAsVector)),
+                ScanContraintType.BiggerThan => Vector.AsVectorByte(Vector.GreaterThan(new Vector<T>(bytes), _userInputAsVector)),
                 _ => throw new NotImplementedException("Not implemented")
             };
         }
@@ -61,7 +63,7 @@ namespace CelSerEngine
                                 var newIntPtr = (IntPtr)virtualMemoryPage.Page.BaseAddress + i + j;
                                 var myArry = virtualMemoryPage.Bytes.AsSpan().Slice(j + i, _sizeOfT).ToArray();
 
-                                yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i + j, myArry.ConvertBytesToObject<T>(), DataType.GetDataType<T>().EnumType);
+                                yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i + j, myArry.ToType<T>(), DataType.GetDataType<T>().EnumType);
                             }
                         }
                     }
