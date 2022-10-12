@@ -8,7 +8,7 @@ namespace CelSerEngine
 {
     public static class ComparerFactory
     {
-        public static IComparer CreateVectorComparer(ScanConstraint scanConstraint)
+        public static IScanComparer CreateVectorComparer(ScanConstraint scanConstraint)
         {
             return scanConstraint.DataType.EnumType switch
             {
@@ -21,7 +21,7 @@ namespace CelSerEngine
             };
         }
 
-        public static IComparer CreateValueComparer(ScanConstraint scanConstraint)
+        public static IScanComparer CreateValueComparer(ScanConstraint scanConstraint)
         {
             return scanConstraint.DataType.EnumType switch
             {
