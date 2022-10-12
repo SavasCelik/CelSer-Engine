@@ -204,7 +204,8 @@ namespace CelSerEngine
                 SelectedScanConstraint.DataType = selectedDataType;
                 SelectedScanConstraint.Value = value.StringToValue(selectedDataType.EnumType);
                 SelectedScanConstraint.ValueObj = value.StringToObject(selectedDataType.EnumType);
-                var comparer = ValueComparer<short>.CreateVectorComparer(SelectedScanConstraint);
+                var comparer = ComparerFactory.CreateVectorComparer(SelectedScanConstraint);
+                //var comparer = ComparerFactory.CreateValueComparer(SelectedScanConstraint);
                 var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();

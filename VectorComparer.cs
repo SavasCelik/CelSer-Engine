@@ -11,7 +11,7 @@ using CelSerEngine.NativeCore;
 
 namespace CelSerEngine
 {
-    public class VectorComparer<T> : IVectorComparer where T : struct
+    public class VectorComparer<T> : IScanComparer where T : struct
     {
         private readonly ScanConstraint _scanConstraint;
         private readonly Vector<T> _userInputAsVector;
@@ -67,19 +67,6 @@ namespace CelSerEngine
                     }
                 }
             }
-        }
-
-        public static IVectorComparer CreateVectorComparer(ScanConstraint scanConstraint)
-        {
-            return scanConstraint.DataType.EnumType switch
-            {
-                EnumDataType.Short => new VectorComparer<short>(scanConstraint),
-                EnumDataType.Integer => new VectorComparer<int>(scanConstraint),
-                EnumDataType.Float => new VectorComparer<float>(scanConstraint),
-                EnumDataType.Double => new VectorComparer<double>(scanConstraint),
-                EnumDataType.Long => new VectorComparer<long>(scanConstraint),
-                _ => new VectorComparer<int>(scanConstraint)
-            };
         }
     }
 }
