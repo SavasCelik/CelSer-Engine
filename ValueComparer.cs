@@ -10,27 +10,32 @@ using CelSerEngine.NativeCore;
 
 namespace CelSerEngine
 {
-    public class ValueComparer<T> : IScanComparer where T : struct
+    public class ValueComparer : IScanComparer
     {
         private readonly ScanConstraint _scanConstraint;
         private dynamic _userInput;
         private readonly int _sizeOfT;
 
-
         public ValueComparer(ScanConstraint scanConstraint)
         {
             _scanConstraint = scanConstraint;
             _userInput = scanConstraint.ValueObj;
-            _sizeOfT = Marshal.SizeOf(default(T));
+            _sizeOfT = scanConstraint.GetSize();
         }
 
-        public bool CompareTo(T bytes)
+        public static bool CompareDataByScanContraintType(dynamic lhs, dynamic rhs, ScanContraintType scanContraintType)
         {
-            return _scanConstraint.ScanContraintType switch
+            if (!((Type)lhs.GetType()).IsValueType)
+                throw new ArgumentException("lhs must be a ValueType (struct)");
+
+            if (!((Type)rhs.GetType()).IsValueType)
+                throw new ArgumentException("rhs must be a ValueType (struct)");
+
+            return scanContraintType switch
             {
-                ScanContraintType.ExactValue => (dynamic)bytes == _userInput,
-                ScanContraintType.SmallerThan => (dynamic)bytes < _userInput,
-                ScanContraintType.BiggerThan => (dynamic)bytes > _userInput,
+                ScanContraintType.ExactValue => lhs == rhs,
+                ScanContraintType.SmallerThan => lhs < rhs,
+                ScanContraintType.BiggerThan => lhs > rhs,
                 _ => throw new NotImplementedException("Not implemented")
             };
         }
@@ -46,9 +51,9 @@ namespace CelSerEngine
                         break;
                     }
                     var bufferValue = virtualMemoryPage.Bytes.AsSpan().Slice(i, _sizeOfT).ToArray();
-                    var valueObject = bufferValue.ToType<T>();
+                    var valueObject = bufferValue.ByteArrayToObject(_scanConstraint.DataType.EnumType);
 
-                    if (CompareTo(valueObject))
+                    if (CompareDataByScanContraintType(valueObject, _userInput, _scanConstraint.ScanContraintType))
                     {
                         yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i, bufferValue.ByteArrayToObject(_scanConstraint.DataType.EnumType), _scanConstraint.DataType.EnumType);
                     }

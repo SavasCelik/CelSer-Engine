@@ -20,18 +20,5 @@ namespace CelSerEngine
                 _ => new VectorComparer<int>(scanConstraint)
             };
         }
-
-        public static IScanComparer CreateValueComparer(ScanConstraint scanConstraint)
-        {
-            return scanConstraint.DataType.EnumType switch
-            {
-                EnumDataType.Short => new ValueComparer<short>(scanConstraint),
-                EnumDataType.Integer => new ValueComparer<int>(scanConstraint),
-                EnumDataType.Float => new ValueComparer<float>(scanConstraint),
-                EnumDataType.Double => new ValueComparer<double>(scanConstraint),
-                EnumDataType.Long => new ValueComparer<long>(scanConstraint),
-                _ => new ValueComparer<int>(scanConstraint)
-            };
-        }
     }
 }

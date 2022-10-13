@@ -8,11 +8,10 @@ namespace CelSerEngine.NativeCore
         [ObservableProperty]
         [AlsoNotifyChangeFor(nameof(ValueString))]
         private dynamic value;
-        public object? PrevoiusValue { get; set; }
+        public dynamic? PrevoiusValue { get; set; }
         public IntPtr BaseAddress { get; set; }
         public int Offset { get; set; }
         public EnumDataType EnumDataType { get; }
-
         public string ValueString => ((object)Value).ValueToString(EnumDataType);
         public string AddressString => ((long)BaseAddress + Offset).ToString("X");
         public IntPtr Address => BaseAddress + Offset;
@@ -45,5 +44,12 @@ namespace CelSerEngine.NativeCore
                 _ => throw new Exception($"Type: {EnumDataType} is not supported"),
             };
         }
+
+        #region CommunityToolkit bug fix
+        // ******************* this fixes the Bug from CommunityToolkit with dynamic datatype, where it asks for the implementation from these generated methods *************/
+        partial void OnValueChanging(dynamic value) {}
+        partial void OnValueChanged(dynamic value) {}
+        #endregion
+
     }
 }

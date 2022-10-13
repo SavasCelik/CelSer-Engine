@@ -54,7 +54,7 @@ namespace CelSerEngine
                 EnumDataType.Float => sizeof(float),
                 EnumDataType.Double => sizeof(double),
                 EnumDataType.Long => sizeof(long),
-                _ => sizeof(int)
+                _ => throw new Exception($"Type: {DataType.EnumType} is not supported")
             };
         }
 
