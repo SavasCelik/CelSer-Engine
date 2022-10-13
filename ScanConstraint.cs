@@ -22,7 +22,7 @@ namespace CelSerEngine
     public class ScanConstraint
     {
         public byte[] Value { get; set; }
-        public object ValueObj { get; set; }
+        public dynamic ValueObj { get; set; }
         public DataType DataType { get; set; }
         public ScanContraintType ScanContraintType { get; set; }
         public string Name => ScanContraintType.GetDisplayName();

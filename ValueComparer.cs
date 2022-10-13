@@ -13,14 +13,14 @@ namespace CelSerEngine
     public class ValueComparer<T> : IScanComparer where T : struct
     {
         private readonly ScanConstraint _scanConstraint;
-        private T _userInput;
+        private dynamic _userInput;
         private readonly int _sizeOfT;
 
 
         public ValueComparer(ScanConstraint scanConstraint)
         {
             _scanConstraint = scanConstraint;
-            _userInput = (T)scanConstraint.ValueObj;
+            _userInput = scanConstraint.ValueObj;
             _sizeOfT = Marshal.SizeOf(default(T));
         }
 
@@ -28,9 +28,9 @@ namespace CelSerEngine
         {
             return _scanConstraint.ScanContraintType switch
             {
-                ScanContraintType.ExactValue => (dynamic)bytes == (dynamic)_userInput,
-                ScanContraintType.SmallerThan => (dynamic)bytes < (dynamic)_userInput,
-                ScanContraintType.BiggerThan => (dynamic)bytes > (dynamic)_userInput,
+                ScanContraintType.ExactValue => (dynamic)bytes == _userInput,
+                ScanContraintType.SmallerThan => (dynamic)bytes < _userInput,
+                ScanContraintType.BiggerThan => (dynamic)bytes > _userInput,
                 _ => throw new NotImplementedException("Not implemented")
             };
         }

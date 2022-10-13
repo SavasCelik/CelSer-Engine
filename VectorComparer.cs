@@ -22,7 +22,7 @@ namespace CelSerEngine
         {
             _scanConstraint = scanConstraint;
             _userInputAsVector = new Vector<T>((T)scanConstraint.ValueObj);
-            _sizeOfT = Marshal.SizeOf(default(T));;
+            _sizeOfT = Marshal.SizeOf(default(T));
         }
 
         public int GetVectorSize()

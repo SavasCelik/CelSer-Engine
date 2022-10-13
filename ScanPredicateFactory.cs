@@ -13,9 +13,9 @@ namespace CelSerEngine
         {
             return scanConstraint.ScanContraintType switch 
             {
-                ScanContraintType.ExactValue => (valueAdress) => (dynamic)valueAdress.Value == (dynamic)scanConstraint.ValueObj,
-                ScanContraintType.SmallerThan => (valueAdress) => (dynamic)valueAdress.Value < (dynamic)scanConstraint.ValueObj,
-                ScanContraintType.BiggerThan => (valueAdress) => (dynamic)valueAdress.Value > (dynamic)scanConstraint.ValueObj,
+                ScanContraintType.ExactValue => (valueAdress) => valueAdress.Value == scanConstraint.ValueObj,
+                ScanContraintType.SmallerThan => (valueAdress) => valueAdress.Value < scanConstraint.ValueObj,
+                ScanContraintType.BiggerThan => (valueAdress) => valueAdress.Value > scanConstraint.ValueObj,
                 _ => throw new NotImplementedException("Predicate not implemented")
             };
         }
