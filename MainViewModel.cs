@@ -14,6 +14,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CelSerEngine.NativeCore;
+using CelSerEngine.Comparators;
+using CelSerEngine.Extensions;
 
 namespace CelSerEngine
 {
@@ -204,14 +206,12 @@ namespace CelSerEngine
                 SelectedScanConstraint.DataType = selectedDataType;
                 SelectedScanConstraint.Value = value.StringToValue(selectedDataType.EnumType);
                 SelectedScanConstraint.ValueObj = value.StringToObject(selectedDataType.EnumType);
-                //var comparer = ComparerFactory.CreateVectorComparer(SelectedScanConstraint);
-                var comparer = new ValueComparer(SelectedScanConstraint);
+                var comparer = ComparerFactory.CreateVectorComparer(SelectedScanConstraint);
+                //var comparer = new ValueComparer(SelectedScanConstraint);
                 var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();
                 var foundItems2 = comparer.GetMatchingValueAddresses(pages).ToList();
-                //var foundItems2 = MemManagerDInvoke2.ReadPMV(_pHandle, pages, selectedScanConstraint).ToList();
-                //var foundItems2 = MemManagerDInvoke2.ReadPMV2(_pHandle, pages, selectedScanConstraint, comparer).ToList();
                 sw.Stop();
                 Debug.WriteLine(sw.Elapsed);
                 // Slower but has visiual effect

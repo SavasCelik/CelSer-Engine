@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Numerics;
 using CelSerEngine.Comparers;
+using CelSerEngine.Extensions;
 
 namespace CelSerEngine
 {

@@ -6,9 +6,10 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using CelSerEngine.Extensions;
 using CelSerEngine.NativeCore;
 
-namespace CelSerEngine
+namespace CelSerEngine.Comparators
 {
     public class ValueComparer : IScanComparer
     {

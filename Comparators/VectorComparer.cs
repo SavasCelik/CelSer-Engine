@@ -7,9 +7,10 @@ using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using CelSerEngine.Extensions;
 using CelSerEngine.NativeCore;
 
-namespace CelSerEngine
+namespace CelSerEngine.Comparators
 {
     public class VectorComparer<T> : IScanComparer where T : struct
     {

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using CelSerEngine.Extensions;
 using static DInvoke.Data.Native;
 using static DInvoke.Data.Win32;
 

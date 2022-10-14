@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CelSerEngine.Extensions;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
 namespace CelSerEngine.NativeCore

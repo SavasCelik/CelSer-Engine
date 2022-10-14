@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using CelSerEngine.NativeCore;
 
-namespace CelSerEngine
+namespace CelSerEngine.Comparators
 {
     public interface IScanComparer
     {
