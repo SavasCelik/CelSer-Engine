@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Numerics;
-using CelSerEngine.Comparers;
 using CelSerEngine.Extensions;
 
 namespace CelSerEngine
@@ -30,7 +29,7 @@ namespace CelSerEngine
 
         private ScanConstraint(ScanContraintType scanContraintType, DataType? dataType = null)
         {
-            DataType = dataType ?? DataType.GetDataTypes[1];
+            //DataType = dataType ?? DataType.GetDataTypes[1];
             ScanContraintType = scanContraintType;
             Value = Array.Empty<byte>();
         }
@@ -63,8 +62,8 @@ namespace CelSerEngine
         {
             return DataType.EnumType switch
             {
-                EnumDataType.Integer => IntConditionVerifier.MeetsCondition(bytes, Value, ScanContraintType),
-                EnumDataType.Float => FloatConditionVerifier.MeetsCondition(bytes, Value, ScanContraintType),
+                //EnumDataType.Integer => IntConditionVerifier.MeetsCondition(bytes, Value, ScanContraintType),
+                //EnumDataType.Float => FloatConditionVerifier.MeetsCondition(bytes, Value, ScanContraintType),
                 _ => false
             };
         }

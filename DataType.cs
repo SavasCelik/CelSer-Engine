@@ -48,7 +48,8 @@ namespace CelSerEngine
                 new DataType(EnumDataType.Double)
             };
 
-        public static DataType[] GetDataTypes => dataTypes;
+        public static DataType[] GetDataTypes2 => dataTypes;
+        public static EnumDataType[] GetDataTypes => Enum.GetValues<EnumDataType>();
 
         public static DataType GetDataType<T>()
         {

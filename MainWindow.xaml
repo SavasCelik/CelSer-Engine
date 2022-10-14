@@ -231,7 +231,7 @@
                 SelectedItem="{Binding SelectedDataType}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Converter={local:MyConverter}}" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>

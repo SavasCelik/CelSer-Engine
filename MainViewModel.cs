@@ -43,7 +43,7 @@ namespace CelSerEngine
         private string foundItemsDisplayString = $"Found: 0";
 
         [ObservableProperty]
-        private DataType selectedDataType = DataType.GetDataTypes[1];
+        private EnumDataType selectedDataType = EnumDataType.Double;
 
         [ObservableProperty]
         private ScanConstraint selectedScanConstraint = ScanConstraint.GetScanContraintTypes[0];
@@ -140,10 +140,10 @@ namespace CelSerEngine
             }
         }
 
-        partial void OnSelectedDataTypeChanged(DataType value)
-        {
-            SelectedScanConstraint = ScanConstraint.GetScanContraintTypes[0];
-        }
+        //partial void OnSelectedDataTypeChanged(DataType value)
+        //{
+        //    SelectedScanConstraint = ScanConstraint.GetScanContraintTypes[0];
+        //}
 
         public async void UpdateAddresses(object? sender, EventArgs args)
         {
@@ -203,9 +203,10 @@ namespace CelSerEngine
             Scanning = true;
             await Task.Run(() =>
             {
-                SelectedScanConstraint.DataType = selectedDataType;
-                SelectedScanConstraint.Value = value.StringToValue(selectedDataType.EnumType);
-                SelectedScanConstraint.ValueObj = value.StringToObject(selectedDataType.EnumType);
+                return;
+                //SelectedScanConstraint.DataType = selectedDataType;
+                //SelectedScanConstraint.Value = value.StringToValue(selectedDataType.EnumType);
+                //SelectedScanConstraint.ValueObj = value.StringToObject(selectedDataType.EnumType);
                 var comparer = ComparerFactory.CreateVectorComparer(SelectedScanConstraint);
                 //var comparer = new ValueComparer(SelectedScanConstraint);
                 var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
@@ -233,10 +234,11 @@ namespace CelSerEngine
         [ICommand]
         public void NextScan(string value)
         {
+            return;
             Scanning = true;
-            SelectedScanConstraint.DataType = SelectedDataType;
-            SelectedScanConstraint.Value = value.StringToValue(SelectedDataType.EnumType);
-            SelectedScanConstraint.ValueObj = value.StringToObject(SelectedDataType.EnumType);
+            //SelectedScanConstraint.DataType = SelectedDataType;
+            //SelectedScanConstraint.Value = value.StringToValue(SelectedDataType.EnumType);
+            //SelectedScanConstraint.ValueObj = value.StringToObject(SelectedDataType.EnumType);
             //var foundItems = new List<ValueAddress>(MemManagerDInvoke2.ChangedValue(_pHandle, FullScanItems, selectedScanConstraint).ToList());
             MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
             var foundItems = FullScanItems.Where(valueAddress => ValueComparer.CompareDataByScanContraintType(valueAddress.Value, SelectedScanConstraint.ValueObj, SelectedScanConstraint.ScanContraintType)).ToList();
