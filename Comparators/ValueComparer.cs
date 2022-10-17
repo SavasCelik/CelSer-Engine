@@ -24,7 +24,7 @@ namespace CelSerEngine.Comparators
             _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
         }
 
-        public static bool CompareDataByScanContraintType(dynamic lhs, dynamic rhs, ScanCompareType scanContraintType)
+        public static bool CompareDataByScanConstraintType(dynamic lhs, dynamic rhs, ScanCompareType scanConstraintType)
         {
             if (!((Type)lhs.GetType()).IsValueType)
                 throw new ArgumentException("lhs must be a ValueType (struct)");
@@ -32,7 +32,7 @@ namespace CelSerEngine.Comparators
             if (!((Type)rhs.GetType()).IsValueType)
                 throw new ArgumentException("rhs must be a ValueType (struct)");
 
-            return scanContraintType switch
+            return scanConstraintType switch
             {
                 ScanCompareType.ExactValue => lhs == rhs,
                 ScanCompareType.SmallerThan => lhs < rhs,
@@ -54,7 +54,7 @@ namespace CelSerEngine.Comparators
                     var bufferValue = virtualMemoryPage.Bytes.AsSpan().Slice(i, _sizeOfT).ToArray();
                     var valueObject = bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType);
 
-                    if (CompareDataByScanContraintType(valueObject, _userInput, _scanConstraint.ScanCompareType))
+                    if (CompareDataByScanConstraintType(valueObject, _userInput, _scanConstraint.ScanCompareType))
                     {
                         yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i, bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType), _scanConstraint.ScanDataType);
                     }

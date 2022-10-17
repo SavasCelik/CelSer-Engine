@@ -139,11 +139,6 @@ namespace CelSerEngine
             }
         }
 
-        //partial void OnSelectedDataTypeChanged(DataType value)
-        //{
-        //    SelectedScanConstraint = ScanConstraint.GetScanContraintTypes[0];
-        //}
-
         public async void UpdateAddresses(object? sender, EventArgs args)
         {
             if (_pHandle != IntPtr.Zero && ScanItems.Count > 0)
@@ -204,7 +199,7 @@ namespace CelSerEngine
             {
                 var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
                 {
-                    UserInput = value.StringToObject(SelectedScanDataType)
+                    UserInput = value.ToPrimitiveDataType(SelectedScanDataType)
                 };
                 var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
                 //var comparer = new ValueComparer(SelectedScanConstraint);
@@ -237,9 +232,9 @@ namespace CelSerEngine
             MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
             var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
             {
-                UserInput = value.StringToObject(SelectedScanDataType)
+                UserInput = value.ToPrimitiveDataType(SelectedScanDataType)
             };
-            var foundItems = FullScanItems.Where(valueAddress => ValueComparer.CompareDataByScanContraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint.ScanCompareType)).ToList();
+            var foundItems = FullScanItems.Where(valueAddress => ValueComparer.CompareDataByScanConstraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint.ScanCompareType)).ToList();
             AddFoundItems(foundItems);
             Scanning = false;
         }
@@ -292,9 +287,9 @@ namespace CelSerEngine
                 {
                     if (item.IsFreezed)
                     {
-                        item.SetValue = value.StringToObject(item.ScanDataType);
+                        item.SetValue = value.ToPrimitiveDataType(item.ScanDataType);
                     }
-                    item.Value = value.StringToObject(item.ScanDataType);
+                    item.Value = value.ToPrimitiveDataType(item.ScanDataType);
                     MemManagerDInvoke2.WriteMemory(_pHandle, item);
                 }
             }

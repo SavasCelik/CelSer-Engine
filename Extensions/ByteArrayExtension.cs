@@ -34,34 +34,6 @@ namespace CelSerEngine.Extensions
             };
         }
 
-        public static object StringToObject(this string value, ScanDataType scanDataType)
-        {
-            var obj = new object();
-
-            if (ScanDataType.Short == scanDataType)
-            {
-                obj = short.Parse(value);
-            }
-            else if (ScanDataType.Integer == scanDataType)
-            {
-                obj = int.Parse(value);
-            }
-            else if (ScanDataType.Float == scanDataType)
-            {
-                obj = float.Parse(value);
-            }
-            else if (ScanDataType.Double == scanDataType)
-            {
-                obj = double.Parse(value);
-            }
-            else if (ScanDataType.Long == scanDataType)
-            {
-                obj = long.Parse(value);
-            }
-
-            return obj;
-        }
-
         public static object ByteArrayToObject(this byte[] byteArray, ScanDataType scanDataType)
         {
             if (ScanDataType.Short == scanDataType)
