@@ -24,7 +24,7 @@ namespace CelSerEngine.Comparators
             _sizeOfT = scanConstraint.GetSize();
         }
 
-        public static bool CompareDataByScanContraintType(dynamic lhs, dynamic rhs, ScanContraintType scanContraintType)
+        public static bool CompareDataByScanContraintType(dynamic lhs, dynamic rhs, ScanCompareType scanContraintType)
         {
             if (!((Type)lhs.GetType()).IsValueType)
                 throw new ArgumentException("lhs must be a ValueType (struct)");
@@ -34,9 +34,9 @@ namespace CelSerEngine.Comparators
 
             return scanContraintType switch
             {
-                ScanContraintType.ExactValue => lhs == rhs,
-                ScanContraintType.SmallerThan => lhs < rhs,
-                ScanContraintType.BiggerThan => lhs > rhs,
+                ScanCompareType.ExactValue => lhs == rhs,
+                ScanCompareType.SmallerThan => lhs < rhs,
+                ScanCompareType.BiggerThan => lhs > rhs,
                 _ => throw new NotImplementedException("Not implemented")
             };
         }
@@ -52,11 +52,11 @@ namespace CelSerEngine.Comparators
                         break;
                     }
                     var bufferValue = virtualMemoryPage.Bytes.AsSpan().Slice(i, _sizeOfT).ToArray();
-                    var valueObject = bufferValue.ByteArrayToObject(_scanConstraint.DataType.EnumType);
+                    var valueObject = bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType);
 
-                    if (CompareDataByScanContraintType(valueObject, _userInput, _scanConstraint.ScanContraintType))
+                    if (CompareDataByScanContraintType(valueObject, _userInput, _scanConstraint.ScanCompareType))
                     {
-                        yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i, bufferValue.ByteArrayToObject(_scanConstraint.DataType.EnumType), _scanConstraint.DataType.EnumType);
+                        yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i, bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType), _scanConstraint.ScanDataType);
                     }
                 }
             }

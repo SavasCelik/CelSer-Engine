@@ -33,11 +33,11 @@ namespace CelSerEngine.Comparators
 
         public Vector<byte> CompareTo(ReadOnlySpan<byte> bytes)
         {
-            return _scanConstraint.ScanContraintType switch
+            return _scanConstraint.ScanCompareType switch
             {
-                ScanContraintType.ExactValue => Vector.AsVectorByte(Vector.Equals(new Vector<T>(bytes), _userInputAsVector)),
-                ScanContraintType.SmallerThan => Vector.AsVectorByte(Vector.LessThan(new Vector<T>(bytes), _userInputAsVector)),
-                ScanContraintType.BiggerThan => Vector.AsVectorByte(Vector.GreaterThan(new Vector<T>(bytes), _userInputAsVector)),
+                ScanCompareType.ExactValue => Vector.AsVectorByte(Vector.Equals(new Vector<T>(bytes), _userInputAsVector)),
+                ScanCompareType.SmallerThan => Vector.AsVectorByte(Vector.LessThan(new Vector<T>(bytes), _userInputAsVector)),
+                ScanCompareType.BiggerThan => Vector.AsVectorByte(Vector.GreaterThan(new Vector<T>(bytes), _userInputAsVector)),
                 _ => throw new NotImplementedException("Not implemented")
             };
         }
@@ -64,7 +64,7 @@ namespace CelSerEngine.Comparators
                                 var newIntPtr = (IntPtr)virtualMemoryPage.Page.BaseAddress + i + j;
                                 var myArry = virtualMemoryPage.Bytes.AsSpan().Slice(j + i, _sizeOfT).ToArray();
 
-                                yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i + j, myArry.ToType<T>(), DataType.GetDataType<T>().EnumType);
+                                yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i + j, myArry.ToType<T>(), _scanConstraint.ScanDataType);
                             }
                         }
                     }

@@ -199,7 +199,7 @@ namespace CelSerEngine.NativeCore
 
                     if (scanConstraint.Compare(bufferValue))
                     {
-                        yield return new ValueAddress(page.BaseAddress, i, bufferValue.ByteArrayToObject(scanConstraint.DataType.EnumType), scanConstraint.DataType.EnumType);
+                        yield return new ValueAddress(page.BaseAddress, i, bufferValue.ByteArrayToObject(scanConstraint.ScanDataType), scanConstraint.ScanDataType);
                     }
                 }
             }

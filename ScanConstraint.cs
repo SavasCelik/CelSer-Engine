@@ -1,66 +1,39 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Numerics;
 using CelSerEngine.Extensions;
 
 namespace CelSerEngine
 {
-    public enum ScanContraintType
-    {
-        [Display(Name = "Exact Value")]
-        ExactValue,
-        [Display(Name = "Bigger than...")]
-        BiggerThan,
-        [Display(Name = "Smaller than...")]
-        SmallerThan,
-        [Display(Name = "Value between...")]
-        ValueBetween,
-        [Display(Name = "Unknown initial value")]
-        UnknownInitialValue
-    }
-
     public class ScanConstraint
     {
         public byte[] Value { get; set; }
         public dynamic ValueObj { get; set; }
-        public DataType DataType { get; set; }
-        public ScanContraintType ScanContraintType { get; set; }
-        public string Name => ScanContraintType.GetDisplayName();
+        public ScanDataType ScanDataType { get; set; }
+        public ScanCompareType ScanCompareType { get; set; }
 
-        private ScanConstraint(ScanContraintType scanContraintType, DataType? dataType = null)
+        public ScanConstraint(ScanCompareType scanCompareType, ScanDataType dataType)
         {
-            //DataType = dataType ?? DataType.GetDataTypes[1];
-            ScanContraintType = scanContraintType;
+            ScanDataType = dataType;
+            ScanCompareType = scanCompareType;
             Value = Array.Empty<byte>();
         }
 
-        private static ScanConstraint[] scanContraintTypes = new[]
-        {
-            new ScanConstraint(ScanContraintType.ExactValue),
-            new ScanConstraint(ScanContraintType.BiggerThan),
-            new ScanConstraint(ScanContraintType.SmallerThan),
-            new ScanConstraint(ScanContraintType.ValueBetween),
-            new ScanConstraint(ScanContraintType.UnknownInitialValue)
-        };
-
-        public static ScanConstraint[] GetScanContraintTypes => scanContraintTypes;
-
         public int GetSize()
         {
-            return DataType.EnumType switch
+            return ScanDataType switch
             {
-                EnumDataType.Short => sizeof(short),
-                EnumDataType.Integer => sizeof(int),
-                EnumDataType.Float => sizeof(float),
-                EnumDataType.Double => sizeof(double),
-                EnumDataType.Long => sizeof(long),
-                _ => throw new Exception($"Type: {DataType.EnumType} is not supported")
+                ScanDataType.Short => sizeof(short),
+                ScanDataType.Integer => sizeof(int),
+                ScanDataType.Float => sizeof(float),
+                ScanDataType.Double => sizeof(double),
+                ScanDataType.Long => sizeof(long),
+                _ => throw new Exception($"Type: {ScanDataType} is not supported")
             };
         }
 
         public bool Compare(byte[] bytes)
         {
-            return DataType.EnumType switch
+            return ScanDataType switch
             {
                 //EnumDataType.Integer => IntConditionVerifier.MeetsCondition(bytes, Value, ScanContraintType),
                 //EnumDataType.Float => FloatConditionVerifier.MeetsCondition(bytes, Value, ScanContraintType),

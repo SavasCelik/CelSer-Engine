@@ -12,12 +12,12 @@ namespace CelSerEngine.NativeCore
         public dynamic? PrevoiusValue { get; set; }
         public IntPtr BaseAddress { get; set; }
         public int Offset { get; set; }
-        public EnumDataType EnumDataType { get; }
+        public ScanDataType EnumDataType { get; }
         public string ValueString => ((object)Value).ValueToString(EnumDataType);
         public string AddressString => ((long)BaseAddress + Offset).ToString("X");
         public IntPtr Address => BaseAddress + Offset;
 
-        public ValueAddress(ulong baseAddress, int offset, dynamic value, EnumDataType enumDataType)
+        public ValueAddress(ulong baseAddress, int offset, dynamic value, ScanDataType enumDataType)
         {
             BaseAddress = (IntPtr)baseAddress;
             Offset = offset;
@@ -37,11 +37,11 @@ namespace CelSerEngine.NativeCore
         {
             return EnumDataType switch
             {
-                EnumDataType.Short => sizeof(short),
-                EnumDataType.Integer => sizeof(int),
-                EnumDataType.Float => sizeof(float),
-                EnumDataType.Double => sizeof(double),
-                EnumDataType.Long => sizeof(long),
+                ScanDataType.Short => sizeof(short),
+                ScanDataType.Integer => sizeof(int),
+                ScanDataType.Float => sizeof(float),
+                ScanDataType.Double => sizeof(double),
+                ScanDataType.Long => sizeof(long),
                 _ => throw new Exception($"Type: {EnumDataType} is not supported"),
             };
         }

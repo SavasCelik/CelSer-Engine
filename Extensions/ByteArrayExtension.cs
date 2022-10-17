@@ -8,66 +8,66 @@ namespace CelSerEngine.Extensions
 {
     public static class ByteArrayExtension
     {
-        public static string ValueToString(this byte[] bytes, EnumDataType enumDataType)
+        public static string ValueToString(this byte[] bytes, ScanDataType enumDataType)
         {
             return enumDataType switch
             {
-                EnumDataType.Short => BitConverter.ToInt16(bytes).ToString(),
-                EnumDataType.Integer => BitConverter.ToInt32(bytes).ToString(),
-                EnumDataType.Float => BitConverter.ToSingle(bytes).ToString(),
-                EnumDataType.Double => BitConverter.ToDouble(bytes).ToString(),
-                EnumDataType.Long => BitConverter.ToInt64(bytes).ToString(),
+                ScanDataType.Short => BitConverter.ToInt16(bytes).ToString(),
+                ScanDataType.Integer => BitConverter.ToInt32(bytes).ToString(),
+                ScanDataType.Float => BitConverter.ToSingle(bytes).ToString(),
+                ScanDataType.Double => BitConverter.ToDouble(bytes).ToString(),
+                ScanDataType.Long => BitConverter.ToInt64(bytes).ToString(),
                 _ => BitConverter.ToInt32(bytes).ToString(),
             };
         }
 
-        public static string ValueToString(this object obj, EnumDataType enumDataType)
+        public static string ValueToString(this object obj, ScanDataType enumDataType)
         {
             return enumDataType switch
             {
-                EnumDataType.Short => ((short)obj).ToString(),
-                EnumDataType.Integer => ((int)obj).ToString(),
-                EnumDataType.Float => ((float)obj).ToString(),
-                EnumDataType.Double => ((double)obj).ToString(),
-                EnumDataType.Long => ((long)obj).ToString(),
+                ScanDataType.Short => ((short)obj).ToString(),
+                ScanDataType.Integer => ((int)obj).ToString(),
+                ScanDataType.Float => ((float)obj).ToString(),
+                ScanDataType.Double => ((double)obj).ToString(),
+                ScanDataType.Long => ((long)obj).ToString(),
                 _ => ((int)obj).ToString(),
             };
         }
 
-        public static byte[] StringToValue(this string value, EnumDataType enumDataType)
+        public static byte[] StringToValue(this string value, ScanDataType enumDataType)
         {
             return enumDataType switch
             {
-                EnumDataType.Short => BitConverter.GetBytes(short.Parse(value)),
-                EnumDataType.Integer => BitConverter.GetBytes(int.Parse(value)),
-                EnumDataType.Float => BitConverter.GetBytes(float.Parse(value)),
-                EnumDataType.Double => BitConverter.GetBytes(double.Parse(value)),
-                EnumDataType.Long => BitConverter.GetBytes(long.Parse(value)),
+                ScanDataType.Short => BitConverter.GetBytes(short.Parse(value)),
+                ScanDataType.Integer => BitConverter.GetBytes(int.Parse(value)),
+                ScanDataType.Float => BitConverter.GetBytes(float.Parse(value)),
+                ScanDataType.Double => BitConverter.GetBytes(double.Parse(value)),
+                ScanDataType.Long => BitConverter.GetBytes(long.Parse(value)),
                 _ => BitConverter.GetBytes(int.Parse(value))
             };
         }
 
-        public static object StringToObject(this string value, EnumDataType enumDataType)
+        public static object StringToObject(this string value, ScanDataType enumDataType)
         {
             var obj = new object();
 
-            if (EnumDataType.Short == enumDataType)
+            if (ScanDataType.Short == enumDataType)
             {
                 obj = short.Parse(value);
             }
-            else if (EnumDataType.Integer == enumDataType)
+            else if (ScanDataType.Integer == enumDataType)
             {
                 obj = int.Parse(value);
             }
-            else if (EnumDataType.Float == enumDataType)
+            else if (ScanDataType.Float == enumDataType)
             {
                 obj = float.Parse(value);
             }
-            else if (EnumDataType.Double == enumDataType)
+            else if (ScanDataType.Double == enumDataType)
             {
                 obj = double.Parse(value);
             }
-            else if (EnumDataType.Long == enumDataType)
+            else if (ScanDataType.Long == enumDataType)
             {
                 obj = long.Parse(value);
             }
@@ -76,25 +76,25 @@ namespace CelSerEngine.Extensions
             return obj;
         }
 
-        public static object ByteArrayToObject(this byte[] byteArray, EnumDataType enumDataType)
+        public static object ByteArrayToObject(this byte[] byteArray, ScanDataType enumDataType)
         {
-            if (EnumDataType.Short == enumDataType)
+            if (ScanDataType.Short == enumDataType)
             {
                 return BitConverter.ToInt16(byteArray);
             }
-            if (EnumDataType.Integer == enumDataType)
+            if (ScanDataType.Integer == enumDataType)
             {
                 return BitConverter.ToInt32(byteArray);
             }
-            if (EnumDataType.Float == enumDataType)
+            if (ScanDataType.Float == enumDataType)
             {
                 return BitConverter.ToSingle(byteArray);
             }
-            if (EnumDataType.Double == enumDataType)
+            if (ScanDataType.Double == enumDataType)
             {
                 return BitConverter.ToDouble(byteArray);
             }
-            if (EnumDataType.Long == enumDataType)
+            if (ScanDataType.Long == enumDataType)
             {
                 return BitConverter.ToInt64(byteArray);
             }

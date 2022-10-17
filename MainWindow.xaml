@@ -2,6 +2,8 @@
     x:Class="CelSerEngine.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cseme="clr-namespace:CelSerEngine.MarkupExtensions"
+    xmlns:csevc="clr-namespace:CelSerEngine.MarkupExtensions.ValueConverter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:intr="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:local="clr-namespace:CelSerEngine"
@@ -202,11 +204,11 @@
                 Margin="87,65,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                ItemsSource="{x:Static local:ScanConstraint.GetScanContraintTypes}"
-                SelectedItem="{Binding SelectedScanConstraint}">
+                ItemsSource="{Binding Source={cseme:EnumBindingSource {x:Type local:ScanCompareType}}}"
+                SelectedItem="{Binding SelectedScanCompareType}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Converter={csevc:EnumDisplayNameConverter}}" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
@@ -227,11 +229,11 @@
                 Margin="87,89,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                ItemsSource="{x:Static local:DataType.GetDataTypes}"
-                SelectedItem="{Binding SelectedDataType}">
+                ItemsSource="{Binding Source={cseme:EnumBindingSource {x:Type local:ScanDataType}}}"
+                SelectedItem="{Binding SelectedScanDataType}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Converter={local:MyConverter}}" />
+                        <TextBlock Text="{Binding Converter={csevc:EnumDisplayNameConverter}}" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
