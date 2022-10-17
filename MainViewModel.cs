@@ -246,7 +246,7 @@ namespace CelSerEngine
             Scanning = false;
         }
 
-        public void AddFoundItems(List<ValueAddress> foundItems)
+        private void AddFoundItems(List<ValueAddress> foundItems)
         {
             FullScanItems = foundItems;
             ScanItems = FullScanItems.Take(2_000_000).ToList();
