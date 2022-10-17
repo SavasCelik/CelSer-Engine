@@ -294,9 +294,9 @@ namespace CelSerEngine
                 {
                     if (item.IsFreezed)
                     {
-                        item.SetValue = value.StringToValue(item.EnumDataType);
+                        item.SetValue = value.StringToValue(item.ScanDataType);
                     }
-                    item.Value = value.StringToValue(item.EnumDataType);
+                    item.Value = value.StringToValue(item.ScanDataType);
                     MemManagerDInvoke2.WriteMemory(_pHandle, item);
                 }
             }

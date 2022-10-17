@@ -64,7 +64,11 @@ namespace CelSerEngine.Comparators
                                 var newIntPtr = (IntPtr)virtualMemoryPage.Page.BaseAddress + i + j;
                                 var myArry = virtualMemoryPage.Bytes.AsSpan().Slice(j + i, _sizeOfT).ToArray();
 
-                                yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i + j, myArry.ToType<T>(), _scanConstraint.ScanDataType);
+                                yield return 
+                                    new ValueAddress(
+                                        virtualMemoryPage.Page.BaseAddress, i + j,
+                                        myArry.ByteArrayToObject(_scanConstraint.ScanDataType),
+                                        _scanConstraint.ScanDataType);
                             }
                         }
                     }

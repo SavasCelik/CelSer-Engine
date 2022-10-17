@@ -137,7 +137,7 @@ namespace CelSerEngine.NativeCore
 
         public static void WriteMemory(IntPtr hProcess, TrackedScanItem trackedScanItem)
         {
-            var typeSize = trackedScanItem.GetDataTypeSize();
+            var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
             uint bytesWritten = 0;
 
             //var result = NtWriteVirtualMemory(
@@ -154,7 +154,7 @@ namespace CelSerEngine.NativeCore
             {
                 if (address == null)
                     continue;
-                var typeSize = address.GetDataTypeSize();
+                var typeSize = address.ScanDataType.GetPrimitiveSize();
                 var buffer = new byte[typeSize];
                 uint bytesWritten = 0;
 
@@ -165,7 +165,7 @@ namespace CelSerEngine.NativeCore
                     (uint)typeSize,
                     ref bytesWritten);
 
-                address.Value = buffer.ByteArrayToObject(address.EnumDataType);
+                address.Value = buffer.ByteArrayToObject(address.ScanDataType);
             }
         }
 

@@ -21,7 +21,7 @@ namespace CelSerEngine.Comparators
         {
             _scanConstraint = scanConstraint;
             _userInput = scanConstraint.ValueObj;
-            _sizeOfT = scanConstraint.GetSize();
+            _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
         }
 
         public static bool CompareDataByScanContraintType(dynamic lhs, dynamic rhs, ScanCompareType scanContraintType)
