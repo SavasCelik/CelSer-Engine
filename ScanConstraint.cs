@@ -4,8 +4,7 @@ namespace CelSerEngine
 {
     public class ScanConstraint
     {
-        public byte[] Value { get; set; }
-        public dynamic ValueObj { get; set; }
+        public dynamic UserInput { get; set; }
         public ScanDataType ScanDataType { get; set; }
         public ScanCompareType ScanCompareType { get; set; }
 
@@ -13,7 +12,6 @@ namespace CelSerEngine
         {
             ScanDataType = dataType;
             ScanCompareType = scanCompareType;
-            Value = Array.Empty<byte>();
         }
     }
 }

@@ -22,7 +22,7 @@ namespace CelSerEngine.Comparators
         public VectorComparer(ScanConstraint scanConstraint)
         {
             _scanConstraint = scanConstraint;
-            _userInputAsVector = new Vector<T>((T)scanConstraint.ValueObj);
+            _userInputAsVector = new Vector<T>((T)scanConstraint.UserInput);
             _sizeOfT = Marshal.SizeOf(default(T));
         }
 

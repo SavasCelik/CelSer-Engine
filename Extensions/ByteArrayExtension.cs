@@ -34,19 +34,6 @@ namespace CelSerEngine.Extensions
             };
         }
 
-        public static byte[] StringToValue(this string value, ScanDataType scanDataType)
-        {
-            return scanDataType switch
-            {
-                ScanDataType.Short => BitConverter.GetBytes(short.Parse(value)),
-                ScanDataType.Integer => BitConverter.GetBytes(int.Parse(value)),
-                ScanDataType.Float => BitConverter.GetBytes(float.Parse(value)),
-                ScanDataType.Double => BitConverter.GetBytes(double.Parse(value)),
-                ScanDataType.Long => BitConverter.GetBytes(long.Parse(value)),
-                _ => BitConverter.GetBytes(int.Parse(value))
-            };
-        }
-
         public static object StringToObject(this string value, ScanDataType scanDataType)
         {
             var obj = new object();

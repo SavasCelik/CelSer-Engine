@@ -20,7 +20,7 @@ namespace CelSerEngine.Comparators
         public ValueComparer(ScanConstraint scanConstraint)
         {
             _scanConstraint = scanConstraint;
-            _userInput = scanConstraint.ValueObj;
+            _userInput = scanConstraint.UserInput;
             _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
         }
 

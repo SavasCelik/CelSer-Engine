@@ -204,8 +204,7 @@ namespace CelSerEngine
             {
                 var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
                 {
-                    Value = value.StringToValue(SelectedScanDataType),
-                    ValueObj = value.StringToObject(SelectedScanDataType)
+                    UserInput = value.StringToObject(SelectedScanDataType)
                 };
                 var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
                 //var comparer = new ValueComparer(SelectedScanConstraint);
@@ -238,10 +237,9 @@ namespace CelSerEngine
             MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
             var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
             {
-                Value = value.StringToValue(SelectedScanDataType),
-                ValueObj = value.StringToObject(SelectedScanDataType)
+                UserInput = value.StringToObject(SelectedScanDataType)
             };
-            var foundItems = FullScanItems.Where(valueAddress => ValueComparer.CompareDataByScanContraintType(valueAddress.Value, scanConstraint.ValueObj, scanConstraint.ScanCompareType)).ToList();
+            var foundItems = FullScanItems.Where(valueAddress => ValueComparer.CompareDataByScanContraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint.ScanCompareType)).ToList();
             AddFoundItems(foundItems);
             Scanning = false;
         }
@@ -294,9 +292,9 @@ namespace CelSerEngine
                 {
                     if (item.IsFreezed)
                     {
-                        item.SetValue = value.StringToValue(item.ScanDataType);
+                        item.SetValue = value.StringToObject(item.ScanDataType);
                     }
-                    item.Value = value.StringToValue(item.ScanDataType);
+                    item.Value = value.StringToObject(item.ScanDataType);
                     MemManagerDInvoke2.WriteMemory(_pHandle, item);
                 }
             }

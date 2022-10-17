@@ -139,13 +139,14 @@ namespace CelSerEngine.NativeCore
         {
             var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
             uint bytesWritten = 0;
+            var bytesToWrite = BitConverter.GetBytes(trackedScanItem.SetValue ?? trackedScanItem.Value);
 
-            //var result = NtWriteVirtualMemory(
-            //                            hProcess,
-            //                            trackedScanItem.Address,
-            //                            trackedScanItem.SetValue!,
-            //                            (uint)typeSize,
-            //                            ref bytesWritten);
+            var result = NtWriteVirtualMemory(
+                                        hProcess,
+                                        trackedScanItem.Address,
+                                        bytesToWrite,
+                                        (uint)typeSize,
+                                        ref bytesWritten);
         }
 
         public static void UpdateAddresses(IntPtr hProcess, IEnumerable<ValueAddress?> virtualAddresses)

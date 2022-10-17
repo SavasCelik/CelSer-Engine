@@ -7,33 +7,12 @@ public partial class TrackedScanItem : ValueAddress
 {
     [ObservableProperty]
     private bool isFreezed;
-    private object? setValue;
-    public object? SetValue
-    {
-        get
-        {
-            setValue ??= Value;
-            return setValue;
-        }
-        set
-        {
-            if (value != null)
-            {
-                Value = value;
-            }
-            setValue = value;
-        }
-    }
+    public dynamic? SetValue { get; set; }
 
     partial void OnIsFreezedChanged(bool value)
     {
-        if (!value)
-        {
-            SetValue = null;
-        }
+        SetValue = value ? Value : null;
     }
 
-    public TrackedScanItem(ValueAddress valueAddress) : base(valueAddress)
-    {
-    }
+    public TrackedScanItem(ValueAddress valueAddress) : base(valueAddress) {}
 }
