@@ -7,7 +7,7 @@ namespace CelSerEngine.NativeCore
     public partial class ValueAddress : ObservableObject
     {
         [ObservableProperty]
-        [AlsoNotifyChangeFor(nameof(ValueString))]
+        [NotifyPropertyChangedFor(nameof(ValueString))]
         private dynamic value;
         public dynamic? PrevoiusValue { get; set; }
         public IntPtr BaseAddress { get; set; }

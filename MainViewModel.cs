@@ -29,11 +29,11 @@ namespace CelSerEngine
         public List<ValueAddress> FullScanItems { get; set; }
 
         [ObservableProperty]
-        [AlsoNotifyChangeFor(nameof(FirstScanDone))]
+        [NotifyPropertyChangedFor(nameof(FirstScanDone))]
         private Visibility firstScanVisibility = Visibility.Visible;
 
         [ObservableProperty]
-        [AlsoNotifyChangeFor(nameof(FirstScanDone))]
+        [NotifyPropertyChangedFor(nameof(FirstScanDone))]
         private Visibility newScanVisibility = Visibility.Hidden;
 
         public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
@@ -107,7 +107,7 @@ namespace CelSerEngine
             _timer2.Start();
         }
 
-        [ICommand]
+        [RelayCommand]
         public void ResultScanLoaded(ListView listView)
         {
             var scrollViewer = listView.GetVisualChild<ScrollViewer>(); //Extension method
@@ -190,7 +190,7 @@ namespace CelSerEngine
             NewScanVisibility = Visibility.Hidden;
         }
 
-        [ICommand]
+        [RelayCommand]
         public async Task FirstScan(string userInput)
         {
             if (string.IsNullOrWhiteSpace(userInput))
@@ -228,7 +228,7 @@ namespace CelSerEngine
             Scanning = false;
         }
 
-        [ICommand]
+        [RelayCommand]
         public void NextScan(string userInput)
         {
             if (string.IsNullOrWhiteSpace(userInput))
@@ -253,7 +253,7 @@ namespace CelSerEngine
                         (foundItems.Count > 2_000_000 ? $" (Showing: {ScanItems.Count.ToString("n0", new CultureInfo("en-US"))})" : "");
         }
 
-        [ICommand]
+        [RelayCommand]
         public void NewScan()
         {
             ShowFirstScanBtn();
@@ -261,7 +261,7 @@ namespace CelSerEngine
             GC.Collect();
         }
 
-        [ICommand]
+        [RelayCommand]
         public void AddItemToTrackedItem(ValueAddress? selectedItem)
         {
             if (selectedItem == null)
@@ -270,7 +270,7 @@ namespace CelSerEngine
             TrackedItems.Add(new TrackedScanItem(selectedItem));
         }
 
-        [ICommand]
+        [RelayCommand]
         public void DblClickedCell(DataGrid dataGrid)
         {
             var colName = dataGrid.CurrentColumn?.SortMemberPath;
