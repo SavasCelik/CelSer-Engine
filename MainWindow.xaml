@@ -161,6 +161,7 @@
                 Command="{Binding FirstScanCommand}"
                 CommandParameter="{Binding ElementName=txtValue, Path=Text}"
                 Content="First Scan"
+                IsDefault="True"
                 Visibility="{Binding FirstScanVisibility}" />
             <Button
                 Name="btnNewScan"
@@ -182,6 +183,7 @@
                 Command="{Binding NextScanCommand}"
                 CommandParameter="{Binding ElementName=txtValue, Path=Text}"
                 Content="Next Scan"
+                IsDefault="{Binding FirstScanDone}"
                 IsEnabled="{Binding FirstScanDone}" />
             <Label
                 x:Name="lblValue"
