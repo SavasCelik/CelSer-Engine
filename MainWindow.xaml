@@ -140,6 +140,11 @@
                     Header="Freeze" />
                 <DataGridTextColumn
                     Width="150"
+                    Binding="{Binding Description}"
+                    Header="Description"
+                    IsReadOnly="False" />
+                <DataGridTextColumn
+                    Width="150"
                     Binding="{Binding AddressString}"
                     Header="Address"
                     IsReadOnly="True" />
