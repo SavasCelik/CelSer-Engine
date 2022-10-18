@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CelSerEngine.Extensions
 {
@@ -58,26 +54,6 @@ namespace CelSerEngine.Extensions
             }
 
             throw new NotImplementedException("");
-        }
-
-        public static T ToType<T>(this byte[] bytes) where T : struct
-        {
-            if (typeof(T) == typeof(int))
-            {
-                return (T)(object)BitConverter.ToInt32(bytes);
-            }
-
-            if (typeof(T) == typeof(float))
-            {
-                return (T)(object)BitConverter.ToSingle(bytes);
-            }
-
-            if (typeof(T) == typeof(double))
-            {
-                return (T)(object)BitConverter.ToDouble(bytes);
-            }
-
-            throw new NotImplementedException("Not implemented");
         }
     }
 }
