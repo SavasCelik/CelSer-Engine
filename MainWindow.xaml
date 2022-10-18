@@ -193,7 +193,6 @@
             <TextBox
                 Name="txtValue"
                 Width="234"
-                Height="22"
                 Margin="87,35,0,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"

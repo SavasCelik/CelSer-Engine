@@ -29,6 +29,12 @@ namespace CelSerEngine
             valueTxtBox.Text = value;
         }
 
+        public void SetFocusTextBox()
+        {
+            valueTxtBox.SelectionStart = valueTxtBox.Text.Length;
+            valueTxtBox.Focus();
+        }
+
         private void OkBtn_Click(object sender, RoutedEventArgs e)
         {
             Value = valueTxtBox.Text;

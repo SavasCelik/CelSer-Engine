@@ -278,6 +278,7 @@ namespace CelSerEngine
                 Owner = Application.Current.MainWindow
             };
             valueEditor.SetValueTextBox(selectedItems.First().ValueString);
+            valueEditor.SetFocusTextBox();
             var dialogResult = valueEditor.ShowDialog();
 
             if (dialogResult ?? false)
