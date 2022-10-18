@@ -191,15 +191,18 @@ namespace CelSerEngine
         }
 
         [ICommand]
-        public async Task FirstScan(string value)
+        public async Task FirstScan(string userInput)
         {
+            if (string.IsNullOrWhiteSpace(userInput))
+                return;
+
             HideFirstScanBtn();
             Scanning = true;
             await Task.Run(() =>
             {
                 var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
                 {
-                    UserInput = value.ToPrimitiveDataType(SelectedScanDataType)
+                    UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
                 };
                 var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
                 //var comparer = new ValueComparer(SelectedScanConstraint);
@@ -226,13 +229,16 @@ namespace CelSerEngine
         }
 
         [ICommand]
-        public void NextScan(string value)
+        public void NextScan(string userInput)
         {
+            if (string.IsNullOrWhiteSpace(userInput))
+                return;
+
             Scanning = true;
             MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
             var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
             {
-                UserInput = value.ToPrimitiveDataType(SelectedScanDataType)
+                UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
             };
             var foundItems = FullScanItems.Where(valueAddress => ValueComparer.CompareDataByScanConstraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint.ScanCompareType)).ToList();
             AddFoundItems(foundItems);
