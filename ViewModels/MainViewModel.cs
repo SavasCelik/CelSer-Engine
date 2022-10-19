@@ -274,12 +274,21 @@ namespace CelSerEngine.ViewModels
         [RelayCommand]
         public void DblClickedCell(DataGrid dataGrid)
         {
-            var colName = dataGrid.CurrentColumn?.SortMemberPath;
+            var colHeaderName = dataGrid.CurrentColumn?.Header as string;
 
-            if (colName == null)
+            if (colHeaderName == null)
                 return;
 
             var selectedItems = dataGrid.SelectedItems.Cast<TrackedScanItem>().ToArray();
+
+            if (colHeaderName == nameof(TrackedScanItem.Value))
+            {
+                DoubleClickOnValueCell(selectedItems);
+            }
+        }
+
+        private void DoubleClickOnValueCell(TrackedScanItem[] selectedItems)
+        {
             var valueEditor = new ValueEditor
             {
                 Owner = Application.Current.MainWindow

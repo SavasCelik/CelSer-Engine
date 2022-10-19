@@ -147,7 +147,7 @@
                     Width="150"
                     Binding="{Binding Description}"
                     Header="Description"
-                    IsReadOnly="False" />
+                    IsReadOnly="True" />
                 <DataGridTextColumn
                     Width="150"
                     Binding="{Binding AddressString}"
