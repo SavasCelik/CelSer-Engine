@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CelSerEngine
+namespace CelSerEngine.Models
 {
     public enum ScanDataType
     {

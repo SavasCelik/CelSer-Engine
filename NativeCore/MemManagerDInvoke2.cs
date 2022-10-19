@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CelSerEngine.Extensions;
+using CelSerEngine.Models;
 using static DInvoke.Data.Native;
 using static DInvoke.Data.Win32;
 

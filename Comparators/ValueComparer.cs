@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using CelSerEngine.Extensions;
+using CelSerEngine.Models;
 using CelSerEngine.NativeCore;
 
 namespace CelSerEngine.Comparators

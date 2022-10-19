@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CelSerEngine
+namespace CelSerEngine.Models
 {
     public class ScanConstraint
     {

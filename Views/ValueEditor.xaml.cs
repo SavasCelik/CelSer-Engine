@@ -13,7 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace CelSerEngine
+namespace CelSerEngine.Views
 {
     public partial class ValueEditor : Window
     {

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
-using CelSerEngine.NativeCore;
+﻿using System.Collections.Generic;
+using CelSerEngine.Models;
 
 namespace CelSerEngine.Comparators
 {

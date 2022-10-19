@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CelSerEngine.Models;
+using System;
 
 namespace CelSerEngine.Extensions
 {

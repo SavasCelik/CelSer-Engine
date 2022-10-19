@@ -10,13 +10,14 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Threading;
 using CelSerEngine.NativeCore;
 using CelSerEngine.Comparators;
 using CelSerEngine.Extensions;
+using CelSerEngine.Models;
+using CelSerEngine.Views;
 
-namespace CelSerEngine
+namespace CelSerEngine.ViewModels
 {
     //[INotifyPropertyChanged]
     public partial class MainViewModel : ObservableRecipient

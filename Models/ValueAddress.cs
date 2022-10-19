@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
-namespace CelSerEngine.NativeCore
+namespace CelSerEngine.Models
 {
     public partial class ValueAddress : ObservableObject
     {

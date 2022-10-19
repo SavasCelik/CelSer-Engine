@@ -2,11 +2,11 @@
 using System;
 using System.Globalization;
 using System.Windows.Data;
-using System.Windows.Markup;
 
-namespace CelSerEngine.MarkupExtensions.ValueConverter
+namespace CelSerEngine.ValueConverter
 {
-    public class EnumDisplayNameConverter : MarkupExtension, IValueConverter
+    [ValueConversion(typeof(Enum), typeof(string))]
+    public class EnumDisplayNameConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -16,11 +16,6 @@ namespace CelSerEngine.MarkupExtensions.ValueConverter
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotSupportedException();
-        }
-
-        public override object ProvideValue(IServiceProvider serviceProvider)
-        {
-            return this;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CelSerEngine.NativeCore;
 
-namespace CelSerEngine;
+namespace CelSerEngine.Models;
 
 public partial class TrackedScanItem : ValueAddress
 {
@@ -18,7 +18,7 @@ public partial class TrackedScanItem : ValueAddress
         SetValue = value ? Value : null;
     }
 
-    public TrackedScanItem(ValueAddress valueAddress) : base(valueAddress) 
+    public TrackedScanItem(ValueAddress valueAddress) : base(valueAddress)
     {
         description = "Description";
     }
