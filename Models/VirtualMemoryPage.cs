@@ -1,6 +1,6 @@
 ﻿using CelSerEngine.NativeCore;
 
-namespace CelSerEngine
+namespace CelSerEngine.Models
 {
     public class VirtualMemoryPage
     {
