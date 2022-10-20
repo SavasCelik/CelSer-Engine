@@ -1,10 +1,13 @@
 ﻿using CelSerEngine.Models;
+using CelSerEngine.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace CelSerEngine.ViewModels
@@ -15,6 +18,8 @@ namespace CelSerEngine.ViewModels
         private readonly IList<ProcessAdapter> _allProcesses;
         [ObservableProperty]
         private IList<ProcessAdapter> processes;
+        [ObservableProperty]
+        private ProcessAdapter? selectedProcess;
 
         public SelectProcessViewModel()
         {
@@ -36,6 +41,12 @@ namespace CelSerEngine.ViewModels
             {
                 Processes = _allProcesses.Where(x => x.Process.ProcessName.ToLower().StartsWith(pressedKey)).ToList();
             }
+        }
+
+        [RelayCommand]
+        public void DoubleClickOnProcess(SelectProcess window)
+        {
+            window.Close();
         }
     }
 }

@@ -68,6 +68,27 @@ namespace CelSerEngine.NativeCore
             return hProcess;
         }
 
+        public static IntPtr OpenProcess(int processId)
+        {
+            Debug.WriteLine($"ProcessID: {processId}");
+
+            var hProcess = IntPtr.Zero;
+            var oa = new OBJECT_ATTRIBUTES();
+
+            var ci = new CLIENT_ID
+            {
+                UniqueProcess = new IntPtr(processId)
+            };
+
+            var result = NtOpenProcess(
+                ref hProcess,
+                (uint)Kernel32.ProcessAccessFlags.PROCESS_ALL_ACCESS,
+                ref oa,
+                ref ci);
+
+            return hProcess;
+        }
+
         public static IList<VirtualMemoryPage> GatherVirtualPages(IntPtr hProcess)
         {
             if (hProcess == IntPtr.Zero)

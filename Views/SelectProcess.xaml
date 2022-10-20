@@ -41,9 +41,16 @@
             IsReadOnly="True"
             ItemsSource="{Binding Processes}"
             RowDetailsVisibilityMode="Visible"
+            SelectedItem="{Binding SelectedProcess}"
             SelectionMode="Single"
             SelectionUnit="FullRow"
             VirtualizingPanel.VirtualizationMode="Recycling">
+            <DataGrid.InputBindings>
+                <MouseBinding
+                    Command="{Binding DoubleClickOnProcessCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+                    MouseAction="LeftDoubleClick" />
+            </DataGrid.InputBindings>
             <DataGrid.CellStyle>
                 <Style TargetType="DataGridCell">
                     <Setter Property="BorderThickness" Value="0" />

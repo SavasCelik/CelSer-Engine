@@ -78,7 +78,7 @@ namespace CelSerEngine.ViewModels
             }
 #endif
 
-            Task.Run(() => 
+            Task.Run(() =>
             {
                 while (true)
                 {
@@ -278,8 +278,19 @@ namespace CelSerEngine.ViewModels
             {
                 Owner = Application.Current.MainWindow
             };
+            selectProcessWidnwow.ShowDialog();
+            var selectProcessViewModel = selectProcessWidnwow.DataContext as SelectProcessViewModel;
+            var selectedProcess = selectProcessViewModel?.SelectedProcess?.Process;
 
-            var result = selectProcessWidnwow.ShowDialog();
+            if (selectedProcess != null)
+            {
+                var pHandle = MemManagerDInvoke2.OpenProcess(selectedProcess.Id);
+                
+                if (pHandle != IntPtr.Zero)
+                {
+                    _pHandle = pHandle;
+                }
+            }
         }
 
         [RelayCommand]
