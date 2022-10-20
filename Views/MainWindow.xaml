@@ -26,6 +26,7 @@
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="450" MinHeight="200" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -35,14 +36,28 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="350" />
         </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <StackPanel.Resources>
+                <Style TargetType="{x:Type Button}">
+                    <Setter Property="Margin" Value="0,0,5,0" />
+                </Style>
+            </StackPanel.Resources>
+            <!--  Select Process Button  -->
+            <Button Width="30">
+                <Image Source="/Resources/Images/SelectProcess.png" />
+            </Button>
+        </StackPanel>
+
         <Label
+            Grid.Row="1"
             Margin="0"
             Padding="0"
             Content="{Binding FoundItemsDisplayString}" />
 
         <DataGrid
             Name="ScanItemsDataGrid"
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.Column="0"
             AutoGenerateColumns="False"
             Background="White"
@@ -94,7 +109,7 @@
         </DataGrid>
 
         <GridSplitter
-            Grid.Row="2"
+            Grid.Row="3"
             Grid.Column="0"
             Grid.ColumnSpan="2"
             Height="5"
@@ -104,7 +119,7 @@
 
         <DataGrid
             Name="TrackedItemsDataGrid"
-            Grid.Row="3"
+            Grid.Row="4"
             Grid.ColumnSpan="2"
             AutoGenerateColumns="False"
             Background="White"
@@ -161,7 +176,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <Grid Grid.Row="1" Grid.Column="1">
+        <Grid Grid.Row="2" Grid.Column="1">
             <Button
                 Width="88"
                 Height="26"
