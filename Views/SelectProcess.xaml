@@ -1,0 +1,70 @@
+﻿<Window
+    x:Class="CelSerEngine.Views.SelectProcess"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:csevm="clr-namespace:CelSerEngine.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:intr="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:local="clr-namespace:CelSerEngine.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="SelectProcess"
+    Width="800"
+    Height="450"
+    Icon="/Resources/Images/SelectProcess.png"
+    mc:Ignorable="d">
+    <Window.DataContext>
+        <csevm:SelectProcessViewModel />
+    </Window.DataContext>
+    <intr:Interaction.Triggers>
+        <intr:EventTrigger EventName="KeyUp">
+            <intr:InvokeCommandAction Command="{Binding KeyPressedCommand}" PassEventArgsToCommand="True" />
+        </intr:EventTrigger>
+    </intr:Interaction.Triggers>
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <DataGrid
+            Name="ProcessListDataGrid"
+            Grid.Row="0"
+            Grid.Column="0"
+            AutoGenerateColumns="False"
+            Background="White"
+            CanUserAddRows="False"
+            CanUserDeleteRows="False"
+            CanUserReorderColumns="False"
+            CanUserResizeRows="False"
+            CanUserSortColumns="False"
+            GridLinesVisibility="None"
+            HeadersVisibility="None"
+            IsReadOnly="True"
+            ItemsSource="{Binding Processes}"
+            RowDetailsVisibilityMode="Visible"
+            SelectionMode="Single"
+            SelectionUnit="FullRow"
+            VirtualizingPanel.VirtualizationMode="Recycling">
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0" />
+                </Style>
+            </DataGrid.CellStyle>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Image
+                                Width="25"
+                                Height="25"
+                                Source="{Binding IconSource}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding DisplayString}"
+                    Header="ProcessName" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>

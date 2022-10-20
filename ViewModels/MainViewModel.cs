@@ -272,6 +272,17 @@ namespace CelSerEngine.ViewModels
         }
 
         [RelayCommand]
+        public void OpenSelectProcessWindow()
+        {
+            var selectProcessWidnwow = new SelectProcess
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            var result = selectProcessWidnwow.ShowDialog();
+        }
+
+        [RelayCommand]
         public void DblClickedCell(DataGrid dataGrid)
         {
             var colHeaderName = dataGrid.CurrentColumn?.Header as string;

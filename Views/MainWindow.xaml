@@ -44,7 +44,7 @@
                 </Style>
             </StackPanel.Resources>
             <!--  Select Process Button  -->
-            <Button Width="30">
+            <Button Width="30" Command="{Binding OpenSelectProcessWindowCommand}">
                 <Image Source="/Resources/Images/SelectProcess.png" />
             </Button>
         </StackPanel>
