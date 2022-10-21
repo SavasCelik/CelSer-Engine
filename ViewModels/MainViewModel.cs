@@ -22,6 +22,9 @@ namespace CelSerEngine.ViewModels
     //[INotifyPropertyChanged]
     public partial class MainViewModel : ObservableRecipient
     {
+        private const string WindowTitleBase = "CelSer Engine";
+        [ObservableProperty]
+        private string windowTitle;
         [ObservableProperty]
         private ObservableCollection<TrackedScanItem> trackedItems;
 
@@ -54,6 +57,7 @@ namespace CelSerEngine.ViewModels
         public bool Scanning { get; set; }
         public MainViewModel()
         {
+            windowTitle = WindowTitleBase;
             _pHandle = IntPtr.Zero;
             scanItems = new List<ValueAddress>();
             FullScanItems = new List<ValueAddress>();
@@ -289,6 +293,7 @@ namespace CelSerEngine.ViewModels
                 if (pHandle != IntPtr.Zero)
                 {
                     _pHandle = pHandle;
+                    WindowTitle = $"{WindowTitleBase} - {selectedProcess.ProcessName}";
                 }
             }
         }

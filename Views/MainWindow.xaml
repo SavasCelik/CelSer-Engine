@@ -10,7 +10,7 @@
     xmlns:intr="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:local="clr-namespace:CelSerEngine"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="MainWindow"
+    Title="{Binding WindowTitle}"
     Width="900"
     Height="800"
     AllowsTransparency="False"
