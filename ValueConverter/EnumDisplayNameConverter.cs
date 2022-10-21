@@ -10,7 +10,9 @@ namespace CelSerEngine.ValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return ((Enum)value).GetDisplayName();
+            var enumValue = value as Enum;
+
+            return enumValue?.GetDisplayName() ?? "No Value";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
