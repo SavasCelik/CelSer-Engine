@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -11,15 +10,21 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Threading;
 using CelSerEngine.NativeCore;
+using CelSerEngine.Comparators;
+using CelSerEngine.Extensions;
+using CelSerEngine.Models;
+using CelSerEngine.Views;
 
-namespace CelSerEngine
+namespace CelSerEngine.ViewModels
 {
     //[INotifyPropertyChanged]
     public partial class MainViewModel : ObservableRecipient
     {
+        private const string WindowTitleBase = "CelSer Engine";
+        [ObservableProperty]
+        private string windowTitle;
         [ObservableProperty]
         private ObservableCollection<TrackedScanItem> trackedItems;
 
@@ -28,11 +33,11 @@ namespace CelSerEngine
         public List<ValueAddress> FullScanItems { get; set; }
 
         [ObservableProperty]
-        [AlsoNotifyChangeFor(nameof(FirstScanDone))]
+        [NotifyPropertyChangedFor(nameof(FirstScanDone))]
         private Visibility firstScanVisibility = Visibility.Visible;
 
         [ObservableProperty]
-        [AlsoNotifyChangeFor(nameof(FirstScanDone))]
+        [NotifyPropertyChangedFor(nameof(FirstScanDone))]
         private Visibility newScanVisibility = Visibility.Hidden;
 
         public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
@@ -41,21 +46,30 @@ namespace CelSerEngine
         private string foundItemsDisplayString = $"Found: 0";
 
         [ObservableProperty]
-        private DataType selectedDataType = DataType.GetDataTypes[1];
+        private ScanDataType selectedScanDataType = ScanDataType.Integer;
 
         [ObservableProperty]
-        private ScanConstraint selectedScanConstraint = ScanConstraint.GetScanContraintTypes[0];
+        private ScanCompareType selectedScanCompareType = ScanCompareType.ExactValue;
+        [ObservableProperty]
+        private float progressBarValue;
 
         private IntPtr _pHandle;
         private readonly DispatcherTimer _timer;
         private readonly DispatcherTimer _timer2;
+        private readonly IProgress<float> _progressBarUpdater;
         public bool Scanning { get; set; }
         public MainViewModel()
         {
+            windowTitle = WindowTitleBase;
+            progressBarValue = 0;
             _pHandle = IntPtr.Zero;
             scanItems = new List<ValueAddress>();
             FullScanItems = new List<ValueAddress>();
             trackedItems = new ObservableCollection<TrackedScanItem>();
+            _progressBarUpdater = new Progress<float>(newValue =>
+            {
+                ProgressBarValue = newValue;
+            });
 
 #if TESTUI
             for (int i = 0; i < 1000; i++)
@@ -76,7 +90,7 @@ namespace CelSerEngine
             }
 #endif
 
-            Task.Run(() => 
+            Task.Run(() =>
             {
                 while (true)
                 {
@@ -106,7 +120,7 @@ namespace CelSerEngine
             _timer2.Start();
         }
 
-        [ICommand]
+        [RelayCommand]
         public void ResultScanLoaded(ListView listView)
         {
             var scrollViewer = listView.GetVisualChild<ScrollViewer>(); //Extension method
@@ -136,11 +150,6 @@ namespace CelSerEngine
                     ShownItemsLength = Convert.ToInt32(scrollViewer.ViewportHeight);
                 }
             }
-        }
-
-        partial void OnSelectedDataTypeChanged(DataType value)
-        {
-            SelectedScanConstraint = ScanConstraint.GetScanContraintTypes[0];
         }
 
         public async void UpdateAddresses(object? sender, EventArgs args)
@@ -194,22 +203,26 @@ namespace CelSerEngine
             NewScanVisibility = Visibility.Hidden;
         }
 
-        [ICommand]
-        public async Task FirstScan(string value)
+        [RelayCommand]
+        public async Task FirstScan(string userInput)
         {
+            if (string.IsNullOrWhiteSpace(userInput))
+                return;
+
             HideFirstScanBtn();
             Scanning = true;
             await Task.Run(() =>
             {
-                SelectedScanConstraint.DataType = selectedDataType;
-                SelectedScanConstraint.Value = value.StringToValue(selectedDataType.EnumType);
-                SelectedScanConstraint.ValueObj = value.StringToObject(selectedDataType.EnumType);
-                var comparer = VectorComparer<short>.CreateVectorComparer(SelectedScanConstraint);
+                var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
+                {
+                    UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
+                };
+                var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
+                //var comparer = new ValueComparer(SelectedScanConstraint);
                 var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();
-                //var foundItems2 = MemManagerDInvoke2.ReadPMV(_pHandle, pages, selectedScanConstraint).ToList();
-                var foundItems2 = MemManagerDInvoke2.ReadPMV2(_pHandle, pages, selectedScanConstraint, comparer).ToList();
+                var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater).ToList();
                 sw.Stop();
                 Debug.WriteLine(sw.Elapsed);
                 // Slower but has visiual effect
@@ -224,22 +237,29 @@ namespace CelSerEngine
                 //}
 
                 AddFoundItems(foundItems2);
+                _progressBarUpdater.Report(100);
             });
             Scanning = false;
         }
 
-        [ICommand]
-        public void NextScan(string value)
+        [RelayCommand]
+        public void NextScan(string userInput)
         {
+            if (string.IsNullOrWhiteSpace(userInput))
+                return;
+
             Scanning = true;
-            SelectedScanConstraint.DataType = SelectedDataType;
-            SelectedScanConstraint.Value = value.StringToValue(SelectedDataType.EnumType);
-            var foundItems = new List<ValueAddress>(MemManagerDInvoke2.ChangedValue(_pHandle, FullScanItems, selectedScanConstraint).ToList());
+            MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
+            var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
+            {
+                UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
+            };
+            var foundItems = FullScanItems.Where(valueAddress => ValueComparer.CompareDataByScanConstraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint.ScanCompareType)).ToList();
             AddFoundItems(foundItems);
             Scanning = false;
         }
 
-        public void AddFoundItems(List<ValueAddress> foundItems)
+        private void AddFoundItems(List<ValueAddress> foundItems)
         {
             FullScanItems = foundItems;
             ScanItems = FullScanItems.Take(2_000_000).ToList();
@@ -247,7 +267,7 @@ namespace CelSerEngine
                         (foundItems.Count > 2_000_000 ? $" (Showing: {ScanItems.Count.ToString("n0", new CultureInfo("en-US"))})" : "");
         }
 
-        [ICommand]
+        [RelayCommand]
         public void NewScan()
         {
             ShowFirstScanBtn();
@@ -255,7 +275,7 @@ namespace CelSerEngine
             GC.Collect();
         }
 
-        [ICommand]
+        [RelayCommand]
         public void AddItemToTrackedItem(ValueAddress? selectedItem)
         {
             if (selectedItem == null)
@@ -264,20 +284,53 @@ namespace CelSerEngine
             TrackedItems.Add(new TrackedScanItem(selectedItem));
         }
 
-        [ICommand]
+        [RelayCommand]
+        public void OpenSelectProcessWindow()
+        {
+            var selectProcessWidnwow = new SelectProcess
+            {
+                Owner = Application.Current.MainWindow
+            };
+            selectProcessWidnwow.ShowDialog();
+            var selectProcessViewModel = selectProcessWidnwow.DataContext as SelectProcessViewModel;
+            var selectedProcess = selectProcessViewModel?.SelectedProcess?.Process;
+
+            if (selectedProcess != null)
+            {
+                var pHandle = MemManagerDInvoke2.OpenProcess(selectedProcess.Id);
+                
+                if (pHandle != IntPtr.Zero)
+                {
+                    _pHandle = pHandle;
+                    WindowTitle = $"{WindowTitleBase} - {selectedProcess.ProcessName}";
+                }
+            }
+        }
+
+        [RelayCommand]
         public void DblClickedCell(DataGrid dataGrid)
         {
-            var colName = dataGrid.CurrentColumn?.SortMemberPath;
+            var colHeaderName = dataGrid.CurrentColumn?.Header as string;
 
-            if (colName == null)
+            if (colHeaderName == null)
                 return;
 
             var selectedItems = dataGrid.SelectedItems.Cast<TrackedScanItem>().ToArray();
+
+            if (colHeaderName == nameof(TrackedScanItem.Value))
+            {
+                DoubleClickOnValueCell(selectedItems);
+            }
+        }
+
+        private void DoubleClickOnValueCell(TrackedScanItem[] selectedItems)
+        {
             var valueEditor = new ValueEditor
             {
                 Owner = Application.Current.MainWindow
             };
             valueEditor.SetValueTextBox(selectedItems.First().ValueString);
+            valueEditor.SetFocusTextBox();
             var dialogResult = valueEditor.ShowDialog();
 
             if (dialogResult ?? false)
@@ -287,9 +340,9 @@ namespace CelSerEngine
                 {
                     if (item.IsFreezed)
                     {
-                        item.SetValue = value.StringToValue(item.EnumDataType);
+                        item.SetValue = value.ToPrimitiveDataType(item.ScanDataType);
                     }
-                    item.Value = value.StringToValue(item.EnumDataType);
+                    item.Value = value.ToPrimitiveDataType(item.ScanDataType);
                     MemManagerDInvoke2.WriteMemory(_pHandle, item);
                 }
             }

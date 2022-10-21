@@ -13,7 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace CelSerEngine
+namespace CelSerEngine.Views
 {
     public partial class ValueEditor : Window
     {
@@ -27,6 +27,12 @@ namespace CelSerEngine
         public void SetValueTextBox(string value)
         {
             valueTxtBox.Text = value;
+        }
+
+        public void SetFocusTextBox()
+        {
+            valueTxtBox.SelectionStart = valueTxtBox.Text.Length;
+            valueTxtBox.Focus();
         }
 
         private void OkBtn_Click(object sender, RoutedEventArgs e)

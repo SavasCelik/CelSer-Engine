@@ -4,12 +4,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using System.Windows.Controls;
+using CelSerEngine.Extensions;
+using CelSerEngine.Models;
 using static DInvoke.Data.Native;
-using static DInvoke.Data.Win32.Kernel32;
+using static DInvoke.Data.Win32;
 
 namespace CelSerEngine.NativeCore
 {
@@ -42,7 +42,7 @@ namespace CelSerEngine.NativeCore
 
         public static IntPtr OpenProcess(string processName)
         {
-            Process[] processList = Process.GetProcessesByName(processName);
+            var processList = Process.GetProcessesByName(processName);
 
             if (processList.Length == 0)
                 return IntPtr.Zero;
@@ -61,19 +61,42 @@ namespace CelSerEngine.NativeCore
 
             var result = NtOpenProcess(
                 ref hProcess,
-                (uint)ProcessAccessFlags.PROCESS_ALL_ACCESS,
+                (uint)Kernel32.ProcessAccessFlags.PROCESS_ALL_ACCESS,
                 ref oa,
                 ref ci);
 
             return hProcess;
         }
 
-        public static IEnumerable<MEMORY_BASIC_INFORMATION64> GatherVirtualPages(IntPtr hProcess)
+        public static IntPtr OpenProcess(int processId)
+        {
+            Debug.WriteLine($"ProcessID: {processId}");
+
+            var hProcess = IntPtr.Zero;
+            var oa = new OBJECT_ATTRIBUTES();
+
+            var ci = new CLIENT_ID
+            {
+                UniqueProcess = new IntPtr(processId)
+            };
+
+            var result = NtOpenProcess(
+                ref hProcess,
+                (uint)Kernel32.ProcessAccessFlags.PROCESS_ALL_ACCESS,
+                ref oa,
+                ref ci);
+
+            return hProcess;
+        }
+
+        public static IList<VirtualMemoryPage> GatherVirtualPages(IntPtr hProcess)
         {
             if (hProcess == IntPtr.Zero)
             {
                 throw new ArgumentNullException(nameof(hProcess));
             }
+
+            var virtualMemoryPages = new List<VirtualMemoryPage>();
 
             GetSystemInfo(out var sys_info);
 
@@ -102,10 +125,13 @@ namespace CelSerEngine.NativeCore
                 );
 
                 // if this memory chunk is accessible
-                if (returnLength > 0 && mem_basic_info.State != 0x10000 /*&& mem_basic_info.Protect == PAGE_READWRITE && mem_basic_info.State == MEM_COMMIT*/)
+                if (returnLength > 0 && mem_basic_info.Protect == WinNT.PAGE_READWRITE && mem_basic_info.State == Kernel32.MEM_COMMIT)
                 {
                     //VirtualProtectEx(pHandle, new IntPtr((long)mem_basic_info.BaseAddress), new UIntPtr(mem_basic_info.RegionSize), 0x40, out var prt);
                     memoryBasicInfos.Add(mem_basic_info);
+                    var memoryBytes = ReadVirtualMemory(hProcess, (IntPtr)mem_basic_info.BaseAddress, (uint)mem_basic_info.RegionSize);
+                    var virtualMemoryPage = new VirtualMemoryPage(mem_basic_info, memoryBytes);
+                    virtualMemoryPages.Add(virtualMemoryPage);
                 }
 
                 // move to the next memory chunk
@@ -113,170 +139,45 @@ namespace CelSerEngine.NativeCore
                 proc_min_address = new IntPtr((long)proc_min_address_l);
             }
 
-            return memoryBasicInfos;
+            return virtualMemoryPages;
         }
 
-        public static IEnumerable<ValueAddress> ReadPMV(IntPtr hProcess, IEnumerable<MEMORY_BASIC_INFORMATION64> virtualPages, ScanConstraint scanConstraint)
+        public static byte[] ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead)
         {
-            var sizeOfType = scanConstraint.GetSize();
-            var concurrentPointingThere = new ConcurrentBag<ValueAddress>();
-            var parallelOptions = new ParallelOptions();
-            parallelOptions.MaxDegreeOfParallelism = Environment.ProcessorCount;
+            var buffer = new byte[numberOfBytesToRead];
+            uint bytesWritten = 0;
 
-            //Parallel.ForEach(virtualPages, parallelOptions, page => {
-            //    var buffer = new byte[(uint)page.RegionSize];
+            var result = NtReadVirtualMemory(
+                hProcess,
+                address,
+                buffer,
+                numberOfBytesToRead,
+                ref bytesWritten);
 
-            //    uint bytesWritten = 0;
-
-            //    var result = NtReadVirtualMemory(
-            //        hProcess,
-            //        (IntPtr)page.BaseAddress,
-            //        buffer,
-            //        (uint)page.RegionSize,
-            //        ref bytesWritten);
-
-            //    for (int i = 0; i < (int)page.RegionSize; i += sizeOfType)
-            //    {
-            //        if (i + sizeOfType > (int)page.RegionSize)
-            //        {
-            //            continue;
-            //        }
-            //        var bufferValue = buffer.Skip(i).Take(sizeOfType).ToArray();
-
-            //        if (scanConstraint.Comapare(bufferValue))
-            //        {
-            //            concurrentPointingThere.Add(new ValueAddress(page.BaseAddress, i, bufferValue, scanConstraint.DataType.EnumType));
-            //        }
-            //    }
-            //});
-
-            //return concurrentPointingThere;
-
-            foreach (var page in virtualPages)
-            {
-                var buffer = new byte[(uint)page.RegionSize];
-
-                uint bytesWritten = 0;
-
-                var result = NtReadVirtualMemory(
-                    hProcess,
-                    (IntPtr)page.BaseAddress,
-                    buffer,
-                    (uint)page.RegionSize,
-                    ref bytesWritten);
-
-                for (var i = 0; i < (int)page.RegionSize; i += sizeOfType)
-                {
-                    if (i + sizeOfType > (int)page.RegionSize)
-                    {
-                        continue;
-                    }
-                    var bufferValue = buffer.Skip(i).Take(sizeOfType).ToArray();
-
-                    if (scanConstraint.Comapare(bufferValue))
-                    {
-                        yield return new ValueAddress(page.BaseAddress, i, bufferValue, scanConstraint.DataType.EnumType);
-                    }
-                }
-            }
-        }
-
-
-        public static IEnumerable<ValueAddress> ReadPMV2(IntPtr hProcess, MEMORY_BASIC_INFORMATION64[] virtualPages, ScanConstraint scanConstraint, IVectorComparer comparer)
-        {
-            var sizeOfType = scanConstraint.GetSize();
-            var concurrentPointingThere = new ConcurrentBag<ValueAddress>();
-            var parallelOptions = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = Environment.ProcessorCount
-            };
-            var valueAddressList = new List<ValueAddress>();
-
-            //foreach (var page in virtualPages)
-            //{
-            //    var buffer = new byte[(uint)page.RegionSize];
-
-            //    uint bytesWritten = 0;
-
-            //    var result = NtReadVirtualMemory(
-            //        hProcess,
-            //        (IntPtr)page.BaseAddress,
-            //        buffer,
-            //        (uint)page.RegionSize,
-            //        ref bytesWritten);
-
-            //    var results = comparer.GetMatchingValueAddresses(page, buffer);
-            //    valueAddressList.AddRange(results);
-            //}
-
-            //return valueAddressList;
-
-            Parallel.ForEach(virtualPages, parallelOptions, page =>
-            {
-                var buffer = new byte[(uint)page.RegionSize];
-                uint bytesWritten = 0;
-
-                var result = NtReadVirtualMemory(
-                    hProcess,
-                    (IntPtr)page.BaseAddress,
-                    buffer,
-                    (uint)page.RegionSize,
-                    ref bytesWritten);
-
-                var results = comparer.GetMatchingValueAddresses(page, buffer).ToArray();
-                foreach (var item in results)
-                {
-                    concurrentPointingThere.Add(item);
-                }
-            });
-
-            return concurrentPointingThere;
-        }
-
-        public static IEnumerable<ValueAddress> ChangedValue(IntPtr hProcess, IEnumerable<ValueAddress> virtualAddresses, ScanConstraint scanConstraint)
-        {
-            var sizeOfType = scanConstraint.GetSize();
-            foreach (var address in virtualAddresses)
-            {
-                var buffer = new byte[sizeof(int)];
-
-                uint bytesWritten = 0;
-
-                var result = NtReadVirtualMemory(
-                    hProcess,
-                    address.BaseAddress + address.Offset,
-                    buffer,
-                    (uint)sizeOfType,
-                    ref bytesWritten);
-
-                if (scanConstraint.Comapare(buffer))
-                {
-                    address.Value = buffer;
-                    yield return address;
-                }
-            }
+            return result == NTSTATUS.Success ? buffer : Array.Empty<byte>();
         }
 
         public static void WriteMemory(IntPtr hProcess, TrackedScanItem trackedScanItem)
         {
-            var typeSize = trackedScanItem.GetDataTypeSize();
+            var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
             uint bytesWritten = 0;
+            var bytesToWrite = BitConverter.GetBytes(trackedScanItem.SetValue ?? trackedScanItem.Value);
 
             var result = NtWriteVirtualMemory(
                                         hProcess,
                                         trackedScanItem.Address,
-                                        trackedScanItem.SetValue!,
+                                        bytesToWrite,
                                         (uint)typeSize,
                                         ref bytesWritten);
         }
 
-        public static void UpdateAddresses(IntPtr hProcess, IEnumerable<ValueAddress> virtualAddresses)
+        public static void UpdateAddresses(IntPtr hProcess, IEnumerable<ValueAddress?> virtualAddresses)
         {
             foreach (var address in virtualAddresses)
             {
                 if (address == null)
                     continue;
-                var typeSize = address.GetDataTypeSize();
+                var typeSize = address.ScanDataType.GetPrimitiveSize();
                 var buffer = new byte[typeSize];
                 uint bytesWritten = 0;
 
@@ -287,7 +188,7 @@ namespace CelSerEngine.NativeCore
                     (uint)typeSize,
                     ref bytesWritten);
 
-                address.Value = buffer;
+                address.Value = buffer.ByteArrayToObject(address.ScanDataType);
             }
         }
 

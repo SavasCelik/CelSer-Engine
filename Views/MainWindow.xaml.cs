@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace CelSerEngine
+namespace CelSerEngine.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
