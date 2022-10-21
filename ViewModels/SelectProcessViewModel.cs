@@ -1,52 +1,42 @@
 ﻿using CelSerEngine.Models;
-using CelSerEngine.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace CelSerEngine.ViewModels
 {
     public partial class SelectProcessViewModel : ObservableRecipient
     {
-        private readonly Regex _alphabetRegex;
         private readonly IList<ProcessAdapter> _allProcesses;
         [ObservableProperty]
         private IList<ProcessAdapter> processes;
         [ObservableProperty]
         private ProcessAdapter? selectedProcess;
+        [ObservableProperty]
+        private string searchProcessText;
 
         public SelectProcessViewModel()
         {
+            searchProcessText = "";
             _allProcesses = Process.GetProcesses()
                 .OrderBy(p => p.ProcessName)
                 .Select(p => new ProcessAdapter(p))
                 .Where(pa => pa.MainModule != null)
                 .ToList();
             processes = _allProcesses;
-            _alphabetRegex = new Regex("[A-Za-z]");
         }
 
-        [RelayCommand]
-        public void KeyPressed(KeyEventArgs keyEventArgs)
+        partial void OnSearchProcessTextChanged(string value)
         {
-            var pressedKey = keyEventArgs.Key.ToString().ToLower();
-
-            if (pressedKey.Length == 1 && _alphabetRegex.IsMatch(keyEventArgs.Key.ToString()))
+            if (value == "")
             {
-                Processes = _allProcesses.Where(x => x.Process.ProcessName.ToLower().StartsWith(pressedKey)).ToList();
+                Processes = _allProcesses;
             }
-        }
-
-        [RelayCommand]
-        public void DoubleClickOnProcess(SelectProcess window)
-        {
-            window.Close();
+            else
+            {
+                Processes = _allProcesses.Where(p => p.Process.ProcessName.ToLower().Contains(value.ToLower())).ToList();
+            }
         }
     }
 }

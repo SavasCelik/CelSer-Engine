@@ -7,27 +7,40 @@
     xmlns:intr="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:local="clr-namespace:CelSerEngine.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="SelectProcess"
+    Title="Select Process"
     Width="800"
     Height="450"
+    FocusManager.FocusedElement="{Binding ElementName=searchProcessTxtBox}"
     Icon="/Resources/Images/SelectProcess.png"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.DataContext>
         <csevm:SelectProcessViewModel />
     </Window.DataContext>
-    <intr:Interaction.Triggers>
-        <intr:EventTrigger EventName="KeyUp">
-            <intr:InvokeCommandAction Command="{Binding KeyPressedCommand}" PassEventArgsToCommand="True" />
-        </intr:EventTrigger>
-    </intr:Interaction.Triggers>
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <TextBox
+                Name="searchProcessTxtBox"
+                Width="250"
+                Margin="0,0,0,5"
+                Text="{Binding SearchProcessText, UpdateSourceTrigger=PropertyChanged}"
+                TextChanged="OnSearchProcessTextChanged"
+                TextWrapping="NoWrap">
+                <TextBox.Background>
+                    <ImageBrush
+                        AlignmentX="Left"
+                        ImageSource="/Resources/Images/SearchProcessWatermark.png"
+                        Stretch="None" />
+                </TextBox.Background>
+            </TextBox>
+        </StackPanel>
         <DataGrid
             Name="ProcessListDataGrid"
-            Grid.Row="0"
+            Grid.Row="1"
             Grid.Column="0"
             AutoGenerateColumns="False"
             Background="White"
@@ -40,17 +53,12 @@
             HeadersVisibility="None"
             IsReadOnly="True"
             ItemsSource="{Binding Processes}"
+            MouseDoubleClick="DoubleClickOnProcessInDataGrid"
             RowDetailsVisibilityMode="Visible"
             SelectedItem="{Binding SelectedProcess}"
             SelectionMode="Single"
             SelectionUnit="FullRow"
             VirtualizingPanel.VirtualizationMode="Recycling">
-            <DataGrid.InputBindings>
-                <MouseBinding
-                    Command="{Binding DoubleClickOnProcessCommand}"
-                    CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
-                    MouseAction="LeftDoubleClick" />
-            </DataGrid.InputBindings>
             <DataGrid.CellStyle>
                 <Style TargetType="DataGridCell">
                     <Setter Property="BorderThickness" Value="0" />

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows;
@@ -18,7 +19,7 @@ namespace CelSerEngine.Models
         {
             Process = process;
             TryGetMainModule();
-            DisplayString = MainModule != null ? $"0x{MainModule.BaseAddress:X} - {MainModule?.ModuleName}" : "MainModule not found!";
+            DisplayString = MainModule != null ? $"0x{Process.Id:X8} - {MainModule.ModuleName}" : "MainModule not found!";
             GetIconImageSource();
         }
 
@@ -26,6 +27,9 @@ namespace CelSerEngine.Models
         {
             try
             {
+                if (Process.HasExited)
+                    return;
+
                 MainModule = Process.MainModule;
             }
             catch (Win32Exception) { }
