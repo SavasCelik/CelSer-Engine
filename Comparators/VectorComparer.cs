@@ -43,10 +43,11 @@ namespace CelSerEngine.Comparators
             };
         }
 
-        public IEnumerable<ValueAddress> GetMatchingValueAddresses(ICollection<VirtualMemoryPage> virtualMemoryPages)
+        public IEnumerable<ValueAddress> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
         {
-            foreach (var virtualMemoryPage in virtualMemoryPages)
+            for (var pageIndex = 0; pageIndex < virtualMemoryPages.Count; pageIndex++)
             {
+                var virtualMemoryPage = virtualMemoryPages[pageIndex];
                 var remaining = (int)virtualMemoryPage.Page.RegionSize % GetVectorSize();
 
                 for (var i = 0; i < (int)virtualMemoryPage.Page.RegionSize - remaining; i += Vector<byte>.Count)
@@ -74,6 +75,9 @@ namespace CelSerEngine.Comparators
                         }
                     }
                 }
+
+                var progress = (float)pageIndex * 100 / virtualMemoryPages.Count;
+                progressBarUpdater?.Report(progress);
             }
         }
     }

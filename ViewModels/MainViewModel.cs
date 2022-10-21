@@ -50,18 +50,26 @@ namespace CelSerEngine.ViewModels
 
         [ObservableProperty]
         private ScanCompareType selectedScanCompareType = ScanCompareType.ExactValue;
+        [ObservableProperty]
+        private float progressBarValue;
 
         private IntPtr _pHandle;
         private readonly DispatcherTimer _timer;
         private readonly DispatcherTimer _timer2;
+        private readonly IProgress<float> _progressBarUpdater;
         public bool Scanning { get; set; }
         public MainViewModel()
         {
             windowTitle = WindowTitleBase;
+            progressBarValue = 0;
             _pHandle = IntPtr.Zero;
             scanItems = new List<ValueAddress>();
             FullScanItems = new List<ValueAddress>();
             trackedItems = new ObservableCollection<TrackedScanItem>();
+            _progressBarUpdater = new Progress<float>(newValue =>
+            {
+                ProgressBarValue = newValue;
+            });
 
 #if TESTUI
             for (int i = 0; i < 1000; i++)
@@ -214,7 +222,7 @@ namespace CelSerEngine.ViewModels
                 var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();
-                var foundItems2 = comparer.GetMatchingValueAddresses(pages).ToList();
+                var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater).ToList();
                 sw.Stop();
                 Debug.WriteLine(sw.Elapsed);
                 // Slower but has visiual effect
@@ -229,6 +237,7 @@ namespace CelSerEngine.ViewModels
                 //}
 
                 AddFoundItems(foundItems2);
+                _progressBarUpdater.Report(100);
             });
             Scanning = false;
         }

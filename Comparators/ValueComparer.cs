@@ -42,7 +42,7 @@ namespace CelSerEngine.Comparators
             };
         }
 
-        public IEnumerable<ValueAddress> GetMatchingValueAddresses(ICollection<VirtualMemoryPage> virtualMemoryPages)
+        public IEnumerable<ValueAddress> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
         {
             foreach (var virtualMemoryPage in virtualMemoryPages)
             {
