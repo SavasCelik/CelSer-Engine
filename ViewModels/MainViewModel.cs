@@ -237,7 +237,7 @@ namespace CelSerEngine.ViewModels
                 //}
 
                 AddFoundItems(foundItems2);
-                _progressBarUpdater.Report(100);
+                _progressBarUpdater.Report(0);
             });
             Scanning = false;
         }
