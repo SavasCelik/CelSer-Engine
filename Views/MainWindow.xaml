@@ -38,18 +38,14 @@
         </Grid.ColumnDefinitions>
 
         <DockPanel Grid.Row="0" Grid.ColumnSpan="2">
-            <DockPanel.Resources>
-                <Style TargetType="{x:Type Button}">
-                    <Setter Property="Margin" Value="0,0,5,0" />
-                </Style>
-            </DockPanel.Resources>
             <!--  Select Process Button  -->
-            <Button Width="30" Command="{Binding OpenSelectProcessWindowCommand}">
+            <Button
+                Width="30"
+                Margin="0,0,5,0"
+                Command="{Binding OpenSelectProcessWindowCommand}">
                 <Image Source="/Resources/Images/SelectProcess.png" />
             </Button>
             <ProgressBar
-                Width="550"
-                HorizontalAlignment="Center"
                 Maximum="100"
                 Minimum="0"
                 Value="{Binding ProgressBarValue}" />
@@ -57,6 +53,7 @@
 
         <Label
             Grid.Row="1"
+            Grid.Column="0"
             Margin="0"
             Padding="0"
             Content="{Binding FoundItemsDisplayString}" />
