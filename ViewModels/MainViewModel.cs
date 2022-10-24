@@ -120,39 +120,24 @@ namespace CelSerEngine.ViewModels
             _timer2.Start();
         }
 
-        [RelayCommand]
-        public void ResultScanLoaded(ListView listView)
-        {
-            var scrollViewer = listView.GetVisualChild<ScrollViewer>(); //Extension method
-            if (scrollViewer != null)
-            {
-                ScrollBar? scrollBar = scrollViewer.Template.FindName("PART_VerticalScrollBar", scrollViewer) as ScrollBar;
-                if (scrollBar != null)
-                {
-                    scrollBar.ValueChanged += Scrolling;
-                }
-            }
-        }
-
         public int ShownItemsStartIndex { get; set; } = 0;
         public int ShownItemsLength { get; set; } = 0;
         private static readonly object _locker = new();
 
-        public void Scrolling(object sender, EventArgs e)
+        [RelayCommand]
+        public void ScrollingFoundItems(ScrollChangedEventArgs scrollChangedEventArgs)
         {
-            if (ScanItems.Count > 0)
+            if (scrollChangedEventArgs != null)
             {
-                var scrollBar = (ScrollBar)sender;
-                var scrollViewer = (ScrollViewer)scrollBar.TemplatedParent;
                 lock (_locker)
                 {
-                    ShownItemsStartIndex = Convert.ToInt32(scrollViewer.VerticalOffset);
-                    ShownItemsLength = Convert.ToInt32(scrollViewer.ViewportHeight);
+                    ShownItemsStartIndex = Convert.ToInt32(scrollChangedEventArgs.VerticalOffset);
+                    ShownItemsLength = Convert.ToInt32(scrollChangedEventArgs.ViewportHeight);
                 }
             }
         }
 
-        public async void UpdateAddresses(object? sender, EventArgs args)
+        public async void UpdateAddresses(object? sender, EventArgs? args)
         {
             if (_pHandle != IntPtr.Zero && ScanItems.Count > 0)
             {
