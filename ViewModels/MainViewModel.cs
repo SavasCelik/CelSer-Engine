@@ -71,30 +71,10 @@ namespace CelSerEngine.ViewModels
                 ProgressBarValue = newValue;
             });
 
-#if TESTUI
-            for (int i = 0; i < 1000; i++)
-            {
-                scanItems.Add(new ValueAddress
-                {
-                    BaseAddress = 0x100000,
-                    Offset = i,
-                    Value = "123"
-                });
-
-                trackedItems.Add(new ValueAddress
-                {
-                    BaseAddress = 0x100000,
-                    Offset = i,
-                    Value = "123"
-                });
-            }
-#endif
-
             Task.Run(() =>
             {
                 while (true)
                 {
-                    //var pHandle = MemManagerDInvoke2.OpenProcess("TClient");
                     var pHandle = MemManagerDInvoke2.OpenProcess("SmallGame");
                     if (pHandle != IntPtr.Zero)
                     {
