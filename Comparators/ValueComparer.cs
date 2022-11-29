@@ -1,14 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using CelSerEngine.Extensions;
 using CelSerEngine.Models;
-using CelSerEngine.NativeCore;
 
 namespace CelSerEngine.Comparators
 {
@@ -46,9 +39,9 @@ namespace CelSerEngine.Comparators
         {
             foreach (var virtualMemoryPage in virtualMemoryPages)
             {
-                for (var i = 0; i < (int)virtualMemoryPage.Page.RegionSize; i += _sizeOfT)
+                for (var i = 0; i < (int)virtualMemoryPage.RegionSize; i += _sizeOfT)
                 {
-                    if (i + _sizeOfT > (int)virtualMemoryPage.Page.RegionSize)
+                    if (i + _sizeOfT > (int)virtualMemoryPage.RegionSize)
                     {
                         break;
                     }
@@ -57,7 +50,7 @@ namespace CelSerEngine.Comparators
 
                     if (CompareDataByScanConstraintType(valueObject, _userInput, _scanConstraint.ScanCompareType))
                     {
-                        yield return new ValueAddress(virtualMemoryPage.Page.BaseAddress, i, bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType), _scanConstraint.ScanDataType);
+                        yield return new ValueAddress(virtualMemoryPage.BaseAddress, i, bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType), _scanConstraint.ScanDataType);
                     }
                 }
             }

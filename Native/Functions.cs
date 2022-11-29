@@ -8,19 +8,19 @@ namespace CelSerEngine.Native
     internal static class Functions
     {
         [DllImport("kernel32.dll")]
-        static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
+        internal static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
 
         [DllImport("ntdll.dll", SetLastError = true)]
-        static extern NTSTATUS NtOpenProcess(ref IntPtr ProcessHandle, uint AccessMask, ref OBJECT_ATTRIBUTES ObjectAttributes, ref CLIENT_ID ClientId);
+        internal static extern NTSTATUS NtOpenProcess(out IntPtr ProcessHandle, uint AccessMask, out OBJECT_ATTRIBUTES ObjectAttributes, ref CLIENT_ID ClientId);
 
         [DllImport("ntdll.dll", SetLastError = true)]
-        static extern NTSTATUS NtReadVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, uint NumberOfBytesToRead, ref uint NumberOfBytesRead);
+        internal static extern NTSTATUS NtReadVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, uint NumberOfBytesToRead, ref uint NumberOfBytesRead);
 
         [DllImport("ntdll.dll", SetLastError = true)]
-        static extern NTSTATUS NtWriteVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, uint NumberOfBytesToWrite, ref uint NumberOfBytesWritten);
+        internal static extern NTSTATUS NtWriteVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, uint NumberOfBytesToWrite, ref uint NumberOfBytesWritten);
 
         [DllImport("ntdll.dll")]
-        public static extern NTSTATUS NtQueryVirtualMemory(
+        internal static extern NTSTATUS NtQueryVirtualMemory(
             IntPtr ProcessHandle,
             IntPtr BaseAddress,
             int MemoryInformationClass,

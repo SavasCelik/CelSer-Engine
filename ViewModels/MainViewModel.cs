@@ -9,12 +9,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
-using CelSerEngine.NativeCore;
 using CelSerEngine.Comparators;
 using CelSerEngine.Extensions;
 using CelSerEngine.Models;
+using CelSerEngine.Native;
 using CelSerEngine.Views;
 
 namespace CelSerEngine.ViewModels
@@ -75,7 +74,7 @@ namespace CelSerEngine.ViewModels
             {
                 while (true)
                 {
-                    var pHandle = MemManagerDInvoke2.OpenProcess("SmallGame");
+                    var pHandle = NativeApi.OpenProcess("SmallGame");
                     if (pHandle != IntPtr.Zero)
                     {
                         _pHandle = pHandle;
@@ -133,7 +132,7 @@ namespace CelSerEngine.ViewModels
                         shownItems ??= ScanItems.ToArray().AsSpan().Slice(ShownItemsStartIndex, ShownItemsLength).ToArray();
                     }
 
-                    MemManagerDInvoke2.UpdateAddresses(_pHandle, shownItems);
+                    NativeApi.UpdateAddresses(_pHandle, shownItems);
                     Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressString);
                     Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressString);
                 });
@@ -147,10 +146,10 @@ namespace CelSerEngine.ViewModels
                 await Task.Run(() =>
                 {
                     var trackedItems = TrackedItems.ToArray();
-                    MemManagerDInvoke2.UpdateAddresses(_pHandle, trackedItems);
+                    NativeApi.UpdateAddresses(_pHandle, trackedItems);
                     foreach (var item in trackedItems.Where(x => x.IsFreezed))
                     {
-                        MemManagerDInvoke2.WriteMemory(_pHandle, item);
+                        NativeApi.WriteMemory(_pHandle, item);
                     }
                 });
             }
@@ -184,7 +183,7 @@ namespace CelSerEngine.ViewModels
                 };
                 var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
                 //var comparer = new ValueComparer(SelectedScanConstraint);
-                var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
+                var pages = NativeApi.GatherVirtualPages(_pHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();
                 var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater).ToList();
@@ -214,7 +213,7 @@ namespace CelSerEngine.ViewModels
                 return;
 
             Scanning = true;
-            MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
+            NativeApi.UpdateAddresses(_pHandle, FullScanItems);
             var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
             {
                 UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
@@ -262,7 +261,7 @@ namespace CelSerEngine.ViewModels
 
             if (selectedProcess != null)
             {
-                var pHandle = MemManagerDInvoke2.OpenProcess(selectedProcess.Id);
+                var pHandle = NativeApi.OpenProcess(selectedProcess.Id);
                 
                 if (pHandle != IntPtr.Zero)
                 {
@@ -308,7 +307,7 @@ namespace CelSerEngine.ViewModels
                         item.SetValue = value.ToPrimitiveDataType(item.ScanDataType);
                     }
                     item.Value = value.ToPrimitiveDataType(item.ScanDataType);
-                    MemManagerDInvoke2.WriteMemory(_pHandle, item);
+                    NativeApi.WriteMemory(_pHandle, item);
                 }
             }
         }

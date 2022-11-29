@@ -36,5 +36,47 @@ namespace CelSerEngine.Native
             PROCESS_VM_WRITE = 0x0020,
             SYNCHRONIZE = 0x00100000
         }
+
+        /// <summary>
+        /// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ne-ntifs-_memory_information_class
+        /// </summary>
+        public enum MEMORY_INFORMATION_CLASS : int
+        {
+            MemoryBasicInformation
+        }
+
+        /// <summary>
+        /// https://learn.microsoft.com/en-us/windows/win32/memory/memory-protection-constants
+        /// </summary>
+        [Flags]
+        public enum MEMORY_PROTECTION : uint
+        {
+            PAGE_ACCESS_DENIED = 0x0,
+            PAGE_EXECUTE = 0x10,
+            PAGE_EXECUTE_READ = 0x20,
+            PAGE_EXECUTE_READWRITE = 0x40,
+            PAGE_EXECUTE_WRITECOPY = 0x80,
+            PAGE_GUARD = 0x100,
+            PAGE_NOCACHE = 0x200,
+            PAGE_WRITECOMBINE = 0x400,
+            PAGE_NOACCESS = 0x01,
+            PAGE_READONLY = 0x02,
+            PAGE_READWRITE = 0x04,
+            PAGE_WRITECOPY = 0x08
+        }
+
+        [Flags]
+        public enum MEMORY_STATE : uint
+        {
+            MEM_COMMIT = 0x1000,
+            MEM_RESERVE = 0x2000,
+            MEM_DECOMMIT = 0x4000,
+            MEM_RELEASE = 0x8000,
+            MEM_FREE = 0x10000,
+            MEM_RESET = 0x80000,
+            MEM_TOP_DOWN = 0x100000,
+            MEM_PHYSICAL = 0x400000,
+            MEM_LARGE_PAGES = 0x20000000
+        }
     }
 }
