@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CelSerEngine.NativeCore;
 
 namespace CelSerEngine.Models;
 

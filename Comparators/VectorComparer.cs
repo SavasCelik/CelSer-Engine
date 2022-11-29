@@ -1,15 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
 using CelSerEngine.Extensions;
 using CelSerEngine.Models;
-using CelSerEngine.NativeCore;
 
 namespace CelSerEngine.Comparators
 {
@@ -48,9 +42,9 @@ namespace CelSerEngine.Comparators
             for (var pageIndex = 0; pageIndex < virtualMemoryPages.Count; pageIndex++)
             {
                 var virtualMemoryPage = virtualMemoryPages[pageIndex];
-                var remaining = (int)virtualMemoryPage.Page.RegionSize % GetVectorSize();
+                var remaining = (int)virtualMemoryPage.RegionSize % GetVectorSize();
 
-                for (var i = 0; i < (int)virtualMemoryPage.Page.RegionSize - remaining; i += Vector<byte>.Count)
+                for (var i = 0; i < (int)virtualMemoryPage.RegionSize - remaining; i += Vector<byte>.Count)
                 {
                     var splitBuffer = virtualMemoryPage.Bytes.AsSpan().Slice(i, Vector<byte>.Count);
                     var compareResult = CompareTo(splitBuffer);
@@ -63,12 +57,12 @@ namespace CelSerEngine.Comparators
                         {
                             if (compareResult[j] != 0)
                             {
-                                var newIntPtr = (IntPtr)virtualMemoryPage.Page.BaseAddress + i + j;
+                                var newIntPtr = (IntPtr)virtualMemoryPage.BaseAddress + i + j;
                                 var myArry = virtualMemoryPage.Bytes.AsSpan().Slice(j + i, _sizeOfT).ToArray();
 
                                 yield return 
                                     new ValueAddress(
-                                        virtualMemoryPage.Page.BaseAddress, i + j,
+                                        virtualMemoryPage.BaseAddress, i + j,
                                         myArry.ByteArrayToObject(_scanConstraint.ScanDataType),
                                         _scanConstraint.ScanDataType);
                             }

@@ -1,15 +1,16 @@
-﻿using CelSerEngine.NativeCore;
-
+﻿
 namespace CelSerEngine.Models
 {
     public class VirtualMemoryPage
     {
-        public MEMORY_BASIC_INFORMATION64 Page { get; set; }
+        public ulong BaseAddress { get; set; }
+        public ulong RegionSize { get; set; }
         public byte[] Bytes { get; set; }
-
-        public VirtualMemoryPage(MEMORY_BASIC_INFORMATION64 page, byte[] bytes)
+        
+        public VirtualMemoryPage(ulong baseAddress, ulong regionSize, byte[] bytes)
         {
-            Page = page;
+            BaseAddress = baseAddress;
+            RegionSize = regionSize;
             Bytes = bytes;
         }
     }

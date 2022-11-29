@@ -9,12 +9,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Threading;
-using CelSerEngine.NativeCore;
 using CelSerEngine.Comparators;
 using CelSerEngine.Extensions;
 using CelSerEngine.Models;
+using CelSerEngine.Native;
 using CelSerEngine.Views;
 
 namespace CelSerEngine.ViewModels
@@ -71,31 +70,11 @@ namespace CelSerEngine.ViewModels
                 ProgressBarValue = newValue;
             });
 
-#if TESTUI
-            for (int i = 0; i < 1000; i++)
-            {
-                scanItems.Add(new ValueAddress
-                {
-                    BaseAddress = 0x100000,
-                    Offset = i,
-                    Value = "123"
-                });
-
-                trackedItems.Add(new ValueAddress
-                {
-                    BaseAddress = 0x100000,
-                    Offset = i,
-                    Value = "123"
-                });
-            }
-#endif
-
             Task.Run(() =>
             {
                 while (true)
                 {
-                    //var pHandle = MemManagerDInvoke2.OpenProcess("TClient");
-                    var pHandle = MemManagerDInvoke2.OpenProcess("SmallGame");
+                    var pHandle = NativeApi.OpenProcess("SmallGame");
                     if (pHandle != IntPtr.Zero)
                     {
                         _pHandle = pHandle;
@@ -120,39 +99,24 @@ namespace CelSerEngine.ViewModels
             _timer2.Start();
         }
 
-        [RelayCommand]
-        public void ResultScanLoaded(ListView listView)
-        {
-            var scrollViewer = listView.GetVisualChild<ScrollViewer>(); //Extension method
-            if (scrollViewer != null)
-            {
-                ScrollBar? scrollBar = scrollViewer.Template.FindName("PART_VerticalScrollBar", scrollViewer) as ScrollBar;
-                if (scrollBar != null)
-                {
-                    scrollBar.ValueChanged += Scrolling;
-                }
-            }
-        }
-
         public int ShownItemsStartIndex { get; set; } = 0;
         public int ShownItemsLength { get; set; } = 0;
         private static readonly object _locker = new();
 
-        public void Scrolling(object sender, EventArgs e)
+        [RelayCommand]
+        public void ScrollingFoundItems(ScrollChangedEventArgs scrollChangedEventArgs)
         {
-            if (ScanItems.Count > 0)
+            if (scrollChangedEventArgs != null)
             {
-                var scrollBar = (ScrollBar)sender;
-                var scrollViewer = (ScrollViewer)scrollBar.TemplatedParent;
                 lock (_locker)
                 {
-                    ShownItemsStartIndex = Convert.ToInt32(scrollViewer.VerticalOffset);
-                    ShownItemsLength = Convert.ToInt32(scrollViewer.ViewportHeight);
+                    ShownItemsStartIndex = Convert.ToInt32(scrollChangedEventArgs.VerticalOffset);
+                    ShownItemsLength = Convert.ToInt32(scrollChangedEventArgs.ViewportHeight);
                 }
             }
         }
 
-        public async void UpdateAddresses(object? sender, EventArgs args)
+        public async void UpdateAddresses(object? sender, EventArgs? args)
         {
             if (_pHandle != IntPtr.Zero && ScanItems.Count > 0)
             {
@@ -168,7 +132,7 @@ namespace CelSerEngine.ViewModels
                         shownItems ??= ScanItems.ToArray().AsSpan().Slice(ShownItemsStartIndex, ShownItemsLength).ToArray();
                     }
 
-                    MemManagerDInvoke2.UpdateAddresses(_pHandle, shownItems);
+                    NativeApi.UpdateAddresses(_pHandle, shownItems);
                     Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressString);
                     Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressString);
                 });
@@ -182,10 +146,10 @@ namespace CelSerEngine.ViewModels
                 await Task.Run(() =>
                 {
                     var trackedItems = TrackedItems.ToArray();
-                    MemManagerDInvoke2.UpdateAddresses(_pHandle, trackedItems);
+                    NativeApi.UpdateAddresses(_pHandle, trackedItems);
                     foreach (var item in trackedItems.Where(x => x.IsFreezed))
                     {
-                        MemManagerDInvoke2.WriteMemory(_pHandle, item);
+                        NativeApi.WriteMemory(_pHandle, item);
                     }
                 });
             }
@@ -219,7 +183,7 @@ namespace CelSerEngine.ViewModels
                 };
                 var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
                 //var comparer = new ValueComparer(SelectedScanConstraint);
-                var pages = MemManagerDInvoke2.GatherVirtualPages(_pHandle).ToArray();
+                var pages = NativeApi.GatherVirtualPages(_pHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();
                 var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater).ToList();
@@ -237,7 +201,7 @@ namespace CelSerEngine.ViewModels
                 //}
 
                 AddFoundItems(foundItems2);
-                _progressBarUpdater.Report(100);
+                _progressBarUpdater.Report(0);
             });
             Scanning = false;
         }
@@ -249,7 +213,7 @@ namespace CelSerEngine.ViewModels
                 return;
 
             Scanning = true;
-            MemManagerDInvoke2.UpdateAddresses(_pHandle, FullScanItems);
+            NativeApi.UpdateAddresses(_pHandle, FullScanItems);
             var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
             {
                 UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
@@ -297,7 +261,7 @@ namespace CelSerEngine.ViewModels
 
             if (selectedProcess != null)
             {
-                var pHandle = MemManagerDInvoke2.OpenProcess(selectedProcess.Id);
+                var pHandle = NativeApi.OpenProcess(selectedProcess.Id);
                 
                 if (pHandle != IntPtr.Zero)
                 {
@@ -343,7 +307,7 @@ namespace CelSerEngine.ViewModels
                         item.SetValue = value.ToPrimitiveDataType(item.ScanDataType);
                     }
                     item.Value = value.ToPrimitiveDataType(item.ScanDataType);
-                    MemManagerDInvoke2.WriteMemory(_pHandle, item);
+                    NativeApi.WriteMemory(_pHandle, item);
                 }
             }
         }
