@@ -67,9 +67,7 @@ namespace CelSerEngine.Native
                 trackedScanItem.Address,
                 bytesToWrite,
                 (uint)typeSize,
-                out var bytesWritten);
-
-            var aa = bytesToWrite.ToString();
+                out uint bytesWritten);
         }
 
         public static void UpdateAddresses(IntPtr hProcess, IEnumerable<ValueAddress?> virtualAddresses)
