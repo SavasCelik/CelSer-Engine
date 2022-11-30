@@ -46,14 +46,13 @@ namespace CelSerEngine.Native
         public static byte[] ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead)
         {
             var buffer = new byte[numberOfBytesToRead];
-            uint bytesWritten = 0;
 
             var result = NtReadVirtualMemory(
                 hProcess,
                 address,
                 buffer,
                 numberOfBytesToRead,
-                ref bytesWritten);
+                out var bytesRead);
 
             return result == NTSTATUS.Success ? buffer : Array.Empty<byte>();
         }
@@ -61,7 +60,6 @@ namespace CelSerEngine.Native
         public static void WriteMemory(IntPtr hProcess, TrackedScanItem trackedScanItem)
         {
             var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
-            uint bytesWritten = 0;
             var bytesToWrite = BitConverter.GetBytes(trackedScanItem.SetValue ?? trackedScanItem.Value);
 
             var result = NtWriteVirtualMemory(
@@ -69,7 +67,7 @@ namespace CelSerEngine.Native
                 trackedScanItem.Address,
                 bytesToWrite,
                 (uint)typeSize,
-                ref bytesWritten);
+                out uint bytesWritten);
         }
 
         public static void UpdateAddresses(IntPtr hProcess, IEnumerable<ValueAddress?> virtualAddresses)
@@ -80,14 +78,13 @@ namespace CelSerEngine.Native
                     continue;
                 var typeSize = address.ScanDataType.GetPrimitiveSize();
                 var buffer = new byte[typeSize];
-                uint bytesWritten = 0;
 
                 var result = NtReadVirtualMemory(
                     hProcess,
                     address.BaseAddress + address.Offset,
                     buffer,
                     (uint)typeSize,
-                    ref bytesWritten);
+                    out var bytesRead);
 
                 address.Value = buffer.ByteArrayToObject(address.ScanDataType);
             }
@@ -117,12 +114,12 @@ namespace CelSerEngine.Native
                 // 28 = sizeof(MEMORY_BASIC_INFORMATION)
                 //var result = VirtualQueryEx(pHandle, proc_min_address, out mem_basic_info, (uint)Marshal.SizeOf(mem_basic_info));
                 var result = NtQueryVirtualMemory(
-                hProcess,
-                proc_min_address,
-                (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation,
-                ref mem_basic_info,
-                Marshal.SizeOf(mem_basic_info),
-                out var returnLength
+                    hProcess,
+                    proc_min_address,
+                    (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation,
+                    ref mem_basic_info,
+                    Marshal.SizeOf(mem_basic_info),
+                    out var returnLength
                 );
 
                 // if this memory chunk is accessible
