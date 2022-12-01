@@ -99,44 +99,44 @@ namespace CelSerEngine.ViewModels
             _timer2.Start();
         }
 
-        public int ShownItemsStartIndex { get; set; } = 0;
-        public int ShownItemsLength { get; set; } = 0;
+        private int _shownItemsStartIndex;
+        private int _shownItemsLength;
         private static readonly object _locker = new();
 
         [RelayCommand]
-        public void ScrollingFoundItems(ScrollChangedEventArgs scrollChangedEventArgs)
+        public void ScrollingFoundItems(ScrollChangedEventArgs? scrollChangedEventArgs)
         {
-            if (scrollChangedEventArgs != null)
+            if (scrollChangedEventArgs == null) 
+                return;
+
+            lock (_locker)
             {
-                lock (_locker)
-                {
-                    ShownItemsStartIndex = Convert.ToInt32(scrollChangedEventArgs.VerticalOffset);
-                    ShownItemsLength = Convert.ToInt32(scrollChangedEventArgs.ViewportHeight);
-                }
+                _shownItemsStartIndex = Convert.ToInt32(scrollChangedEventArgs.VerticalOffset);
+                _shownItemsLength = Convert.ToInt32(scrollChangedEventArgs.ViewportHeight);
             }
         }
 
         public async void UpdateAddresses(object? sender, EventArgs? args)
         {
-            if (_pHandle != IntPtr.Zero && ScanItems.Count > 0)
-            {
-                await Task.Run(() =>
-                {
-                    ValueAddress[]? shownItems = null;
-                    lock (_locker)
-                    {
-                        if (ShownItemsStartIndex + ShownItemsLength == 0)
-                        {
-                            shownItems = ScanItems.Take(100).ToArray();
-                        }
-                        shownItems ??= ScanItems.ToArray().AsSpan().Slice(ShownItemsStartIndex, ShownItemsLength).ToArray();
-                    }
+            if (_pHandle == IntPtr.Zero || ScanItems.Count <= 0) 
+                return;
 
-                    NativeApi.UpdateAddresses(_pHandle, shownItems);
-                    Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressString);
-                    Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressString);
-                });
-            }
+            await Task.Run(() =>
+            {
+                ValueAddress[]? shownItems = null;
+                lock (_locker)
+                {
+                    if (_shownItemsStartIndex + _shownItemsLength == 0)
+                    {
+                        shownItems = ScanItems.Take(100).ToArray();
+                    }
+                    shownItems ??= ScanItems.ToArray().AsSpan().Slice(_shownItemsStartIndex, _shownItemsLength).ToArray();
+                }
+
+                NativeApi.UpdateAddresses(_pHandle, shownItems);
+                Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressString);
+                Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressString);
+            });
         }
 
         public async void UpdateTrackedItems(object? sender, EventArgs args)
@@ -145,9 +145,9 @@ namespace CelSerEngine.ViewModels
             {
                 await Task.Run(() =>
                 {
-                    var trackedItems = TrackedItems.ToArray();
-                    NativeApi.UpdateAddresses(_pHandle, trackedItems);
-                    foreach (var item in trackedItems.Where(x => x.IsFreezed))
+                    var trackedItemsCopy = TrackedItems.ToArray();
+                    NativeApi.UpdateAddresses(_pHandle, trackedItemsCopy);
+                    foreach (var item in trackedItemsCopy.Where(x => x.IsFreezed))
                     {
                         NativeApi.WriteMemory(_pHandle, item);
                     }
@@ -274,9 +274,7 @@ namespace CelSerEngine.ViewModels
         [RelayCommand]
         public void DblClickedCell(DataGrid dataGrid)
         {
-            var colHeaderName = dataGrid.CurrentColumn?.Header as string;
-
-            if (colHeaderName == null)
+            if (dataGrid.CurrentColumn?.Header is not string colHeaderName)
                 return;
 
             var selectedItems = dataGrid.SelectedItems.Cast<TrackedScanItem>().ToArray();
