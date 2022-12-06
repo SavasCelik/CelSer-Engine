@@ -70,6 +70,7 @@ namespace CelSerEngine.ViewModels
                 ProgressBarValue = newValue;
             });
 
+#if DEBUG
             Task.Run(() =>
             {
                 while (true)
@@ -83,6 +84,7 @@ namespace CelSerEngine.ViewModels
                     }
                 }
             });
+#endif
 
             _timer = new DispatcherTimer(DispatcherPriority.Background)
             {
