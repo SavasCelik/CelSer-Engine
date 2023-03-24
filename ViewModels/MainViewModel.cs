@@ -36,7 +36,6 @@ namespace CelSerEngine.ViewModels
         private Visibility firstScanVisibility = Visibility.Visible;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(FirstScanDone))]
         private Visibility newScanVisibility = Visibility.Hidden;
 
         public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
