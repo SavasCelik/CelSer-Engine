@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -14,7 +13,6 @@ using CelSerEngine.Comparators;
 using CelSerEngine.Extensions;
 using CelSerEngine.Models;
 using CelSerEngine.Native;
-using CelSerEngine.Views;
 
 namespace CelSerEngine.ViewModels
 {
@@ -24,8 +22,6 @@ namespace CelSerEngine.ViewModels
         private const string WindowTitleBase = "CelSer Engine";
         [ObservableProperty]
         private string windowTitle;
-        [ObservableProperty]
-        private ObservableCollection<TrackedScanItem> trackedItems;
 
         [ObservableProperty]
         private List<ValueAddress> scanItems;
@@ -53,7 +49,6 @@ namespace CelSerEngine.ViewModels
 
         private IntPtr _pHandle;
         private readonly DispatcherTimer _timer;
-        private readonly DispatcherTimer _timer2;
         private readonly IProgress<float> _progressBarUpdater;
         public bool Scanning { get; set; }
         public MainViewModel(SelectProcessViewModel selectProcessViewModel, TrackedScanItemsViewModel trackedScanItemsViewModel)
@@ -63,7 +58,6 @@ namespace CelSerEngine.ViewModels
             _pHandle = IntPtr.Zero;
             scanItems = new List<ValueAddress>();
             FullScanItems = new List<ValueAddress>();
-            trackedItems = new ObservableCollection<TrackedScanItem>();
             _progressBarUpdater = new Progress<float>(newValue =>
             {
                 ProgressBarValue = newValue;
@@ -92,12 +86,6 @@ namespace CelSerEngine.ViewModels
             _timer.Tick += UpdateAddresses;
             _timer.Start();
 
-            _timer2 = new DispatcherTimer(DispatcherPriority.Background)
-            {
-                Interval = TimeSpan.FromSeconds(0.1)
-            };
-            _timer2.Tick += UpdateTrackedItems;
-            _timer2.Start();
             _selectProcessViewModel = selectProcessViewModel;
             _trackedScanItemsViewModel = trackedScanItemsViewModel;
         }
@@ -142,22 +130,6 @@ namespace CelSerEngine.ViewModels
                 Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressString);
                 Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressString);
             });
-        }
-
-        public async void UpdateTrackedItems(object? sender, EventArgs args)
-        {
-            if (_pHandle != IntPtr.Zero && TrackedItems.Count > 0)
-            {
-                await Task.Run(() =>
-                {
-                    var trackedItemsCopy = TrackedItems.ToArray();
-                    NativeApi.UpdateAddresses(_pHandle, trackedItemsCopy);
-                    foreach (var item in trackedItemsCopy.Where(x => x.IsFreezed))
-                    {
-                        NativeApi.WriteMemory(_pHandle, item);
-                    }
-                });
-            }
         }
 
         private void HideFirstScanBtn()
