@@ -56,7 +56,7 @@ namespace CelSerEngine.ViewModels
         private readonly DispatcherTimer _timer2;
         private readonly IProgress<float> _progressBarUpdater;
         public bool Scanning { get; set; }
-        public MainViewModel(SelectProcessViewModel selectProcessViewModel)
+        public MainViewModel(SelectProcessViewModel selectProcessViewModel, TrackedScanItemsViewModel trackedScanItemsViewModel)
         {
             windowTitle = WindowTitleBase;
             progressBarValue = 0;
@@ -99,12 +99,14 @@ namespace CelSerEngine.ViewModels
             _timer2.Tick += UpdateTrackedItems;
             _timer2.Start();
             _selectProcessViewModel = selectProcessViewModel;
+            _trackedScanItemsViewModel = trackedScanItemsViewModel;
         }
 
         private int _shownItemsStartIndex;
         private int _shownItemsLength;
         private static readonly object _locker = new();
         private readonly SelectProcessViewModel _selectProcessViewModel;
+        private readonly TrackedScanItemsViewModel _trackedScanItemsViewModel;
 
         [RelayCommand]
         public void ScrollingFoundItems(ScrollChangedEventArgs? scrollChangedEventArgs)
@@ -248,7 +250,7 @@ namespace CelSerEngine.ViewModels
             if (selectedItem == null)
                 return;
 
-            TrackedItems.Add(new TrackedScanItem(selectedItem));
+            _trackedScanItemsViewModel.TrackedScanItems.Add(new TrackedScanItem(selectedItem));
         }
 
         [RelayCommand]
@@ -256,45 +258,6 @@ namespace CelSerEngine.ViewModels
         {
             if (_selectProcessViewModel.ShowSelectProcessDialog())
                 _pHandle = _selectProcessViewModel.GetSelectedProcessHandle();
-        }
-
-        [RelayCommand]
-        public void DblClickedCell(DataGrid dataGrid)
-        {
-            if (dataGrid.CurrentColumn?.Header is not string colHeaderName)
-                return;
-
-            var selectedItems = dataGrid.SelectedItems.Cast<TrackedScanItem>().ToArray();
-
-            if (colHeaderName == nameof(TrackedScanItem.Value))
-            {
-                DoubleClickOnValueCell(selectedItems);
-            }
-        }
-
-        private void DoubleClickOnValueCell(TrackedScanItem[] selectedItems)
-        {
-            var valueEditor = new ValueEditor
-            {
-                Owner = Application.Current.MainWindow
-            };
-            valueEditor.SetValueTextBox(selectedItems.First().ValueString);
-            valueEditor.SetFocusTextBox();
-            var dialogResult = valueEditor.ShowDialog();
-
-            if (dialogResult ?? false)
-            {
-                var value = valueEditor.Value;
-                foreach (var item in selectedItems)
-                {
-                    if (item.IsFreezed)
-                    {
-                        item.SetValue = value.ToPrimitiveDataType(item.ScanDataType);
-                    }
-                    item.Value = value.ToPrimitiveDataType(item.ScanDataType);
-                    NativeApi.WriteMemory(_pHandle, item);
-                }
-            }
         }
     }
 }
