@@ -56,7 +56,7 @@ namespace CelSerEngine.ViewModels
         private readonly DispatcherTimer _timer2;
         private readonly IProgress<float> _progressBarUpdater;
         public bool Scanning { get; set; }
-        public MainViewModel()
+        public MainViewModel(SelectProcessViewModel selectProcessViewModel)
         {
             windowTitle = WindowTitleBase;
             progressBarValue = 0;
@@ -98,11 +98,13 @@ namespace CelSerEngine.ViewModels
             };
             _timer2.Tick += UpdateTrackedItems;
             _timer2.Start();
+            _selectProcessViewModel = selectProcessViewModel;
         }
 
         private int _shownItemsStartIndex;
         private int _shownItemsLength;
         private static readonly object _locker = new();
+        private readonly SelectProcessViewModel _selectProcessViewModel;
 
         [RelayCommand]
         public void ScrollingFoundItems(ScrollChangedEventArgs? scrollChangedEventArgs)
@@ -252,24 +254,8 @@ namespace CelSerEngine.ViewModels
         [RelayCommand]
         public void OpenSelectProcessWindow()
         {
-            var selectProcessWidnwow = new SelectProcess
-            {
-                Owner = Application.Current.MainWindow
-            };
-            selectProcessWidnwow.ShowDialog();
-            var selectProcessViewModel = selectProcessWidnwow.DataContext as SelectProcessViewModel;
-            var selectedProcess = selectProcessViewModel?.SelectedProcess?.Process;
-
-            if (selectedProcess != null)
-            {
-                var pHandle = NativeApi.OpenProcess(selectedProcess.Id);
-                
-                if (pHandle != IntPtr.Zero)
-                {
-                    _pHandle = pHandle;
-                    WindowTitle = $"{WindowTitleBase} - {selectedProcess.ProcessName}";
-                }
-            }
+            if (_selectProcessViewModel.ShowSelectProcessDialog())
+                _pHandle = _selectProcessViewModel.GetSelectedProcessHandle();
         }
 
         [RelayCommand]
