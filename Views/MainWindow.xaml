@@ -54,62 +54,12 @@
         <Label
             Grid.Row="1"
             Grid.Column="0"
+            MinHeight="10"
             Margin="0"
             Padding="0"
             Content="{Binding FoundItemsDisplayString}" />
 
-        <DataGrid
-            Name="ScanItemsDataGrid"
-            Grid.Row="2"
-            Grid.Column="0"
-            AutoGenerateColumns="False"
-            Background="White"
-            CanUserAddRows="False"
-            CanUserDeleteRows="False"
-            CanUserReorderColumns="False"
-            CanUserResizeRows="False"
-            CanUserSortColumns="False"
-            GridLinesVisibility="None"
-            HeadersVisibility="Column"
-            IsReadOnly="True"
-            ItemsSource="{Binding ScanItems}"
-            RowDetailsVisibilityMode="Visible"
-            SelectionMode="Extended"
-            SelectionUnit="FullRow"
-            VirtualizingPanel.VirtualizationMode="Recycling">
-            <intr:Interaction.Triggers>
-                <intr:EventTrigger EventName="MouseDoubleClick">
-                    <intr:InvokeCommandAction Command="{Binding AddItemToTrackedItemCommand}" CommandParameter="{Binding ElementName=ScanItemsDataGrid, Path=SelectedItem}" />
-                </intr:EventTrigger>
-                <csebeh:RoutedEventTrigger RoutedEvent="ScrollViewer.ScrollChanged">
-                    <intr:InvokeCommandAction Command="{Binding ScrollingFoundItemsCommand}" PassEventArgsToCommand="True" />
-                </csebeh:RoutedEventTrigger>
-            </intr:Interaction.Triggers>
-            <DataGrid.ColumnHeaderStyle>
-                <Style TargetType="{x:Type DataGridColumnHeader}">
-                    <Setter Property="BorderThickness" Value="12" />
-                </Style>
-            </DataGrid.ColumnHeaderStyle>
-            <DataGrid.CellStyle>
-                <Style TargetType="DataGridCell">
-                    <Setter Property="BorderThickness" Value="0" />
-                </Style>
-            </DataGrid.CellStyle>
-            <DataGrid.Columns>
-                <DataGridTextColumn
-                    Width="150"
-                    Binding="{Binding AddressString}"
-                    Header="Address" />
-                <DataGridTextColumn
-                    Width="150"
-                    Binding="{Binding ValueString}"
-                    Header="Value" />
-                <DataGridTextColumn
-                    Width="*"
-                    Binding="{Binding PrevoiusValue}"
-                    Header="PrevoiusValue" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <cseuc:ScanResultsView Grid.Row="2" Grid.Column="0" />
 
         <GridSplitter
             Grid.Row="3"
@@ -119,8 +69,8 @@
             Margin="0,5,0,0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center" />
-        <cseuc:TrackedScanItemsView Grid.Row="4" Grid.ColumnSpan="2" />
 
+        <cseuc:TrackedScanItemsView Grid.Row="4" Grid.ColumnSpan="2" />
 
         <Grid Grid.Row="2" Grid.Column="1">
             <Button

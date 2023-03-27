@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 namespace CelSerEngine.Views
 {
     /// <summary>
-    /// Interaction logic for TrackedItems.xaml
+    /// Interaction logic for TrackedScanItemsView.xaml
     /// </summary>
     public partial class TrackedScanItemsView : UserControl
     {
