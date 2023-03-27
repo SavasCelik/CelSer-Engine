@@ -43,38 +43,20 @@ namespace CelSerEngine.ViewModels
 
         private readonly SelectProcessViewModel _selectProcessViewModel;
         private readonly ScanResultsViewModel _scanResultsViewModel;
-        private IntPtr _pHandle;
         private readonly IProgress<float> _progressBarUpdater;
         public bool Scanning { get; set; }
 
         public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel)
         {
+            _selectProcessViewModel = selectProcessViewModel;
+            _scanResultsViewModel = scanResultsViewModel;
             windowTitle = WindowTitleBase;
             progressBarValue = 0;
-            _pHandle = IntPtr.Zero;
             _progressBarUpdater = new Progress<float>(newValue =>
             {
                 ProgressBarValue = newValue;
             });
-
-#if DEBUG
-            Task.Run(() =>
-            {
-                while (true)
-                {
-                    var pHandle = NativeApi.OpenProcess("SmallGame");
-                    if (pHandle != IntPtr.Zero)
-                    {
-                        _pHandle = pHandle;
-                        Debug.WriteLine("Found Process");
-                        break;
-                    }
-                }
-            });
-#endif
-
-            _selectProcessViewModel = selectProcessViewModel;
-            _scanResultsViewModel = scanResultsViewModel;
+            _selectProcessViewModel.AttachToDebugGame();
         }
 
         private void HideFirstScanBtn()
@@ -105,7 +87,8 @@ namespace CelSerEngine.ViewModels
                 };
                 var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
                 //var comparer = new ValueComparer(SelectedScanConstraint);
-                var pages = NativeApi.GatherVirtualPages(_pHandle).ToArray();
+                var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
+                var pages = NativeApi.GatherVirtualPages(processHandle).ToArray();
                 var sw = new Stopwatch();
                 sw.Start();
                 var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater).ToList();
@@ -135,7 +118,8 @@ namespace CelSerEngine.ViewModels
                 return;
 
             Scanning = true;
-            NativeApi.UpdateAddresses(_pHandle, _scanResultsViewModel.AllScanItems);
+            var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
+            NativeApi.UpdateAddresses(processHandle, _scanResultsViewModel.AllScanItems);
             var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
             {
                 UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
@@ -166,7 +150,10 @@ namespace CelSerEngine.ViewModels
         public void OpenSelectProcessWindow()
         {
             if (_selectProcessViewModel.ShowSelectProcessDialog())
-                _pHandle = _selectProcessViewModel.GetSelectedProcessHandle();
+            {
+                var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
+                Debug.WriteLine("Opening Process was successfull");
+            }
         }
     }
 }

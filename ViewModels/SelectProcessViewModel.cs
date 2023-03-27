@@ -61,5 +61,18 @@ namespace CelSerEngine.ViewModels
 
             return IntPtr.Zero;
         }
+
+        [Conditional("DEBUG")]
+
+        public void AttachToDebugGame()
+        {
+            var process = Process.GetProcessesByName("SmallGame").First();
+            SelectedProcess = new ProcessAdapter(process);
+            var pHandle = GetSelectedProcessHandle();
+
+            if (pHandle != IntPtr.Zero)
+                Debug.WriteLine("Attached To DebugGame");
+        }
+
     }
 }

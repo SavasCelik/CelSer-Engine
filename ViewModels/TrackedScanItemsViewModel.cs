@@ -17,7 +17,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
 {
     [ObservableProperty]
     private ObservableCollection<TrackedScanItem> trackedScanItems;
-    private readonly DispatcherTimer _timer2;
+    private readonly DispatcherTimer _timer;
     private readonly SelectProcessViewModel _selectProcessViewModel;
 
     public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel)
@@ -25,12 +25,12 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         trackedScanItems = new ObservableCollection<TrackedScanItem>();
         _selectProcessViewModel = selectProcessViewModel;
 
-        _timer2 = new DispatcherTimer(DispatcherPriority.Background)
+        _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(0.1)
         };
-        _timer2.Tick += UpdateTrackedScanItems;
-        _timer2.Start();
+        _timer.Tick += UpdateTrackedScanItems;
+        _timer.Start();
     }
 
     private async void UpdateTrackedScanItems(object? sender, EventArgs args)
