@@ -6,6 +6,7 @@
     StartupUri="Views/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
+            <local:ViewModelLocator x:Key="ViewModelLocator" />
             <Style TargetType="{x:Type Button}">
                 <Setter Property="Width" Value="70" />
                 <Setter Property="Height" Value="25" />

@@ -15,11 +15,9 @@
     Width="900"
     Height="800"
     AllowsTransparency="False"
+    DataContext="{Binding MainViewModel, Source={StaticResource ViewModelLocator}}"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
-    <Window.DataContext>
-        <csevm:MainViewModel />
-    </Window.DataContext>
     <Window.Resources>
         <csevc:EnumDisplayNameConverter x:Key="EnumDisplayNameConverter" />
     </Window.Resources>
