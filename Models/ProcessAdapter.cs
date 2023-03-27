@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CelSerEngine.Native;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -14,6 +15,7 @@ namespace CelSerEngine.Models
         public string DisplayString { get; private set; }
         public BitmapSource? IconSource { get; private set; }
         public ProcessModule? MainModule { get; private set; }
+        private IntPtr _processHandle;
 
         public ProcessAdapter(Process process)
         {
@@ -45,6 +47,14 @@ namespace CelSerEngine.Models
                     Int32Rect.Empty,
                     BitmapSizeOptions.FromEmptyOptions());
             }
+        }
+
+        public IntPtr GetProcessHandle()
+        {
+            if (_processHandle == IntPtr.Zero)
+                _processHandle = NativeApi.OpenProcess(Process.Id);
+
+            return _processHandle;
         }
     }
 }

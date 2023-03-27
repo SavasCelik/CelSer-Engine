@@ -10,13 +10,11 @@
     Title="Select Process"
     Width="800"
     Height="450"
+    DataContext="{Binding SelectProcessViewModel, Source={StaticResource ViewModelLocator}}"
     FocusManager.FocusedElement="{Binding ElementName=searchProcessTxtBox}"
     Icon="/Resources/Images/SelectProcess.png"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
-    <Window.DataContext>
-        <csevm:SelectProcessViewModel />
-    </Window.DataContext>
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

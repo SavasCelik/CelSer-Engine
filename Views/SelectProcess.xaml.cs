@@ -41,6 +41,7 @@ namespace CelSerEngine.Views
             var datagrid = sender as DataGrid;
             if (datagrid != null && datagrid.SelectedItem != null)
             {
+                DialogResult = true;
                 Close();
             }
         }

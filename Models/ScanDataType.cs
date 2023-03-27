@@ -10,9 +10,9 @@ namespace CelSerEngine.Models
         Integer,
         [Display(Name = "Long (8 Bytes)")]
         Long,
-        [Display(Name = "Float")]
+        [Display(Name = "Float (4 Bytes)")]
         Float,
-        [Display(Name = "Double")]
+        [Display(Name = "Double (8 Bytes)")]
         Double
     }
 }

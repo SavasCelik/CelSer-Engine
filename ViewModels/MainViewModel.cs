@@ -36,7 +36,6 @@ namespace CelSerEngine.ViewModels
         private Visibility firstScanVisibility = Visibility.Visible;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(FirstScanDone))]
         private Visibility newScanVisibility = Visibility.Hidden;
 
         public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
@@ -57,7 +56,7 @@ namespace CelSerEngine.ViewModels
         private readonly DispatcherTimer _timer2;
         private readonly IProgress<float> _progressBarUpdater;
         public bool Scanning { get; set; }
-        public MainViewModel()
+        public MainViewModel(SelectProcessViewModel selectProcessViewModel, TrackedScanItemsViewModel trackedScanItemsViewModel)
         {
             windowTitle = WindowTitleBase;
             progressBarValue = 0;
@@ -70,6 +69,7 @@ namespace CelSerEngine.ViewModels
                 ProgressBarValue = newValue;
             });
 
+#if DEBUG
             Task.Run(() =>
             {
                 while (true)
@@ -83,6 +83,7 @@ namespace CelSerEngine.ViewModels
                     }
                 }
             });
+#endif
 
             _timer = new DispatcherTimer(DispatcherPriority.Background)
             {
@@ -97,46 +98,50 @@ namespace CelSerEngine.ViewModels
             };
             _timer2.Tick += UpdateTrackedItems;
             _timer2.Start();
+            _selectProcessViewModel = selectProcessViewModel;
+            _trackedScanItemsViewModel = trackedScanItemsViewModel;
         }
 
-        public int ShownItemsStartIndex { get; set; } = 0;
-        public int ShownItemsLength { get; set; } = 0;
+        private int _shownItemsStartIndex;
+        private int _shownItemsLength;
         private static readonly object _locker = new();
+        private readonly SelectProcessViewModel _selectProcessViewModel;
+        private readonly TrackedScanItemsViewModel _trackedScanItemsViewModel;
 
         [RelayCommand]
-        public void ScrollingFoundItems(ScrollChangedEventArgs scrollChangedEventArgs)
+        public void ScrollingFoundItems(ScrollChangedEventArgs? scrollChangedEventArgs)
         {
-            if (scrollChangedEventArgs != null)
+            if (scrollChangedEventArgs == null) 
+                return;
+
+            lock (_locker)
             {
-                lock (_locker)
-                {
-                    ShownItemsStartIndex = Convert.ToInt32(scrollChangedEventArgs.VerticalOffset);
-                    ShownItemsLength = Convert.ToInt32(scrollChangedEventArgs.ViewportHeight);
-                }
+                _shownItemsStartIndex = Convert.ToInt32(scrollChangedEventArgs.VerticalOffset);
+                _shownItemsLength = Convert.ToInt32(scrollChangedEventArgs.ViewportHeight);
             }
         }
 
         public async void UpdateAddresses(object? sender, EventArgs? args)
         {
-            if (_pHandle != IntPtr.Zero && ScanItems.Count > 0)
-            {
-                await Task.Run(() =>
-                {
-                    ValueAddress[]? shownItems = null;
-                    lock (_locker)
-                    {
-                        if (ShownItemsStartIndex + ShownItemsLength == 0)
-                        {
-                            shownItems = ScanItems.Take(100).ToArray();
-                        }
-                        shownItems ??= ScanItems.ToArray().AsSpan().Slice(ShownItemsStartIndex, ShownItemsLength).ToArray();
-                    }
+            if (_pHandle == IntPtr.Zero || ScanItems.Count <= 0) 
+                return;
 
-                    NativeApi.UpdateAddresses(_pHandle, shownItems);
-                    Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressString);
-                    Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressString);
-                });
-            }
+            await Task.Run(() =>
+            {
+                ValueAddress[]? shownItems = null;
+                lock (_locker)
+                {
+                    if (_shownItemsStartIndex + _shownItemsLength == 0)
+                    {
+                        shownItems = ScanItems.Take(100).ToArray();
+                    }
+                    shownItems ??= ScanItems.ToArray().AsSpan().Slice(_shownItemsStartIndex, _shownItemsLength).ToArray();
+                }
+
+                NativeApi.UpdateAddresses(_pHandle, shownItems);
+                Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressString);
+                Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressString);
+            });
         }
 
         public async void UpdateTrackedItems(object? sender, EventArgs args)
@@ -145,9 +150,9 @@ namespace CelSerEngine.ViewModels
             {
                 await Task.Run(() =>
                 {
-                    var trackedItems = TrackedItems.ToArray();
-                    NativeApi.UpdateAddresses(_pHandle, trackedItems);
-                    foreach (var item in trackedItems.Where(x => x.IsFreezed))
+                    var trackedItemsCopy = TrackedItems.ToArray();
+                    NativeApi.UpdateAddresses(_pHandle, trackedItemsCopy);
+                    foreach (var item in trackedItemsCopy.Where(x => x.IsFreezed))
                     {
                         NativeApi.WriteMemory(_pHandle, item);
                     }
@@ -245,71 +250,14 @@ namespace CelSerEngine.ViewModels
             if (selectedItem == null)
                 return;
 
-            TrackedItems.Add(new TrackedScanItem(selectedItem));
+            _trackedScanItemsViewModel.TrackedScanItems.Add(new TrackedScanItem(selectedItem));
         }
 
         [RelayCommand]
         public void OpenSelectProcessWindow()
         {
-            var selectProcessWidnwow = new SelectProcess
-            {
-                Owner = Application.Current.MainWindow
-            };
-            selectProcessWidnwow.ShowDialog();
-            var selectProcessViewModel = selectProcessWidnwow.DataContext as SelectProcessViewModel;
-            var selectedProcess = selectProcessViewModel?.SelectedProcess?.Process;
-
-            if (selectedProcess != null)
-            {
-                var pHandle = NativeApi.OpenProcess(selectedProcess.Id);
-                
-                if (pHandle != IntPtr.Zero)
-                {
-                    _pHandle = pHandle;
-                    WindowTitle = $"{WindowTitleBase} - {selectedProcess.ProcessName}";
-                }
-            }
-        }
-
-        [RelayCommand]
-        public void DblClickedCell(DataGrid dataGrid)
-        {
-            var colHeaderName = dataGrid.CurrentColumn?.Header as string;
-
-            if (colHeaderName == null)
-                return;
-
-            var selectedItems = dataGrid.SelectedItems.Cast<TrackedScanItem>().ToArray();
-
-            if (colHeaderName == nameof(TrackedScanItem.Value))
-            {
-                DoubleClickOnValueCell(selectedItems);
-            }
-        }
-
-        private void DoubleClickOnValueCell(TrackedScanItem[] selectedItems)
-        {
-            var valueEditor = new ValueEditor
-            {
-                Owner = Application.Current.MainWindow
-            };
-            valueEditor.SetValueTextBox(selectedItems.First().ValueString);
-            valueEditor.SetFocusTextBox();
-            var dialogResult = valueEditor.ShowDialog();
-
-            if (dialogResult ?? false)
-            {
-                var value = valueEditor.Value;
-                foreach (var item in selectedItems)
-                {
-                    if (item.IsFreezed)
-                    {
-                        item.SetValue = value.ToPrimitiveDataType(item.ScanDataType);
-                    }
-                    item.Value = value.ToPrimitiveDataType(item.ScanDataType);
-                    NativeApi.WriteMemory(_pHandle, item);
-                }
-            }
+            if (_selectProcessViewModel.ShowSelectProcessDialog())
+                _pHandle = _selectProcessViewModel.GetSelectedProcessHandle();
         }
     }
 }
