@@ -45,9 +45,9 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
 
         await Task.Run(() =>
         {
-            var trackedItemsCopy = TrackedScanItems.ToArray();
-            NativeApi.UpdateAddresses(pHandle, trackedItemsCopy);
-            foreach (var item in trackedItemsCopy.Where(x => x.IsFreezed))
+            var trackedScanItemsCopy = TrackedScanItems.ToArray();
+            NativeApi.UpdateAddresses(pHandle, trackedScanItemsCopy);
+            foreach (var item in trackedScanItemsCopy.Where(x => x.IsFreezed))
             {
                 NativeApi.WriteMemory(pHandle, item);
             }
