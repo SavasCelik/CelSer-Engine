@@ -23,14 +23,14 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel)
     {
         trackedScanItems = new ObservableCollection<TrackedScanItem>();
+        _selectProcessViewModel = selectProcessViewModel;
+
         _timer2 = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(0.1)
         };
         _timer2.Tick += UpdateTrackedScanItems;
         _timer2.Start();
-
-        _selectProcessViewModel = selectProcessViewModel;
     }
 
     private async void UpdateTrackedScanItems(object? sender, EventArgs args)

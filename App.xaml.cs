@@ -36,6 +36,7 @@ public sealed partial class App : Application
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SelectProcessViewModel>();
         services.AddSingleton<TrackedScanItemsViewModel>();
+        services.AddSingleton<ScanResultsViewModel>();
 
         return services.BuildServiceProvider();
     }
