@@ -65,6 +65,10 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         {
             ShowChangeValueDialog(dataGrid.SelectedItems);
         }
+        else if (colHeaderName == nameof(TrackedScanItem.Description))
+        {
+            ShowChangeDescriptionDialog(dataGrid.SelectedItems);
+        }
     }
 
     [RelayCommand]
@@ -72,26 +76,47 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     public void ShowChangeValueDialog(IList selectedItems)
     {
         var selectedTrackedItems = selectedItems.Cast<TrackedScanItem>().ToArray();
-        var valueEditor = new ValueEditor
-        {
-            Owner = App.Current.MainWindow
-        };
-        valueEditor.SetValueTextBox(selectedTrackedItems.First().ValueString);
-        valueEditor.SetFocusTextBox();
-        var dialogResult = valueEditor.ShowDialog();
 
-        if (dialogResult ?? false)
+        if (ShowChangePropertyDialog(selectedTrackedItems.First().ValueString, nameof(TrackedScanItem.Value), out string newValue))
         {
-            var value = valueEditor.Value;
             foreach (var item in selectedTrackedItems)
             {
                 if (item.IsFreezed)
                 {
-                    item.SetValue = value.ToPrimitiveDataType(item.ScanDataType);
+                    item.SetValue = newValue.ToPrimitiveDataType(item.ScanDataType);
                 }
-                item.Value = value.ToPrimitiveDataType(item.ScanDataType);
+                item.Value = newValue.ToPrimitiveDataType(item.ScanDataType);
                 NativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), item);
             }
         }
+    }
+
+    [RelayCommand]
+
+    public void ShowChangeDescriptionDialog(IList selectedItems)
+    {
+        var selectedTrackedItems = selectedItems.Cast<TrackedScanItem>().ToArray();
+
+        if (ShowChangePropertyDialog(selectedTrackedItems.First().Description, nameof(TrackedScanItem.Description), out string newValue))
+        {
+            foreach (var item in selectedTrackedItems)
+            {
+                item.Description = newValue;
+            }
+        }
+    }
+
+    private bool ShowChangePropertyDialog(string propertyValue, string propertyName, out string newValue)
+    {
+        var valueEditor = new ValueEditor(propertyName)
+        {
+            Owner = App.Current.MainWindow
+        };
+        valueEditor.SetValueTextBox(propertyValue);
+        valueEditor.SetFocusTextBox();
+        var dialogResult = valueEditor.ShowDialog();
+        newValue = valueEditor.Value;
+
+        return dialogResult ?? false;
     }
 }

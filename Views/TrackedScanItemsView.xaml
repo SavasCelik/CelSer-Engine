@@ -14,6 +14,10 @@
     <UserControl.Resources>
         <ContextMenu x:Key="RowMenu">
             <MenuItem
+                Command="{Binding TrackedScanItemsViewModel.ShowChangeDescriptionDialogCommand, Source={StaticResource ViewModelLocator}}"
+                CommandParameter="{Binding Path=SelectedItems, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
+                Header="Change Description" />
+            <MenuItem
                 Command="{Binding TrackedScanItemsViewModel.ShowChangeValueDialogCommand, Source={StaticResource ViewModelLocator}}"
                 CommandParameter="{Binding Path=SelectedItems, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
                 Header="Change Value" />
