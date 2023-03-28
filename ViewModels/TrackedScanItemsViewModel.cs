@@ -5,6 +5,7 @@ using CelSerEngine.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -60,28 +61,29 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         if (dataGrid.CurrentColumn?.Header is not string colHeaderName)
             return;
 
-        var selectedItems = dataGrid.SelectedItems.Cast<TrackedScanItem>().ToArray();
-
         if (colHeaderName == nameof(TrackedScanItem.Value))
         {
-            DoubleClickOnValueCell(selectedItems);
+            ShowChangeValueDialog(dataGrid.SelectedItems);
         }
     }
 
-    private void DoubleClickOnValueCell(TrackedScanItem[] selectedItems)
+    [RelayCommand]
+
+    public void ShowChangeValueDialog(IList selectedItems)
     {
+        var selectedTrackedItems = selectedItems.Cast<TrackedScanItem>().ToArray();
         var valueEditor = new ValueEditor
         {
             Owner = App.Current.MainWindow
         };
-        valueEditor.SetValueTextBox(selectedItems.First().ValueString);
+        valueEditor.SetValueTextBox(selectedTrackedItems.First().ValueString);
         valueEditor.SetFocusTextBox();
         var dialogResult = valueEditor.ShowDialog();
 
         if (dialogResult ?? false)
         {
             var value = valueEditor.Value;
-            foreach (var item in selectedItems)
+            foreach (var item in selectedTrackedItems)
             {
                 if (item.IsFreezed)
                 {
