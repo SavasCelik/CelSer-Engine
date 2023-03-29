@@ -190,7 +190,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
 
         var resultsts = pointingThere.OrderBy(x => x.Offsets.Count).ToArray();
 
-        // rescan //
+        //-- rescan --//
         var nextAddy = IntPtr.Zero;
         listOfBaseAddresses.Clear();
         currentSize = 0;
