@@ -106,6 +106,12 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         }
     }
 
+    [RelayCommand]
+
+    public void ShowPointerScanDialog(TrackedScanItem selectedItem)
+    {
+    }
+
     private bool ShowChangePropertyDialog(string propertyValue, string propertyName, out string newValue)
     {
         var valueEditor = new ValueEditor(propertyName)
