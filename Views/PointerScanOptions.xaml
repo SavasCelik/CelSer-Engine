@@ -7,8 +7,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Pointer Scan Options"
     Width="450"
-    Height="150"
+    Height="200"
     DataContext="{Binding PointerScanOptionsViewModel, Source={StaticResource ViewModelLocator}}"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Grid Margin="5">
         <Grid.RowDefinitions>
@@ -24,16 +25,17 @@
         </Grid.ColumnDefinitions>
 
         <Label
+            Name="lblTxtBox"
             Grid.Row="0"
             Margin="0,5,5,5"
             Padding="0,0,0,5"
-            Content="{Binding PointerScanAddress}" />
+            Content="Address to find:" />
         <TextBox
             Name="valueTxtBox"
             Grid.Row="1"
             Grid.ColumnSpan="2"
             Margin="0,0,0,5"
-            Text="Address"
+            Text="{Binding PointerScanAddress}"
             TextWrapping="Wrap" />
         <CheckBox
             Grid.Row="2"

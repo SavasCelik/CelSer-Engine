@@ -20,12 +20,13 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     private ObservableCollection<TrackedScanItem> trackedScanItems;
     private readonly DispatcherTimer _timer;
     private readonly SelectProcessViewModel _selectProcessViewModel;
+    private readonly PointerScanOptionsViewModel _pointerScanOptionsViewModel;
 
-    public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel)
+    public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel, PointerScanOptionsViewModel pointerScanOptionsViewModel)
     {
         trackedScanItems = new ObservableCollection<TrackedScanItem>();
         _selectProcessViewModel = selectProcessViewModel;
-
+        _pointerScanOptionsViewModel = pointerScanOptionsViewModel;
         _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(0.1)
@@ -110,6 +111,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
 
     public void ShowPointerScanDialog(TrackedScanItem selectedItem)
     {
+        _pointerScanOptionsViewModel.ShowPointerScanDialog(selectedItem.AddressString);
     }
 
     private bool ShowChangePropertyDialog(string propertyValue, string propertyName, out string newValue)
