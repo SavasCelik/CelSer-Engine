@@ -42,7 +42,7 @@ namespace CelSerEngine.Native
 
             return hProcess;
         }
-
+        
         public static byte[] ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead)
         {
             var buffer = new byte[numberOfBytesToRead];
