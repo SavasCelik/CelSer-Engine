@@ -24,11 +24,10 @@
         </Grid.ColumnDefinitions>
 
         <Label
-            Name="lblTxtBox"
             Grid.Row="0"
             Margin="0,5,5,5"
             Padding="0,0,0,5"
-            Content="Address to find:" />
+            Content="{Binding PointerScanAddress}" />
         <TextBox
             Name="valueTxtBox"
             Grid.Row="1"

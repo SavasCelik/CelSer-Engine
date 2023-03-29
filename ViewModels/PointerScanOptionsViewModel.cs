@@ -3,8 +3,10 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace CelSerEngine.ViewModels;
 
-public class PointerScanOptionsViewModel : ObservableRecipient
+public partial class PointerScanOptionsViewModel : ObservableRecipient
 {
+    [ObservableProperty]
+    private string pointerScanAddress;
 
     [RelayCommand]
     public void StartPointerScan()
