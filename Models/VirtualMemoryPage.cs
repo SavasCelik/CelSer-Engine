@@ -17,7 +17,7 @@ public class VirtualMemoryPage
         Bytes = bytes;
     }
 
-    public void ReReadBytes(IntPtr processHandle)
+    public void ReReadMemory(IntPtr processHandle)
     {
         Bytes = NativeApi.ReadVirtualMemory(processHandle, (IntPtr)BaseAddress, (uint)RegionSize);
     }

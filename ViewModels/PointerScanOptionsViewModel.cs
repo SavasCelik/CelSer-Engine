@@ -190,7 +190,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
 
         var resultsts = pointingThere.OrderBy(x => x.Offsets.Count).ToArray();
 
-        // rescan //
+        //-- rescan --//
         var nextAddy = IntPtr.Zero;
         listOfBaseAddresses.Clear();
         currentSize = 0;
@@ -218,7 +218,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
 
         foreach (var page in pages)
         {
-            page.ReReadBytes(selectedProcess.GetProcessHandle());
+            page.ReReadMemory(selectedProcess.GetProcessHandle());
             for (int i = 0; i < (int)page.RegionSize; i += sizeOfAddress)
             {
                 if (i + sizeOfAddress > (int)page.RegionSize)
