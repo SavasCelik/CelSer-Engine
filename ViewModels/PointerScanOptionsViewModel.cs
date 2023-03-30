@@ -41,6 +41,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
     {
         pointerScanAddress = "";
         _selectProcessViewModel = selectProcessViewModel;
+        // Test
     }
 
     [RelayCommand]
