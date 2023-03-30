@@ -46,6 +46,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
     [RelayCommand]
     public void StartPointerScan()
     {
+        // TODO: refactor this pile of lines ^^
         var selectedProcess = _selectProcessViewModel.SelectedProcess!;
         var readBytes = IntPtr.Zero;
         var maxSize = 4000;
