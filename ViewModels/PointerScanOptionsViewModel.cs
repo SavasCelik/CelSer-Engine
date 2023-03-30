@@ -238,6 +238,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             }
         }
 
+        // even though the variables with a 2 as a suffix have more filtering they still find the correct pointers
         allAddresses = allAddresses.Where(x => x.PointingTo != IntPtr.Zero).ToList();
         var allAddresses2 = allAddresses.Where(x => x.PointingTo != IntPtr.Zero && x.Address.ToInt64() % 4 == 0 && x.PointingTo.ToInt64() % 4 == 0).ToList(); 
 
