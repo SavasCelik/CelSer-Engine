@@ -104,7 +104,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
 
         allAddresses = allAddresses.Where(x => x.PointingTo != IntPtr.Zero && x.Address.ToInt64() % 4 == 0).ToList();
         var addyByPointingTo = allAddresses
-            .Where(x => x.PointingTo.ToInt64() >= 0x10000 && x.PointingTo.ToInt64() <= 0x7ffffffeffff) // could use this on allAddresses (i think)
+            .Where(x => x.PointingTo.ToInt64() >= 0x10000 && x.PointingTo.ToInt64() <= 0x7ffffffeffff) // TODO: could use this on allAddresses (i think)
             .OrderBy(x => x.PointingTo)
             .GroupBy(x => x.PointingTo).ToDictionary(x => x.Key, x => x.ToArray());
         var pointsWhereIWant = allAddresses.Where(x => x.Address.ToInt64() >= searchedAddress - maxSize && x.Address.ToInt64() <= searchedAddress).ToArray();
