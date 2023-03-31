@@ -54,10 +54,12 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             .ToDictionary(x => x.Key, x => x.ToArray());
         var pointsWhereIWant = heapPointers.Where(x => x.Address.ToInt64() >= searchedAddress - maxSize && x.Address.ToInt64() <= searchedAddress).ToArray();
         var pointerScan1 = new List<PointerScanResult>();
+        var searchingPointers = new List<PointerScanResult>();
 
         foreach (var pointer in pointsWhereIWant)
         {
             var firstOffset = (IntPtr)(searchedAddress - pointer.Address.ToInt64());
+            
             pointer.Offsets.Add(firstOffset);
             pointer.PointingTo = (IntPtr)searchedAddress;
 
@@ -65,69 +67,119 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             {
                 var clonedPointers = pointers.Select(x => x.Clone()).ToList();
                 clonedPointers.ForEach(p => p.Offsets.Add(firstOffset));
-                pointerScan1.AddRange(clonedPointers);
+                if (firstOffset == (IntPtr)0x18)
+                {
+                    pointerScan1.AddRange(clonedPointers);
+                    searchingPointers.AddRange(clonedPointers);
+                }
             }
         }
 
-        var pointingThere = new List<PointerScanResult>();
-        var level = 4;
-        var counter = new Dictionary<IntPtr, int>();
-
-        for (var currentLevel = 0; currentLevel < level; currentLevel++)
+        for (var currentLevel = 0; currentLevel < 4; currentLevel++)
         {
-            var pointerList = pointerScan1.OrderBy(x => x.Offsets.Last()).ToArray();
-            pointerScan1.Clear();
-            foreach (var pointer in pointerList)
+            var tempSearchingPointers = searchingPointers.ToArray();
+            searchingPointers.Clear();
+            foreach (var searchedPointer in tempSearchingPointers)
             {
-                if (staticPointersByAddress.TryGetValue(pointer.Address, out var startingPoint))
+                var pointsWhereIWant2 = heapPointers.Where(x => x.Address.ToInt64() >= searchedPointer.Address.ToInt64() - maxSize && x.Address.ToInt64() <= searchedPointer.Address.ToInt64()).ToArray();
+                foreach (var pointer in pointsWhereIWant2)
                 {
-                    var newPointingThere = new PointerScanResult
+                    //pointer.Offsets.Add(firstOffset);
+                    //pointer.PointingTo = (IntPtr)searchedAddress;
+
+                    if (heapPointersByPointingTo.TryGetValue(pointer.Address, out var pointers))
                     {
-                        BaseAddress = startingPoint.BaseAddress,
-                        BaseOffset = startingPoint.BaseOffset,
-                        Offsets = pointer.Offsets,
-                        PointingTo = (IntPtr)searchedAddress
-                    };
-                    pointingThere.Add(newPointingThere);
-                }
-
-                if (currentLevel == level - 1)
-                {
-                    continue;
-                }
-
-                var newAddy = IntPtr.Zero;
-                for (int i = 0; i < maxSize; i += 4)
-                {
-
-                    newAddy = pointer.Address - i;
-                    if (heapPointersByPointingTo.TryGetValue(newAddy, out var pointers))
-                    {
+                        var offsets = searchedPointer.Offsets.ToList();
+                        var firstOffset = (IntPtr)(searchedPointer.Address.ToInt64() - pointer.Address.ToInt64());
+                        offsets.Add(firstOffset);
                         var clonedPointers = pointers.Select(x => x.Clone()).ToList();
-                        var offsets = new List<IntPtr>(pointer.Offsets);
-                        offsets.Add((IntPtr)i);
-                        clonedPointers.ForEach(x => x.Offsets = new List<IntPtr>(offsets));
-                        pointerScan1.AddRange(clonedPointers);
-                        var countingFound = counter.TryGetValue(newAddy, out int count);
-                        if (!staticPointersByAddress.ContainsKey(clonedPointers.First().Address) && countingFound && count >= 3)
+                        clonedPointers.ForEach(p => p.Offsets.AddRange(offsets));
+                        if ((currentLevel == 0 && firstOffset == (IntPtr)0x0
+                            || currentLevel == 1 && firstOffset == (IntPtr)0x18
+                            || currentLevel == 2 && firstOffset == (IntPtr)0x10) || true)
                         {
-                            heapPointersByPointingTo.Remove(newAddy);
-                        }
-                        else
-                        {
-                            count++;
-                            if (!countingFound)
-                            {
-                                counter.Add(newAddy, count);
-                            }
-                            counter[newAddy] = count;
+                            searchingPointers.AddRange(clonedPointers);
                         }
                     }
                 }
             }
         }
 
-        var resultsts = pointingThere.OrderBy(x => x.Offsets.Count).ToArray();
+        var pointingThere2 = new List<PointerScanResult>();
+        foreach (var pointer in searchingPointers)
+        {
+            if (staticPointersByAddress.TryGetValue(pointer.Address, out var startingPoint))
+            {
+                var newPointingThere = new PointerScanResult
+                {
+                    BaseAddress = startingPoint.BaseAddress,
+                    BaseOffset = startingPoint.BaseOffset,
+                    Offsets = pointer.Offsets,
+                    PointingTo = (IntPtr)searchedAddress
+                };
+                pointingThere2.Add(newPointingThere);
+            }
+        }
+
+        //var pointingThere = new List<PointerScanResult>();
+        //var level = 4;
+        //var counter = new Dictionary<IntPtr, int>();
+
+        //for (var currentLevel = 0; currentLevel < level; currentLevel++)
+        //{
+        //    var pointerList = pointerScan1.OrderBy(x => x.Offsets.Last()).ToArray();
+        //    pointerScan1.Clear();
+        //    foreach (var pointer in pointerList)
+        //    {
+        //        if (staticPointersByAddress.TryGetValue(pointer.Address, out var startingPoint))
+        //        {
+        //            var newPointingThere = new PointerScanResult
+        //            {
+        //                BaseAddress = startingPoint.BaseAddress,
+        //                BaseOffset = startingPoint.BaseOffset,
+        //                Offsets = pointer.Offsets,
+        //                PointingTo = (IntPtr)searchedAddress
+        //            };
+        //            pointingThere.Add(newPointingThere);
+        //        }
+
+        //        if (currentLevel == level - 1)
+        //        {
+        //            continue;
+        //        }
+
+        //        var newAddy = IntPtr.Zero;
+        //        for (int i = 0; i < maxSize; i += 4)
+        //        {
+
+        //            newAddy = pointer.Address - i;
+        //            if (heapPointersByPointingTo.TryGetValue(newAddy, out var pointers))
+        //            {
+        //                var clonedPointers = pointers.Select(x => x.Clone()).ToList();
+        //                var offsets = new List<IntPtr>(pointer.Offsets);
+        //                offsets.Add((IntPtr)i);
+        //                clonedPointers.ForEach(x => x.Offsets = new List<IntPtr>(offsets));
+        //                pointerScan1.AddRange(clonedPointers);
+        //                var countingFound = counter.TryGetValue(newAddy, out int count);
+        //                if (!staticPointersByAddress.ContainsKey(clonedPointers.First().Address) && countingFound && count >= 3)
+        //                {
+        //                    heapPointersByPointingTo.Remove(newAddy);
+        //                }
+        //                else
+        //                {
+        //                    count++;
+        //                    if (!countingFound)
+        //                    {
+        //                        counter.Add(newAddy, count);
+        //                    }
+        //                    counter[newAddy] = count;
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+
+        var resultsts = pointingThere2.OrderBy(x => x.Offsets.Count).ToArray();
 
         //-- rescan --//
         var nextAddy = IntPtr.Zero;
@@ -227,7 +279,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
 
         return allAddresses
             .Where(x => x.PointingTo != IntPtr.Zero && x.Address.ToInt64() % 4 == 0)
-            .Where(x => x.PointingTo.ToInt64() >= 0x10000 && x.PointingTo.ToInt64() <= 0x7ffffffeffff)
+            //.Where(x => x.PointingTo.ToInt64() >= 0x10000 && x.PointingTo.ToInt64() <= 0x7ffffffeffff)
             .ToArray();
     }
 }
