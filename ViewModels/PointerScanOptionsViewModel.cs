@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
 using CelSerEngine.Models;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
 
 namespace CelSerEngine.ViewModels;
 
@@ -24,21 +22,6 @@ public class PointerScanResult : ProcessMemory
         clone.Offsets = clone.Offsets.ToList();
 
         return clone;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj is PointerScanResult ps && ps.Address == Address && ps.PointingTo == PointingTo)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    public override int GetHashCode()
-    {
-        return Address.GetHashCode() ^ PointingTo.GetHashCode();
     }
 }
 
@@ -56,61 +39,11 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
         _pointerSize = sizeof(long);
     }
 
-
-
-    private int FindFirstIndexGreaterThanOrEqualToAddress(IReadOnlyList<PointerScanResult> list, long address)
-    {
-        var startIndex = 0;
-        var endIndex = list.Count - 1;
-        while (startIndex <= endIndex)
-        {
-            var midIndex = (startIndex + endIndex) / 2;
-            var midAddress = list[midIndex].Address.ToInt64();
-            if (midAddress < address)
-            {
-                startIndex = midIndex + 1;
-            }
-            else if (midAddress > address)
-            {
-                endIndex = midIndex - 1;
-            }
-            else
-            {
-                return midIndex;
-            }
-        }
-        return startIndex;
-    }
-
-    private int FindLastIndexLessThanOrEqualToAddress(IReadOnlyList<PointerScanResult> list, long address)
-    {
-        var startIndex = 0;
-        var endIndex = list.Count - 1;
-        while (startIndex <= endIndex)
-        {
-            var midIndex = (startIndex + endIndex) / 2;
-            var midAddress = list[midIndex].Address.ToInt64();
-            if (midAddress < address)
-            {
-                startIndex = midIndex + 1;
-            }
-            else if (midAddress > address)
-            {
-                endIndex = midIndex - 1;
-            }
-            else
-            {
-                return midIndex;
-            }
-        }
-        return endIndex;
-    }
-
     [RelayCommand]
     public void StartPointerScan()
     {
         var selectedProcess = _selectProcessViewModel.SelectedProcess!;
-        var maxSize = 24000;
+        var maxSize = 4000;
         var searchedAddress = long.Parse(PointerScanAddress, NumberStyles.HexNumber);
         var staticPointers = GetStaticPointers(selectedProcess);
         var staticPointersByAddress = staticPointers.ToDictionary(x => x.Address);
@@ -121,7 +54,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             .ToDictionary(x => x.Key, x => x.ToArray());
         var pointsWhereIWant = heapPointers.Where(x => x.Address.ToInt64() >= searchedAddress - maxSize && x.Address.ToInt64() <= searchedAddress).ToArray();
         var pointerScan1 = new List<PointerScanResult>();
-        var searchingPointers = new HashSet<PointerScanResult>();
+        var searchingPointers = new List<PointerScanResult>();
 
         foreach (var pointer in pointsWhereIWant)
         {
@@ -133,33 +66,27 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             if (heapPointersByPointingTo.TryGetValue(pointer.Address, out var pointers))
             {
                 var clonedPointers = pointers.Select(x => x.Clone()).ToList();
-                clonedPointers.ForEach(p => p.Offsets.Clear());
                 clonedPointers.ForEach(p => p.Offsets.Add(firstOffset));
-                if (firstOffset == (IntPtr)0x18 || true)
+                if (firstOffset == (IntPtr)0x18)
                 {
                     pointerScan1.AddRange(clonedPointers);
-                    foreach (var item in clonedPointers)
-                    {
-                        searchingPointers.Add(item);
-                    }
+                    searchingPointers.AddRange(clonedPointers);
                 }
             }
         }
 
-        var sw = Stopwatch.StartNew();
-
-        var counter = new Dictionary<IntPtr, int>();
-        for (var currentLevel = 0; currentLevel < 4 - 1; currentLevel++)
+        for (var currentLevel = 0; currentLevel < 4; currentLevel++)
         {
             var tempSearchingPointers = searchingPointers.ToArray();
             searchingPointers.Clear();
             foreach (var searchedPointer in tempSearchingPointers)
             {
-                var startIndex = FindFirstIndexGreaterThanOrEqualToAddress(heapPointers, searchedPointer.Address.ToInt64() - maxSize);
-                var endIndex = FindLastIndexLessThanOrEqualToAddress(heapPointers, searchedPointer.Address.ToInt64());
-                for (var i = startIndex; i <= endIndex; i++)
+                var pointsWhereIWant2 = heapPointers.Where(x => x.Address.ToInt64() >= searchedPointer.Address.ToInt64() - maxSize && x.Address.ToInt64() <= searchedPointer.Address.ToInt64()).ToArray();
+                foreach (var pointer in pointsWhereIWant2)
                 {
-                    var pointer = heapPointers[i];
+                    //pointer.Offsets.Add(firstOffset);
+                    //pointer.PointingTo = (IntPtr)searchedAddress;
+
                     if (heapPointersByPointingTo.TryGetValue(pointer.Address, out var pointers))
                     {
                         var offsets = searchedPointer.Offsets.ToList();
@@ -167,24 +94,11 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
                         offsets.Add(firstOffset);
                         var clonedPointers = pointers.Select(x => x.Clone()).ToList();
                         clonedPointers.ForEach(p => p.Offsets.AddRange(offsets));
-                        foreach (var item in clonedPointers)
+                        if ((currentLevel == 0 && firstOffset == (IntPtr)0x0
+                            || currentLevel == 1 && firstOffset == (IntPtr)0x18
+                            || currentLevel == 2 && firstOffset == (IntPtr)0x10) || true)
                         {
-                            searchingPointers.Add(item);
-                        }
-
-                        var countingFound = counter.TryGetValue(pointer.Address, out int count);
-                        if (!staticPointersByAddress.ContainsKey(clonedPointers.First().Address) && countingFound && count >= 3)
-                        {
-                            heapPointersByPointingTo.Remove(pointer.Address);
-                        }
-                        else
-                        {
-                            count++;
-                            if (!countingFound)
-                            {
-                                counter.Add(pointer.Address, count);
-                            }
-                            counter[pointer.Address] = count;
+                            searchingPointers.AddRange(clonedPointers);
                         }
                     }
                 }
@@ -265,8 +179,6 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
         //    }
         //}
 
-        sw.Stop();
-        
         var resultsts = pointingThere2.OrderBy(x => x.Offsets.Count).ToArray();
 
         //-- rescan --//
@@ -368,7 +280,6 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
         return allAddresses
             .Where(x => x.PointingTo != IntPtr.Zero && x.Address.ToInt64() % 4 == 0)
             //.Where(x => x.PointingTo.ToInt64() >= 0x10000 && x.PointingTo.ToInt64() <= 0x7ffffffeffff)
-            .OrderBy(x => x.Address)
             .ToArray();
     }
 }
