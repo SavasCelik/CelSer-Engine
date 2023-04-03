@@ -227,7 +227,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
 
         return allAddresses
             .Where(x => x.PointingTo != IntPtr.Zero && x.Address.ToInt64() % 4 == 0)
-            .Where(x => x.PointingTo.ToInt64() >= 0x10000 && x.PointingTo.ToInt64() <= 0x7ffffffeffff)
+            //.Where(x => x.PointingTo.ToInt64() >= 0x10000 && x.PointingTo.ToInt64() <= 0x7ffffffeffff)
             .ToArray();
     }
 }
