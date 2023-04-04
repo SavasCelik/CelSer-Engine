@@ -38,7 +38,7 @@
         <DataGrid.Columns>
             <DataGridTextColumn
                 Width="150"
-                Binding="{Binding ModuleName}"
+                Binding="{Binding ModuleNameWithBaseOffset}"
                 Header="Base Address" />
             <DataGridTextColumn
                 Width="150"
