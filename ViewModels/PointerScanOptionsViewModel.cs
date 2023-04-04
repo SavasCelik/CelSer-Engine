@@ -10,21 +10,6 @@ using CelSerEngine.Models;
 
 namespace CelSerEngine.ViewModels;
 
-
-public class PointerScanResult : ProcessMemory
-{
-    public List<IntPtr> Offsets { get; set; } = new List<IntPtr>();
-    public IntPtr PointingTo { get; set; }
-
-    public PointerScanResult Clone()
-    {
-        var clone = (PointerScanResult) MemberwiseClone();
-        clone.Offsets = clone.Offsets.ToList();
-
-        return clone;
-    }
-}
-
 public partial class PointerScanOptionsViewModel : ObservableRecipient
 {
     [ObservableProperty]
