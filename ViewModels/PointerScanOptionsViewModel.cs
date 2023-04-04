@@ -72,6 +72,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
         var pointingThere = new List<PointerScanResult>();
         var level = 4;
         var counter = new Dictionary<IntPtr, int>();
+        var alreadyTracking = new HashSet<IntPtr>();
 
         for (var currentLevel = 0; currentLevel < level; currentLevel++)
         {
@@ -91,10 +92,17 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
                     pointingThere.Add(newPointingThere);
                 }
 
+                if (alreadyTracking.Contains(pointer.Address))
+                {
+                    continue;
+                }
+
                 if (currentLevel == level - 1)
                 {
                     continue;
                 }
+
+                alreadyTracking.Add(pointer.Address);
 
                 var newAddy = IntPtr.Zero;
                 for (int i = 0; i < maxSize; i += 4)
