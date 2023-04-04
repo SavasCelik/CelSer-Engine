@@ -2,6 +2,6 @@
 
 namespace CelSerEngine.ViewModels;
 
-public partial class PointerScanViewModel : ObservableRecipient
+public partial class PointerScanResultsViewModel : ObservableRecipient
 {
 }
