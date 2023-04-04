@@ -38,7 +38,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             .GroupBy(x => x.PointingTo)
             .ToDictionary(x => x.Key, x => x.ToArray());
         var pointsWhereIWant = heapPointers.Where(x => x.Address.ToInt64() >= searchedAddress - maxSize && x.Address.ToInt64() <= searchedAddress).ToArray();
-        var pointerScan1 = new List<PointerScanResult>();
+        var pointerScan1 = new List<Pointer>();
 
         foreach (var pointer in pointsWhereIWant)
         {
@@ -54,7 +54,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             }
         }
 
-        var pointingThere = new List<PointerScanResult>();
+        var pointingThere = new List<Pointer>();
         var level = 4;
         var counter = new Dictionary<IntPtr, int>();
         var alreadyTracking = new HashSet<IntPtr>();
@@ -67,7 +67,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             {
                 if (staticPointersByAddress.TryGetValue(pointer.Address, out var startingPoint))
                 {
-                    var newPointingThere = new PointerScanResult
+                    var newPointingThere = new Pointer
                     {
                         BaseAddress = startingPoint.BaseAddress,
                         BaseOffset = startingPoint.BaseOffset,
@@ -130,7 +130,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
         var heapPointerByAddress = heapPointers.GroupBy(x => x.Address).ToDictionary(x => x.Key, x => x.First());
         var results0 = resultsts.Where(x => x.BaseOffset == 0x325b00 && x.Offsets.Count == 4).ToArray();
 
-        var foundPointer = new List<PointerScanResult>();
+        var foundPointer = new List<Pointer>();
         foreach (var resultItem in resultsts)
         {
             if (staticPointersByAddress.TryGetValue(resultItem.Address, out var pointsTo))
@@ -167,18 +167,18 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
         return pointerScanOpstionsDlg.ShowDialog() ?? false;
     }
 
-    private IReadOnlyList<PointerScanResult> GetStaticPointers(ProcessAdapter process)
+    private IReadOnlyList<Pointer> GetStaticPointers(ProcessAdapter process)
     {
         var baseAddress = process.MainModule!.BaseAddress;
         var regionSize = process.MainModule!.ModuleMemorySize;
         var currentSize = 0;
-        var listOfBaseAddresses = new List<PointerScanResult>();
+        var listOfBaseAddresses = new List<Pointer>();
 
         while (currentSize < regionSize)
         {
             var buffer = NativeApi.ReadVirtualMemory(process.GetProcessHandle(), (IntPtr)baseAddress + currentSize, (uint)_pointerSize);
             var foundAddress = BitConverter.ToInt64(buffer);
-            listOfBaseAddresses.Add(new PointerScanResult
+            listOfBaseAddresses.Add(new Pointer
             {
                 BaseAddress = baseAddress,
                 BaseOffset = currentSize,
@@ -192,10 +192,10 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
         return listOfBaseAddresses;
     }
 
-    private IReadOnlyList<PointerScanResult> GetHeapPointers(ProcessAdapter process)
+    private IReadOnlyList<Pointer> GetHeapPointers(ProcessAdapter process)
     {
         var pages = NativeApi.GatherVirtualPages(process.GetProcessHandle());
-        var allAddresses = new List<PointerScanResult>();
+        var allAddresses = new List<Pointer>();
 
         foreach (var page in pages)
         {
@@ -207,7 +207,7 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
                     continue;
                 }
                 var bufferValue = BitConverter.ToInt64(page.Bytes, i);
-                var entry = new PointerScanResult
+                var entry = new Pointer
                 {
                     Memory = pageSpan.Slice(i, _pointerSize).ToArray(),
                     BaseAddress = new IntPtr((long)page.BaseAddress),
