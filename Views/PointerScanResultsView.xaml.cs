@@ -1,11 +1,11 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
 
 namespace CelSerEngine.Views;
 
 /// <summary>
 /// Interaction logic for PointerScanView.xaml
 /// </summary>
-public partial class PointerScanResultsView : UserControl
+public partial class PointerScanResultsView : Window
 {
     public PointerScanResultsView()
     {
