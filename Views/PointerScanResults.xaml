@@ -5,12 +5,17 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:CelSerEngine.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    Width="800"
+    Height="500"
     DataContext="{Binding PointerScanResultsViewModel, Source={StaticResource ViewModelLocator}}"
     mc:Ignorable="d">
-    <StackPanel>
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <StackPanel
+            Grid.Row="0"
             Margin="5,5"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
@@ -28,6 +33,7 @@
                 IsDefault="True" />
         </StackPanel>
         <DataGrid
+            Grid.Row="1"
             AutoGenerateColumns="False"
             Background="White"
             CanUserAddRows="False"
@@ -68,5 +74,5 @@
                     Header="Points to" />
             </DataGrid.Columns>
         </DataGrid>
-    </StackPanel>
+    </Grid>
 </Window>
