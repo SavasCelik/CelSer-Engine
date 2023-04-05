@@ -78,7 +78,7 @@
                 IsReadOnly="True" />
             <DataGridTextColumn
                 Width="150"
-                Binding="{Binding AddressString}"
+                Binding="{Binding AddressDisplayString}"
                 Header="Address"
                 IsReadOnly="True" />
             <DataGridTextColumn

@@ -108,7 +108,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     [RelayCommand]
     public void ShowPointerScanDialog(TrackedScanItem selectedItem)
     {
-        _pointerScanOptionsViewModel.ShowPointerScanDialog(selectedItem.AddressString);
+        _pointerScanOptionsViewModel.ShowPointerScanDialog(selectedItem.AddressDisplayString);
     }
 
     private bool ShowChangePropertyDialog(string propertyValue, string propertyName, out string newValue)

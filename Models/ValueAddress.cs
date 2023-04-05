@@ -14,7 +14,7 @@ namespace CelSerEngine.Models
         public int Offset { get; set; }
         public ScanDataType ScanDataType { get; private set; }
         public string ValueString => ((object)Value).ValueToString(ScanDataType);
-        public string AddressString => ((long)BaseAddress + Offset).ToString("X");
+        public string AddressDisplayString { get; set; }
         public IntPtr Address => BaseAddress + Offset;
 
         public ValueAddress(ulong baseAddress, int offset, dynamic value, ScanDataType scanDataType)
@@ -23,6 +23,7 @@ namespace CelSerEngine.Models
             Offset = offset;
             this.value = value;
             ScanDataType = scanDataType;
+            AddressDisplayString = Address.ToString("X");
         }
 
         public ValueAddress(ValueAddress valueAddress)
@@ -31,6 +32,7 @@ namespace CelSerEngine.Models
             Offset = valueAddress.Offset;
             value = valueAddress.Value;
             ScanDataType = valueAddress.ScanDataType;
+            AddressDisplayString = Address.ToString("X");
         }
 
         #region CommunityToolkit bug fix

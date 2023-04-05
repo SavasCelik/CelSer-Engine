@@ -96,8 +96,8 @@ public partial class ScanResultsViewModel : ObservableRecipient
             }
 
             NativeApi.UpdateAddresses(pHandle, shownItems);
-            Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressString);
-            Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressString);
+            Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressDisplayString);
+            Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressDisplayString);
         });
     }
 }

@@ -49,7 +49,7 @@
         <DataGrid.Columns>
             <DataGridTextColumn
                 Width="150"
-                Binding="{Binding AddressString}"
+                Binding="{Binding AddressDisplayString}"
                 Header="Address" />
             <DataGridTextColumn
                 Width="150"
