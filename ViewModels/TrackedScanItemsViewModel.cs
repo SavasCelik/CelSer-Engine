@@ -73,7 +73,6 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-
     public void ShowChangeValueDialog(IList selectedItems)
     {
         var selectedTrackedItems = selectedItems.Cast<TrackedScanItem>().ToArray();
@@ -93,7 +92,6 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-
     public void ShowChangeDescriptionDialog(IList selectedItems)
     {
         var selectedTrackedItems = selectedItems.Cast<TrackedScanItem>().ToArray();
@@ -108,7 +106,6 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-
     public void ShowPointerScanDialog(TrackedScanItem selectedItem)
     {
         _pointerScanOptionsViewModel.ShowPointerScanDialog(selectedItem.AddressString);
