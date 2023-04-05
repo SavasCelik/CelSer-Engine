@@ -7,6 +7,7 @@ public class TrackedPointerScanItem : TrackedScanItem
     public TrackedPointerScanItem(Pointer pointer) : base((ulong)pointer.PointingTo.ToInt64(), 0, 0, ScanDataType.Integer)
     {
         Pointer = pointer;
+        DetermineAddressDisplayString();
     }
 
     public void DetermineAddressDisplayString()
