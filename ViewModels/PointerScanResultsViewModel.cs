@@ -27,7 +27,6 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
     public void StartPointerScan(PointerScanOptionsViewModel pointerScanOptions)
     {
         var selectedProcess = _selectProcessViewModel.SelectedProcess!;
-        var maxSize = 4000;
         var searchedAddress = long.Parse(pointerScanOptions.PointerScanAddress, NumberStyles.HexNumber);
         var staticPointers = GetStaticPointers(selectedProcess);
         var staticPointersByAddress = staticPointers.ToDictionary(x => x.Address);
@@ -36,7 +35,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
             .OrderBy(x => x.PointingTo)
             .GroupBy(x => x.PointingTo)
             .ToDictionary(x => x.Key, x => x.ToArray());
-        var pointsWhereIWant = heapPointers.Where(x => x.Address.ToInt64() >= searchedAddress - maxSize && x.Address.ToInt64() <= searchedAddress).ToArray();
+        var pointsWhereIWant = heapPointers.Where(x => x.Address.ToInt64() >= searchedAddress - pointerScanOptions.MaxOffset && x.Address.ToInt64() <= searchedAddress).ToArray();
         var pointerScan1 = new List<Pointer>();
 
         foreach (var pointer in pointsWhereIWant)
@@ -54,11 +53,10 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         }
 
         var pointingThere = new List<Pointer>();
-        var level = 4;
         var counter = new Dictionary<IntPtr, int>();
         var alreadyTracking = new HashSet<IntPtr>();
 
-        for (var currentLevel = 0; currentLevel < level; currentLevel++)
+        for (var currentLevel = 0; currentLevel < pointerScanOptions.MaxLevel; currentLevel++)
         {
             var pointerList = pointerScan1.OrderBy(x => x.Offsets.Last()).ToArray();
             pointerScan1.Clear();
@@ -82,7 +80,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
                     continue;
                 }
 
-                if (currentLevel == level - 1)
+                if (currentLevel == pointerScanOptions.MaxLevel - 1)
                 {
                     continue;
                 }
@@ -90,7 +88,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
                 alreadyTracking.Add(pointer.Address);
 
                 var newAddy = IntPtr.Zero;
-                for (int i = 0; i < maxSize; i += _pointerSize)
+                for (int i = 0; i < pointerScanOptions.MaxOffset; i += _pointerSize)
                 {
 
                     newAddy = pointer.Address - i;
@@ -170,7 +168,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
 
         while (currentSize < regionSize)
         {
-            var buffer = NativeApi.ReadVirtualMemory(process.GetProcessHandle(), (IntPtr)baseAddress + currentSize, (uint)_pointerSize);
+            var buffer = NativeApi.ReadVirtualMemory(process.GetProcessHandle(), baseAddress + currentSize, (uint)_pointerSize);
             var foundAddress = BitConverter.ToInt64(buffer);
             listOfBaseAddresses.Add(new Pointer
             {

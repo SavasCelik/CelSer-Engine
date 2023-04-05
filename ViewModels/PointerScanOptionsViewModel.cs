@@ -6,14 +6,21 @@ namespace CelSerEngine.ViewModels;
 
 public partial class PointerScanOptionsViewModel : ObservableRecipient
 {
+    private readonly PointerScanResultsViewModel _pointerScanResultsViewModel;
+
     [ObservableProperty]
     private string pointerScanAddress;
-    private readonly PointerScanResultsViewModel _pointerScanResultsViewModel;
+    [ObservableProperty]
+    private int maxOffset;
+    [ObservableProperty]
+    private int maxLevel;
 
     public PointerScanOptionsViewModel(PointerScanResultsViewModel pointerScanResultsViewModel)
     {
-        pointerScanAddress = "";
         _pointerScanResultsViewModel = pointerScanResultsViewModel;
+        pointerScanAddress = "";
+        maxOffset = 0x1000;
+        maxLevel = 4;
     }
 
     [RelayCommand]
@@ -30,7 +37,6 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
         {
             Owner = App.Current.MainWindow
         };
-
 
         return pointerScanOpstionsDlg.ShowDialog() ?? false;
     }
