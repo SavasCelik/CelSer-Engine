@@ -10,7 +10,9 @@ namespace CelSerEngine.Models
         [NotifyPropertyChangedFor(nameof(ValueString))]
         private dynamic value;
         public dynamic? PrevoiusValue { get; set; }
-        public IntPtr BaseAddress { get; set; }
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(AddressDisplayString))]
+        private IntPtr baseAddress;
         public int Offset { get; set; }
         public ScanDataType ScanDataType { get; private set; }
         public string ValueString => ((object)Value).ValueToString(ScanDataType);

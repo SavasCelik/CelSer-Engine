@@ -21,4 +21,9 @@ public partial class TrackedScanItem : ValueAddress
     {
         description = "Description";
     }
+
+    public TrackedScanItem(ulong baseAddress, int offset, dynamic value, ScanDataType scanDataType) : base(baseAddress, offset, (object)value, scanDataType)
+    {
+        description = "Description";
+    }
 }

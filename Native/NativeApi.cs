@@ -8,6 +8,8 @@ using CelSerEngine.Models;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CelSerEngine.Extensions;
+using System.Net;
+using System.Collections;
 
 namespace CelSerEngine.Native
 {
@@ -76,6 +78,12 @@ namespace CelSerEngine.Native
             {
                 if (address == null)
                     continue;
+
+                if (address is TrackedPointerScanItem pointerScanItem)
+                {
+                    UpdatePointerAddress(hProcess, pointerScanItem);
+                }
+
                 var typeSize = address.ScanDataType.GetPrimitiveSize();
                 var buffer = new byte[typeSize];
 
@@ -88,6 +96,44 @@ namespace CelSerEngine.Native
 
                 address.Value = buffer.ByteArrayToObject(address.ScanDataType);
             }
+        }
+
+        public static void UpdatePointerAddress(IntPtr hProcess, TrackedPointerScanItem trackedPointerScanItem)
+        {
+            // TODO: This method should be refactored, calling DetermineAddressDisplayString just feels weird
+            var buffer = new byte[sizeof(long)];
+
+            NtReadVirtualMemory(
+                hProcess,
+                trackedPointerScanItem.Pointer.Address,
+                buffer,
+                (uint)buffer.Length,
+                out _);
+
+            var pointingAddress = (IntPtr)BitConverter.ToInt64(buffer);
+
+            for (var i = trackedPointerScanItem.Pointer.Offsets.Count - 1; i >= 0; i--)
+            {
+                var offset = trackedPointerScanItem.Pointer.Offsets[i].ToInt32();
+
+                if (i == 0)
+                {
+                    pointingAddress = pointingAddress + offset;
+                    break;
+                }
+
+                NtReadVirtualMemory(
+                hProcess,
+                pointingAddress + offset,
+                buffer,
+                (uint)buffer.Length,
+                out _);
+
+                pointingAddress = (IntPtr)BitConverter.ToInt64(buffer);
+            }
+
+            trackedPointerScanItem.BaseAddress = pointingAddress;
+            trackedPointerScanItem.DetermineAddressDisplayString();
         }
 
         public static IList<VirtualMemoryPage> GatherVirtualPages(IntPtr hProcess)

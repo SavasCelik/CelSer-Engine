@@ -3,6 +3,7 @@ using CelSerEngine.Native;
 using CelSerEngine.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,6 +14,7 @@ namespace CelSerEngine.ViewModels;
 public partial class PointerScanResultsViewModel : ObservableRecipient
 {
     private readonly SelectProcessViewModel _selectProcessViewModel;
+    private readonly TrackedScanItemsViewModel _trackedScanItemsViewModel;
     private int _pointerSize;
 
     [ObservableProperty]
@@ -157,6 +159,16 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         }
 
         FoundPointers = foundPointer;
+    }
+
+    [RelayCommand]
+    public void AddPointerToTrackedScanItem(Pointer? selectedItem)
+    {
+        if (selectedItem == null)
+            return;
+
+        //TODO: bad workaround for circular dependency Fix this later
+        App.Current.Services.GetRequiredService<TrackedScanItemsViewModel>().TrackedScanItems.Add(new TrackedPointerScanItem(selectedItem));
     }
 
     private IReadOnlyList<Pointer> GetStaticPointers(ProcessAdapter process)
