@@ -219,13 +219,9 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
             .ToArray();
     }
 
-    public bool ShowPointerScanResultsDialog()
+    public void ShowPointerScanResultsDialog()
     {
-        var selectProcessWidnwow = new PointerScanResults
-        {
-            Owner = App.Current.MainWindow
-        };
-
-        return selectProcessWidnwow.ShowDialog() ?? false;
+        var selectProcessWidnwow = new PointerScanResults();
+        selectProcessWidnwow.Show();
     }
 }
