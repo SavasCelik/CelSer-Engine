@@ -2,9 +2,9 @@
 using CelSerEngine.Native;
 using CelSerEngine.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -14,12 +14,13 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
 {
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private int _pointerSize;
-    public List<Pointer> FoundPointers { get; set; }
+
+    [ObservableProperty]
+    public List<Pointer>? foundPointers;
 
     public PointerScanResultsViewModel(SelectProcessViewModel selectProcessViewModel)
     {
         _selectProcessViewModel = selectProcessViewModel;
-
         _pointerSize = sizeof(long);
     }
 
@@ -89,7 +90,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
                 alreadyTracking.Add(pointer.Address);
 
                 var newAddy = IntPtr.Zero;
-                for (int i = 0; i < maxSize; i += 4)
+                for (int i = 0; i < maxSize; i += _pointerSize)
                 {
 
                     newAddy = pointer.Address - i;
@@ -120,17 +121,24 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         }
 
         var resultsts = pointingThere.OrderBy(x => x.Offsets.Count).ToList();
-        FoundPointers = resultsts;
-        //-- rescan --//
-        var nextAddy = IntPtr.Zero;
-        staticPointers = GetStaticPointers(selectedProcess);
-        staticPointersByAddress = staticPointers.ToDictionary(x => x.Address);
-        heapPointers = GetHeapPointers(selectedProcess);
-        var heapPointerByAddress = heapPointers.GroupBy(x => x.Address).ToDictionary(x => x.Key, x => x.First());
-        var results0 = resultsts.Where(x => x.BaseOffset == 0x325b00 && x.Offsets.Count == 4).ToArray();
+        FoundPointers = resultsts;        
+    }
 
+    [RelayCommand]
+    public void RescanScan(string nextAddress)
+    {
+        if (FoundPointers == null || FoundPointers.Count == 0)
+            return;
+
+        var selectedProcess = _selectProcessViewModel.SelectedProcess!;
+        var nextAddy = (IntPtr)long.Parse(nextAddress, NumberStyles.HexNumber);
+        var staticPointers = GetStaticPointers(selectedProcess);
+        var staticPointersByAddress = staticPointers.ToDictionary(x => x.Address);
+        var heapPointers = GetHeapPointers(selectedProcess);
+        var heapPointerByAddress = heapPointers.GroupBy(x => x.Address).ToDictionary(x => x.Key, x => x.First());
         var foundPointer = new List<Pointer>();
-        foreach (var resultItem in resultsts)
+
+        foreach (var resultItem in FoundPointers)
         {
             if (staticPointersByAddress.TryGetValue(resultItem.Address, out var pointsTo))
             {
@@ -150,10 +158,8 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
             }
         }
 
-        var resultsts2 = foundPointer.ToArray();
+        FoundPointers = foundPointer;
     }
-
-
 
     private IReadOnlyList<Pointer> GetStaticPointers(ProcessAdapter process)
     {

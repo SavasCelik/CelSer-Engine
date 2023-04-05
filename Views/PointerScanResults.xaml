@@ -9,45 +9,64 @@
     d:DesignWidth="800"
     DataContext="{Binding PointerScanResultsViewModel, Source={StaticResource ViewModelLocator}}"
     mc:Ignorable="d">
-    <DataGrid
-        AutoGenerateColumns="False"
-        Background="White"
-        CanUserAddRows="False"
-        CanUserDeleteRows="False"
-        CanUserReorderColumns="False"
-        CanUserResizeRows="False"
-        CanUserSortColumns="False"
-        GridLinesVisibility="None"
-        HeadersVisibility="Column"
-        IsReadOnly="True"
-        ItemsSource="{Binding FoundPointers}"
-        RowDetailsVisibilityMode="Visible"
-        SelectionMode="Extended"
-        SelectionUnit="FullRow"
-        VirtualizingPanel.VirtualizationMode="Recycling">
-        <DataGrid.ColumnHeaderStyle>
-            <Style TargetType="{x:Type DataGridColumnHeader}">
-                <Setter Property="BorderThickness" Value="12" />
-            </Style>
-        </DataGrid.ColumnHeaderStyle>
-        <DataGrid.CellStyle>
-            <Style TargetType="DataGridCell">
-                <Setter Property="BorderThickness" Value="0" />
-            </Style>
-        </DataGrid.CellStyle>
-        <DataGrid.Columns>
-            <DataGridTextColumn
-                Width="150"
-                Binding="{Binding ModuleNameWithBaseOffset}"
-                Header="Base Address" />
-            <DataGridTextColumn
-                Width="150"
-                Binding="{Binding OffsetsDisplayString}"
-                Header="Offsets" />
-            <DataGridTextColumn
-                Width="*"
-                Binding="{Binding PointingTo}"
-                Header="Points to" />
-        </DataGrid.Columns>
-    </DataGrid>
+    <StackPanel>
+        <StackPanel
+            Margin="5,5"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Orientation="Horizontal">
+            <TextBox
+                Name="tbxRescan"
+                Width="180"
+                Margin="0,0,5,0"
+                VerticalAlignment="Center"
+                TextWrapping="NoWrap" />
+            <Button
+                Command="{Binding RescanScanCommand}"
+                CommandParameter="{Binding ElementName=tbxRescan, Path=Text}"
+                Content="Rescan"
+                IsDefault="True" />
+        </StackPanel>
+        <DataGrid
+            AutoGenerateColumns="False"
+            Background="White"
+            CanUserAddRows="False"
+            CanUserDeleteRows="False"
+            CanUserReorderColumns="False"
+            CanUserResizeRows="False"
+            CanUserSortColumns="False"
+            GridLinesVisibility="None"
+            HeadersVisibility="Column"
+            IsReadOnly="True"
+            ItemsSource="{Binding FoundPointers}"
+            RowDetailsVisibilityMode="Visible"
+            SelectionMode="Extended"
+            SelectionUnit="FullRow"
+            VirtualizingPanel.VirtualizationMode="Recycling">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="{x:Type DataGridColumnHeader}">
+                    <Setter Property="BorderThickness" Value="12" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0" />
+                </Style>
+            </DataGrid.CellStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn
+                    Width="150"
+                    Binding="{Binding ModuleNameWithBaseOffset}"
+                    Header="Base Address" />
+                <DataGridTextColumn
+                    Width="150"
+                    Binding="{Binding OffsetsDisplayString}"
+                    Header="Offsets" />
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding PointingTo}"
+                    Header="Points to" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </StackPanel>
 </Window>
