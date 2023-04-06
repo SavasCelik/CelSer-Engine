@@ -11,7 +11,7 @@ public partial class TrackedScanItem : ValueAddress
     private string description;
 
     public dynamic? SetValue { get; set; }
-
+    
     partial void OnIsFreezedChanged(bool value)
     {
         SetValue = value ? Value : null;

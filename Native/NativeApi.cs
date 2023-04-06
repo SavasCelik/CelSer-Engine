@@ -8,8 +8,6 @@ using CelSerEngine.Models;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CelSerEngine.Extensions;
-using System.Net;
-using System.Collections;
 
 namespace CelSerEngine.Native
 {
@@ -89,7 +87,7 @@ namespace CelSerEngine.Native
 
                 var result = NtReadVirtualMemory(
                     hProcess,
-                    address.BaseAddress + address.Offset,
+                    address.Address,
                     buffer,
                     (uint)typeSize,
                     out var bytesRead);

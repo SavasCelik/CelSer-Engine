@@ -2,7 +2,7 @@
 
 namespace CelSerEngine.Models;
 
-public class ProcessMemory
+public class ProcessMemory : IProcessMemory
 {
     public IntPtr BaseAddress { get; set; }
     public int BaseOffset { get; set; }
