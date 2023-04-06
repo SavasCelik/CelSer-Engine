@@ -14,7 +14,6 @@ namespace CelSerEngine.ViewModels;
 public partial class PointerScanResultsViewModel : ObservableRecipient
 {
     private readonly SelectProcessViewModel _selectProcessViewModel;
-    private readonly TrackedScanItemsViewModel _trackedScanItemsViewModel;
     private int _pointerSize;
 
     [ObservableProperty]
