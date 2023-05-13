@@ -8,6 +8,8 @@ using CelSerEngine.Models;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CelSerEngine.Extensions;
+using System.Net;
+using CelSerEngine.Models.ObservableModels;
 
 namespace CelSerEngine.Native
 {
@@ -57,81 +59,144 @@ namespace CelSerEngine.Native
             return result == NTSTATUS.Success ? buffer : Array.Empty<byte>();
         }
 
-        public static void WriteMemory(IntPtr hProcess, TrackedScanItem trackedScanItem)
+        public static void WriteMemory(IntPtr hProcess, TrackedItem trackedScanItem)
         {
-            var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
-            var bytesToWrite = BitConverter.GetBytes(trackedScanItem.SetValue ?? trackedScanItem.Value);
+            var typeSize = trackedScanItem.Item.ScanDataType.GetPrimitiveSize();
+            var bytesToWrite = BitConverter.GetBytes(trackedScanItem.SetValue ?? trackedScanItem.Item.Value);
 
             var result = NtWriteVirtualMemory(
                 hProcess,
-                trackedScanItem.Address,
+                trackedScanItem.Item.Address,
                 bytesToWrite,
                 (uint)typeSize,
                 out uint bytesWritten);
         }
 
-        public static void UpdateAddresses(IntPtr hProcess, IEnumerable<ValueAddress?> virtualAddresses)
+        public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemory> virtualAddresses)
         {
             foreach (var address in virtualAddresses)
             {
                 if (address == null)
                     continue;
 
-                if (address is TrackedPointerScanItem pointerScanItem)
+                if (address is ObservablePointer pointerScanItem)
                 {
                     UpdatePointerAddress(hProcess, pointerScanItem);
+                    continue;
                 }
 
-                var typeSize = address.ScanDataType.GetPrimitiveSize();
-                var buffer = new byte[typeSize];
-
-                var result = NtReadVirtualMemory(
-                    hProcess,
-                    address.Address,
-                    buffer,
-                    (uint)typeSize,
-                    out var bytesRead);
-
-                address.Value = buffer.ByteArrayToObject(address.ScanDataType);
+                UpdateProcessMemory(hProcess, address);
             }
         }
 
-        public static void UpdatePointerAddress(IntPtr hProcess, TrackedPointerScanItem trackedPointerScanItem)
+        public static void UpdateProcessMemory(IntPtr hProcess, IProcessMemory processMemory)
         {
-            // TODO: This method should be refactored, calling DetermineAddressDisplayString just feels weird
+            if (processMemory == null)
+                return;
+
+            var typeSize = processMemory.ScanDataType.GetPrimitiveSize();
+            var buffer = new byte[typeSize];
+
+            var result = NtReadVirtualMemory(
+                hProcess,
+                processMemory.Address,
+                buffer,
+                (uint)typeSize,
+                out var bytesRead);
+
+            processMemory.Value = buffer.ByteArrayToObject(processMemory.ScanDataType);
+        }
+
+        //public static void UpdatePointerAddress(IntPtr hProcess, TrackedPointerScanItem trackedPointerScanItem)
+        //{
+        //    // TODO: This method should be refactored, calling DetermineAddressDisplayString just feels weird
+        //    var buffer = new byte[sizeof(long)];
+
+        //    NtReadVirtualMemory(
+        //        hProcess,
+        //        trackedPointerScanItem.Pointer.Address,
+        //        buffer,
+        //        (uint)buffer.Length,
+        //        out _);
+
+        //    var pointingAddress = (IntPtr)BitConverter.ToInt64(buffer);
+
+        //    for (var i = trackedPointerScanItem.Pointer.Offsets.Count - 1; i >= 0; i--)
+        //    {
+        //        var offset = trackedPointerScanItem.Pointer.Offsets[i].ToInt32();
+
+        //        if (i == 0)
+        //        {
+        //            pointingAddress = pointingAddress + offset;
+        //            break;
+        //        }
+
+        //        NtReadVirtualMemory(
+        //        hProcess,
+        //        pointingAddress + offset,
+        //        buffer,
+        //        (uint)buffer.Length,
+        //        out _);
+
+        //        pointingAddress = (IntPtr)BitConverter.ToInt64(buffer);
+        //    }
+
+        //    trackedPointerScanItem.ScanItem.BaseAddress = pointingAddress;
+        //    trackedPointerScanItem.DetermineAddressDisplayString();
+        //}
+
+        public static void UpdatePointerAddress(IntPtr hProcess, ObservablePointer? pointerAddress)
+        {
+            if (pointerAddress == null)
+                return;
+
+            ResolvePointerPath(hProcess, pointerAddress);
+            
+            var typeSize = pointerAddress.ScanDataType.GetPrimitiveSize();
+            var buffer = new byte[typeSize];
+
+            var result = NtReadVirtualMemory(
+                hProcess,
+                pointerAddress.PointingTo,
+                buffer,
+                (uint)typeSize,
+                out var bytesRead);
+
+            pointerAddress.Value = buffer.ByteArrayToObject(pointerAddress.ScanDataType);
+        }
+
+        public static void ResolvePointerPath(IntPtr hProcess, ObservablePointer pointerAddress)
+        {
             var buffer = new byte[sizeof(long)];
 
             NtReadVirtualMemory(
                 hProcess,
-                trackedPointerScanItem.Pointer.Address,
+                pointerAddress.Address,
                 buffer,
                 (uint)buffer.Length,
                 out _);
 
-            var pointingAddress = (IntPtr)BitConverter.ToInt64(buffer);
+            pointerAddress.PointingTo = (IntPtr)BitConverter.ToInt64(buffer);
 
-            for (var i = trackedPointerScanItem.Pointer.Offsets.Count - 1; i >= 0; i--)
+            for (var i = pointerAddress.Offsets.Count - 1; i >= 0; i--)
             {
-                var offset = trackedPointerScanItem.Pointer.Offsets[i].ToInt32();
+                var offset = pointerAddress.Offsets[i].ToInt32();
 
                 if (i == 0)
                 {
-                    pointingAddress = pointingAddress + offset;
+                    pointerAddress.PointingTo += offset;
                     break;
                 }
 
                 NtReadVirtualMemory(
                 hProcess,
-                pointingAddress + offset,
+                pointerAddress.PointingTo + offset,
                 buffer,
                 (uint)buffer.Length,
                 out _);
 
-                pointingAddress = (IntPtr)BitConverter.ToInt64(buffer);
+                pointerAddress.PointingTo = (IntPtr)BitConverter.ToInt64(buffer);
             }
-
-            trackedPointerScanItem.BaseAddress = pointingAddress;
-            trackedPointerScanItem.DetermineAddressDisplayString();
         }
 
         public static IList<VirtualMemoryPage> GatherVirtualPages(IntPtr hProcess)

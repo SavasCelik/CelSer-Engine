@@ -8,4 +8,6 @@ public interface IProcessMemory
     public int BaseOffset { get; set; }
     public byte[] Memory { get; set; }
     public IntPtr Address { get; }
+    public dynamic Value { get; set; }
+    public ScanDataType ScanDataType { get; set; }
 }

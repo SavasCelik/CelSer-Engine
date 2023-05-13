@@ -56,7 +56,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         if (selectedItem == null)
             return;
 
-        _trackedScanItemsViewModel.TrackedScanItems.Add(new TrackedScanItem(selectedItem));
+        _trackedScanItemsViewModel.TrackedScanItems.Add(new TrackedItem(selectedItem));
     }
 
 

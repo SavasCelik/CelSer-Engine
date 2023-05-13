@@ -167,7 +167,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
             return;
 
         //TODO: bad workaround for circular dependency Fix this later
-        App.Current.Services.GetRequiredService<TrackedScanItemsViewModel>().TrackedScanItems.Add(new TrackedPointerScanItem(selectedItem));
+        App.Current.Services.GetRequiredService<TrackedScanItemsViewModel>().TrackedScanItems.Add(new TrackedItem(selectedItem.ToObservablePointer()));
     }
 
     private IReadOnlyList<Pointer> GetStaticPointers(ProcessAdapter process)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CelSerEngine.Models.ObservableModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,5 +19,22 @@ public partial class Pointer : ProcessMemory
         clone.Offsets = clone.Offsets.ToList();
 
         return clone;
+    }
+
+    public ObservablePointer ToObservablePointer()
+    {
+        var observablePointer = new ObservablePointer(
+            (ulong)BaseAddress,
+            BaseOffset,
+            Value,
+            ScanDataType)
+        {
+            ModuleName = ModuleName ?? "",
+            Offsets = Offsets,
+            PointingTo = PointingTo,
+            AddressDisplayString = $"P->{PointingTo:X}"
+    };
+
+        return observablePointer;
     }
 }
