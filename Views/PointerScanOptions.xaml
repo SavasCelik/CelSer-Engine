@@ -37,18 +37,31 @@
             Margin="0,0,0,5"
             Text="{Binding PointerScanAddress}"
             TextWrapping="Wrap" />
-        <CheckBox
-            Grid.Row="2"
-            Grid.Column="0"
-            HorizontalAlignment="Left"
-            Content="Addresses must be 32-bit aligned" />
-        <!--  https://stackoverflow.com/questions/19190502/how-do-i-check-a-memory-address-is-32-bit-aligned-in-c  -->
-        <CheckBox
-            Grid.Row="2"
-            Grid.Column="1"
-            HorizontalAlignment="Left"
-            Content="Skip pointers with read-only nodes" />
-
+        <StackPanel Grid.Row="2" Grid.Column="0">
+            <!--  https://stackoverflow.com/questions/19190502/how-do-i-check-a-memory-address-is-32-bit-aligned-in-c  -->
+            <CheckBox HorizontalAlignment="Left" Content="Addresses must be 32-bit aligned" />
+            <StackPanel Orientation="Horizontal">
+                <Label HorizontalAlignment="Left" Content="Max. Offset value: " />
+                <TextBox
+                    Width="100"
+                    Margin="0,0,5,0"
+                    HorizontalAlignment="Right"
+                    Text="{Binding MaxOffset}"
+                    TextWrapping="NoWrap" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label HorizontalAlignment="Left" Content="Max. Level: " />
+                <TextBox
+                    Width="100"
+                    Margin="0,0,5,0"
+                    HorizontalAlignment="Right"
+                    Text="{Binding MaxLevel}"
+                    TextWrapping="NoWrap" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Grid.Column="1">
+            <CheckBox HorizontalAlignment="Left" Content="Skip pointers with read-only nodes" />
+        </StackPanel>
         <StackPanel
             Grid.Row="3"
             Grid.Column="1"
@@ -57,10 +70,14 @@
             Orientation="Horizontal">
             <Button
                 Margin="0,0,5,0"
+                Click="OkBtn_Click"
                 Command="{Binding StartPointerScanCommand}"
                 Content="OK"
                 IsDefault="True" />
-            <Button Content="Cancel" IsCancel="True" />
+            <Button
+                Click="CancelBtn_Click"
+                Content="Cancel"
+                IsCancel="True" />
         </StackPanel>
     </Grid>
 </Window>

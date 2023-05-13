@@ -12,6 +12,7 @@ namespace CelSerEngine.Models
         {
             ScanDataType = dataType;
             ScanCompareType = scanCompareType;
+            UserInput = "";
         }
     }
 }

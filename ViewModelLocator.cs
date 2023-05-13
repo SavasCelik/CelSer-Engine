@@ -10,4 +10,5 @@ public class ViewModelLocator
     public TrackedScanItemsViewModel TrackedScanItemsViewModel => App.Current.Services.GetRequiredService<TrackedScanItemsViewModel>();
     public ScanResultsViewModel ScanResultsViewModel => App.Current.Services.GetRequiredService<ScanResultsViewModel>();
     public PointerScanOptionsViewModel PointerScanOptionsViewModel => App.Current.Services.GetRequiredService<PointerScanOptionsViewModel>();
+    public PointerScanResultsViewModel PointerScanResultsViewModel => App.Current.Services.GetRequiredService<PointerScanResultsViewModel>();
 }

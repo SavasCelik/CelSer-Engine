@@ -1,0 +1,85 @@
+﻿<Window
+    x:Class="CelSerEngine.Views.PointerScanResults"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:intr="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:local="clr-namespace:CelSerEngine.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Width="800"
+    Height="500"
+    DataContext="{Binding PointerScanResultsViewModel, Source={StaticResource ViewModelLocator}}"
+    mc:Ignorable="d">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel
+            Grid.Row="0"
+            Margin="5,5"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Orientation="Horizontal">
+            <TextBox
+                Name="tbxRescan"
+                Width="180"
+                Margin="0,0,5,0"
+                VerticalAlignment="Center"
+                TextWrapping="NoWrap" />
+            <Button
+                Command="{Binding RescanScanCommand}"
+                CommandParameter="{Binding ElementName=tbxRescan, Path=Text}"
+                Content="Rescan"
+                IsDefault="True" />
+        </StackPanel>
+        <DataGrid
+            Name="PointerScanDataGrid"
+            Grid.Row="1"
+            AutoGenerateColumns="False"
+            Background="White"
+            CanUserAddRows="False"
+            CanUserDeleteRows="False"
+            CanUserReorderColumns="False"
+            CanUserResizeRows="False"
+            CanUserSortColumns="False"
+            GridLinesVisibility="None"
+            HeadersVisibility="Column"
+            IsReadOnly="True"
+            ItemsSource="{Binding FoundPointers}"
+            RowDetailsVisibilityMode="Visible"
+            SelectionMode="Extended"
+            SelectionUnit="FullRow"
+            VirtualizingPanel.VirtualizationMode="Recycling">
+            <intr:Interaction.Triggers>
+                <intr:EventTrigger EventName="MouseDoubleClick">
+                    <intr:InvokeCommandAction Command="{Binding AddPointerToTrackedScanItemCommand}" CommandParameter="{Binding ElementName=PointerScanDataGrid, Path=SelectedItem}" />
+                </intr:EventTrigger>
+            </intr:Interaction.Triggers>
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="{x:Type DataGridColumnHeader}">
+                    <Setter Property="BorderThickness" Value="12" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0" />
+                </Style>
+            </DataGrid.CellStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn
+                    Width="150"
+                    Binding="{Binding ModuleNameWithBaseOffset}"
+                    Header="Base Address" />
+                <DataGridTextColumn
+                    Width="150"
+                    Binding="{Binding OffsetsDisplayString}"
+                    Header="Offsets" />
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding PointingTo}"
+                    Header="Points to" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>

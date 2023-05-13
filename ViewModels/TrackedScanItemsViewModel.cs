@@ -17,14 +17,14 @@ namespace CelSerEngine.ViewModels;
 public partial class TrackedScanItemsViewModel : ObservableRecipient
 {
     [ObservableProperty]
-    private ObservableCollection<TrackedScanItem> trackedScanItems;
+    private ObservableCollection<TrackedItem> trackedScanItems;
     private readonly DispatcherTimer _timer;
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly PointerScanOptionsViewModel _pointerScanOptionsViewModel;
 
     public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel, PointerScanOptionsViewModel pointerScanOptionsViewModel)
     {
-        trackedScanItems = new ObservableCollection<TrackedScanItem>();
+        trackedScanItems = new ObservableCollection<TrackedItem>();
         _selectProcessViewModel = selectProcessViewModel;
         _pointerScanOptionsViewModel = pointerScanOptionsViewModel;
         _timer = new DispatcherTimer(DispatcherPriority.Background)
@@ -45,10 +45,12 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         if (pHandle == IntPtr.Zero)
             return;
 
+        // TODO Maybe IProcessMemory should have an Update class? instead of calling NativeApi.UpdateAddresses.
+        // Then e could check in the class its self whether it a pointer or not
         await Task.Run(() =>
         {
             var trackedScanItemsCopy = TrackedScanItems.ToArray();
-            NativeApi.UpdateAddresses(pHandle, trackedScanItemsCopy);
+            NativeApi.UpdateAddresses(pHandle, trackedScanItemsCopy.Select(x => x.Item));
             foreach (var item in trackedScanItemsCopy.Where(x => x.IsFreezed))
             {
                 NativeApi.WriteMemory(pHandle, item);
@@ -62,43 +64,42 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         if (dataGrid.CurrentColumn?.Header is not string colHeaderName)
             return;
 
-        if (colHeaderName == nameof(TrackedScanItem.Value))
+        if (colHeaderName == nameof(IProcessMemory.Value))
         {
             ShowChangeValueDialog(dataGrid.SelectedItems);
         }
-        else if (colHeaderName == nameof(TrackedScanItem.Description))
+        else if (colHeaderName == nameof(TrackedItem.Description))
         {
             ShowChangeDescriptionDialog(dataGrid.SelectedItems);
         }
     }
 
     [RelayCommand]
-
     public void ShowChangeValueDialog(IList selectedItems)
     {
-        var selectedTrackedItems = selectedItems.Cast<TrackedScanItem>().ToArray();
+        // TODO: mayke it work with pointer items too
+        var selectedTrackedItems = selectedItems.Cast<TrackedItem>().ToArray();
 
-        if (ShowChangePropertyDialog(selectedTrackedItems.First().ValueString, nameof(TrackedScanItem.Value), out string newValue))
+        if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.ValueString, nameof(IProcessMemory.Value), out string newValue))
         {
             foreach (var item in selectedTrackedItems)
             {
                 if (item.IsFreezed)
                 {
-                    item.SetValue = newValue.ToPrimitiveDataType(item.ScanDataType);
+                    item.SetValue = newValue.ToPrimitiveDataType(item.Item.ScanDataType);
                 }
-                item.Value = newValue.ToPrimitiveDataType(item.ScanDataType);
+                item.Item.Value = newValue.ToPrimitiveDataType(item.Item.ScanDataType);
                 NativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), item);
             }
         }
     }
 
     [RelayCommand]
-
     public void ShowChangeDescriptionDialog(IList selectedItems)
     {
-        var selectedTrackedItems = selectedItems.Cast<TrackedScanItem>().ToArray();
+        var selectedTrackedItems = selectedItems.Cast<TrackedItem>().ToArray();
 
-        if (ShowChangePropertyDialog(selectedTrackedItems.First().Description, nameof(TrackedScanItem.Description), out string newValue))
+        if (ShowChangePropertyDialog(selectedTrackedItems.First().Description, nameof(TrackedItem.Description), out string newValue))
         {
             foreach (var item in selectedTrackedItems)
             {
@@ -108,10 +109,9 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-
-    public void ShowPointerScanDialog(TrackedScanItem selectedItem)
+    public void ShowPointerScanDialog(TrackedItem selectedItem)
     {
-        _pointerScanOptionsViewModel.ShowPointerScanDialog(selectedItem.AddressString);
+        _pointerScanOptionsViewModel.ShowPointerScanDialog(selectedItem.Item.AddressDisplayString);
     }
 
     private bool ShowChangePropertyDialog(string propertyValue, string propertyName, out string newValue)

@@ -78,12 +78,12 @@
                 IsReadOnly="True" />
             <DataGridTextColumn
                 Width="150"
-                Binding="{Binding AddressString}"
+                Binding="{Binding Item.AddressDisplayString}"
                 Header="Address"
                 IsReadOnly="True" />
             <DataGridTextColumn
                 Width="*"
-                Binding="{Binding ValueString}"
+                Binding="{Binding Item.ValueString}"
                 Header="Value"
                 IsReadOnly="True" />
         </DataGrid.Columns>
