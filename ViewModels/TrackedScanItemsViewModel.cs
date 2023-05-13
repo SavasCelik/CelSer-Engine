@@ -45,6 +45,8 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         if (pHandle == IntPtr.Zero)
             return;
 
+        // TODO Maybe IProcessMemory should have an Update class? instead of calling NativeApi.UpdateAddresses.
+        // Then e could check in the class its self whether it a pointer or not
         await Task.Run(() =>
         {
             var trackedScanItemsCopy = TrackedScanItems.ToArray();
@@ -75,6 +77,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     [RelayCommand]
     public void ShowChangeValueDialog(IList selectedItems)
     {
+        // TODO: mayke it work with pointer items too
         var selectedTrackedItems = selectedItems.Cast<TrackedItem>().ToArray();
 
         if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.ValueString, nameof(IProcessMemory.Value), out string newValue))
