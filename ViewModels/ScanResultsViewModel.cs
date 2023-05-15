@@ -14,6 +14,9 @@ namespace CelSerEngine.ViewModels;
 
 public partial class ScanResultsViewModel : ObservableRecipient
 {
+    [ObservableProperty]
+    private List<ValueAddress> _scanItems;
+
     public const int MaxListedScanItems = 2_000_000;
     public List<ValueAddress> AllScanItems { get; private set; }
 
@@ -24,15 +27,12 @@ public partial class ScanResultsViewModel : ObservableRecipient
     private static readonly object _locker = new();
     private readonly DispatcherTimer _timer;
 
-    [ObservableProperty]
-    private List<ValueAddress> scanItems;
-
     public ScanResultsViewModel(TrackedScanItemsViewModel trackedScanItemsViewModel, SelectProcessViewModel selectProcessViewModel)
     {
         _trackedScanItemsViewModel = trackedScanItemsViewModel;
         _selectProcessViewModel = selectProcessViewModel;
-        scanItems = new List<ValueAddress>();
-        AllScanItems = new List<ValueAddress>();
+        _scanItems = new List<ValueAddress>(0);
+        AllScanItems = new List<ValueAddress>(0);
         _shownItemsStartIndex = 0;
         _shownItemsLength = 0;
 

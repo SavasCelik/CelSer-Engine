@@ -6,21 +6,21 @@ namespace CelSerEngine.ViewModels;
 
 public partial class PointerScanOptionsViewModel : ObservableRecipient
 {
-    private readonly PointerScanResultsViewModel _pointerScanResultsViewModel;
+    [ObservableProperty]
+    private string _pointerScanAddress;
+    [ObservableProperty]
+    private int _maxOffset;
+    [ObservableProperty]
+    private int _maxLevel;
 
-    [ObservableProperty]
-    private string pointerScanAddress;
-    [ObservableProperty]
-    private int maxOffset;
-    [ObservableProperty]
-    private int maxLevel;
+    private readonly PointerScanResultsViewModel _pointerScanResultsViewModel;
 
     public PointerScanOptionsViewModel(PointerScanResultsViewModel pointerScanResultsViewModel)
     {
         _pointerScanResultsViewModel = pointerScanResultsViewModel;
-        pointerScanAddress = "";
-        maxOffset = 0x1000;
-        maxLevel = 4;
+        _pointerScanAddress = "";
+        _maxOffset = 0x1000;
+        _maxLevel = 4;
     }
 
     [RelayCommand]
