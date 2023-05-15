@@ -17,14 +17,15 @@ namespace CelSerEngine.ViewModels;
 public partial class TrackedScanItemsViewModel : ObservableRecipient
 {
     [ObservableProperty]
-    private ObservableCollection<TrackedItem> trackedScanItems;
+    private ObservableCollection<TrackedItem> _trackedScanItems;
+
     private readonly DispatcherTimer _timer;
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly PointerScanOptionsViewModel _pointerScanOptionsViewModel;
 
     public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel, PointerScanOptionsViewModel pointerScanOptionsViewModel)
     {
-        trackedScanItems = new ObservableCollection<TrackedItem>();
+        _trackedScanItems = new ObservableCollection<TrackedItem>();
         _selectProcessViewModel = selectProcessViewModel;
         _pointerScanOptionsViewModel = pointerScanOptionsViewModel;
         _timer = new DispatcherTimer(DispatcherPriority.Background)

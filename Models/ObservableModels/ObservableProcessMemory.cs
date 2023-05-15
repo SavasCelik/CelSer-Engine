@@ -8,15 +8,15 @@ public partial class ObservableProcessMemory : ObservableObject, IProcessMemory
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AddressDisplayString))]
-    private IntPtr baseAddress;
+    private IntPtr _baseAddress;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AddressDisplayString))]
-    public int baseOffset;
+    public int _baseOffset;
     [ObservableProperty]
-    private byte[] memory;
+    private byte[] _memory;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ValueString))]
-    private dynamic value;
+    private dynamic _value;
     public IntPtr Address => BaseAddress + BaseOffset;
     public ScanDataType ScanDataType { get; set; }
     public string ValueString => ((object)Value).ValueToString(ScanDataType);
@@ -24,10 +24,10 @@ public partial class ObservableProcessMemory : ObservableObject, IProcessMemory
 
     public ObservableProcessMemory(ulong baseAddress, int baseOffset, dynamic value, ScanDataType scanDataType)
     {
-        this.baseAddress = (IntPtr)baseAddress;
-        this.baseOffset = baseOffset;
-        this.value = value;
-        memory = Array.Empty<byte>();
+        _baseAddress = (IntPtr)baseAddress;
+        _baseOffset = baseOffset;
+        _value = value;
+        _memory = Array.Empty<byte>();
         ScanDataType = scanDataType;
         AddressDisplayString = Address.ToString("X");
     }

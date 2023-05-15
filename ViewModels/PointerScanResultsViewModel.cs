@@ -13,16 +13,17 @@ namespace CelSerEngine.ViewModels;
 
 public partial class PointerScanResultsViewModel : ObservableRecipient
 {
+    [ObservableProperty]
+    public List<Pointer> _foundPointers;
+
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private int _pointerSize;
-
-    [ObservableProperty]
-    public List<Pointer>? foundPointers;
 
     public PointerScanResultsViewModel(SelectProcessViewModel selectProcessViewModel)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _pointerSize = sizeof(long);
+        _foundPointers = new List<Pointer>(0);
     }
 
     public void StartPointerScan(PointerScanOptionsViewModel pointerScanOptions)
