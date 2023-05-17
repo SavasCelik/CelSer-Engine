@@ -187,7 +187,6 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
                 ModuleName = process.MainModule.ModuleName,
                 BaseAddress = baseAddress,
                 BaseOffset = currentSize,
-                Memory = buffer,
                 PointingTo = (IntPtr)foundAddress
             });
 
@@ -214,7 +213,6 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
                 var bufferValue = BitConverter.ToInt64(page.Bytes, i);
                 var entry = new Pointer
                 {
-                    Memory = pageSpan.Slice(i, _pointerSize).ToArray(),
                     BaseAddress = new IntPtr((long)page.BaseAddress),
                     BaseOffset = i,
                     PointingTo = (IntPtr)bufferValue
