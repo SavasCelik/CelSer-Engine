@@ -8,13 +8,15 @@ using CelSerEngine.Models;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CelSerEngine.Extensions;
-using System.Net;
 using CelSerEngine.Models.ObservableModels;
+using System.Buffers;
 
 namespace CelSerEngine.Native
 {
     public sealed class NativeApi
     {
+        public static readonly ArrayPool<byte> _byteArrayPool = ArrayPool<byte>.Shared;
+
         public static IntPtr OpenProcess(string processName)
         {
             var processList = Process.GetProcessesByName(processName);
@@ -95,7 +97,7 @@ namespace CelSerEngine.Native
                 return;
 
             var typeSize = processMemory.ScanDataType.GetPrimitiveSize();
-            var buffer = new byte[typeSize];
+            var buffer = _byteArrayPool.Rent(typeSize);
 
             var result = NtReadVirtualMemory(
                 hProcess,
@@ -105,6 +107,7 @@ namespace CelSerEngine.Native
                 out var bytesRead);
 
             processMemory.Value = buffer.ByteArrayToObject(processMemory.ScanDataType);
+            _byteArrayPool.Return(buffer, clearArray: true);
         }
 
         //public static void UpdatePointerAddress(IntPtr hProcess, TrackedPointerScanItem trackedPointerScanItem)
@@ -153,7 +156,7 @@ namespace CelSerEngine.Native
             ResolvePointerPath(hProcess, pointerAddress);
             
             var typeSize = pointerAddress.ScanDataType.GetPrimitiveSize();
-            var buffer = new byte[typeSize];
+            var buffer = _byteArrayPool.Rent(typeSize);
 
             var result = NtReadVirtualMemory(
                 hProcess,
@@ -163,11 +166,12 @@ namespace CelSerEngine.Native
                 out var bytesRead);
 
             pointerAddress.Value = buffer.ByteArrayToObject(pointerAddress.ScanDataType);
+            _byteArrayPool.Return(buffer, clearArray: true);
         }
 
         public static void ResolvePointerPath(IntPtr hProcess, ObservablePointer pointerAddress)
         {
-            var buffer = new byte[sizeof(long)];
+            var buffer = _byteArrayPool.Rent(sizeof(long));
 
             NtReadVirtualMemory(
                 hProcess,
@@ -197,6 +201,8 @@ namespace CelSerEngine.Native
 
                 pointerAddress.PointingTo = (IntPtr)BitConverter.ToInt64(buffer);
             }
+
+            _byteArrayPool.Return(buffer, clearArray: true);
         }
 
         public static IList<VirtualMemoryPage> GatherVirtualPages(IntPtr hProcess)
