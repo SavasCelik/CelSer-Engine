@@ -31,8 +31,7 @@ public partial class Pointer : ProcessMemory
         {
             ModuleName = ModuleName ?? "",
             Offsets = Offsets,
-            PointingTo = PointingTo,
-            AddressDisplayString = $"P->{PointingTo:X}"
+            PointingTo = PointingTo
     };
 
         return observablePointer;

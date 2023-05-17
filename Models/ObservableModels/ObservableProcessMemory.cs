@@ -20,7 +20,7 @@ public partial class ObservableProcessMemory : ObservableObject, IProcessMemory
     public IntPtr Address => BaseAddress + BaseOffset;
     public ScanDataType ScanDataType { get; set; }
     public string ValueString => ((object)Value).ValueToString(ScanDataType);
-    public string AddressDisplayString { get; set; }
+    public virtual string AddressDisplayString { get; set; }
 
     public ObservableProcessMemory(ulong baseAddress, int baseOffset, dynamic value, ScanDataType scanDataType)
     {
