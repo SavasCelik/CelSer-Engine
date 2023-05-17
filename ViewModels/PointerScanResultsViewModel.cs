@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -18,12 +19,14 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
 
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private int _pointerSize;
+    private readonly ArrayPool<byte> _byteArrayPool;
 
     public PointerScanResultsViewModel(SelectProcessViewModel selectProcessViewModel)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _pointerSize = sizeof(long);
         _foundPointers = new List<Pointer>(0);
+        _byteArrayPool = ArrayPool<byte>.Shared;
     }
 
     public void StartPointerScan(PointerScanOptionsViewModel pointerScanOptions)
@@ -177,10 +180,11 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         var regionSize = process.MainModule!.ModuleMemorySize;
         var currentSize = 0;
         var listOfBaseAddresses = new List<Pointer>();
+        var buffer = _byteArrayPool.Rent(_pointerSize);
 
         while (currentSize < regionSize)
         {
-            var buffer = NativeApi.ReadVirtualMemory(process.GetProcessHandle(), baseAddress + currentSize, (uint)_pointerSize);
+            NativeApi.ReadVirtualMemory(process.GetProcessHandle(), baseAddress + currentSize, (uint)_pointerSize, buffer);
             var foundAddress = BitConverter.ToInt64(buffer);
             listOfBaseAddresses.Add(new Pointer
             {
@@ -192,6 +196,8 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
 
             currentSize += _pointerSize;
         }
+
+        _byteArrayPool.Return(buffer, clearArray: true);
 
         return listOfBaseAddresses;
     }
