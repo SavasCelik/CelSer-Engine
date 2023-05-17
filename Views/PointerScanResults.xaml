@@ -77,7 +77,7 @@
                     Header="Offsets" />
                 <DataGridTextColumn
                     Width="*"
-                    Binding="{Binding PointingTo}"
+                    Binding="{Binding PointingTo, StringFormat=X}"
                     Header="Points to" />
             </DataGrid.Columns>
         </DataGrid>
