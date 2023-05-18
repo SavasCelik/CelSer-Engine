@@ -84,7 +84,7 @@ namespace CelSerEngine.Native
                 memoryAddress,
                 bytesToWrite,
                 (uint)typeSize,
-                out _);
+                out uint _);
         }
 
         public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemory> virtualAddresses)
