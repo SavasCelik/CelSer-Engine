@@ -78,7 +78,6 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     [RelayCommand]
     public void ShowChangeValueDialog(IList selectedItems)
     {
-        // TODO: mayke it work with pointer items too
         var selectedTrackedItems = selectedItems.Cast<TrackedItem>().ToArray();
 
         if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.ValueString, nameof(IProcessMemory.Value), out string newValue))

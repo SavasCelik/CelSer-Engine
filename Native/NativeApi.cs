@@ -72,13 +72,19 @@ namespace CelSerEngine.Native
         {
             var typeSize = trackedScanItem.Item.ScanDataType.GetPrimitiveSize();
             var bytesToWrite = BitConverter.GetBytes(trackedScanItem.SetValue ?? trackedScanItem.Item.Value);
+            var memoryAddress = trackedScanItem.Item.Address;
+
+            if (trackedScanItem.Item is ObservablePointer pointerItem)
+            {
+                memoryAddress = pointerItem.PointingTo;
+            }
 
             var result = NtWriteVirtualMemory(
                 hProcess,
-                trackedScanItem.Item.Address,
+                memoryAddress,
                 bytesToWrite,
                 (uint)typeSize,
-                out uint bytesWritten);
+                out _);
         }
 
         public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemory> virtualAddresses)
