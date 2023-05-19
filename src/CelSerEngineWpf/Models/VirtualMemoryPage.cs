@@ -1,8 +1,4 @@
-﻿
-using System;
-using CelSerEngine.Native;
-
-namespace CelSerEngine.Models;
+﻿namespace CelSerEngine.Models;
 
 public class VirtualMemoryPage
 {
@@ -15,10 +11,5 @@ public class VirtualMemoryPage
         BaseAddress = baseAddress;
         RegionSize = regionSize;
         Bytes = bytes;
-    }
-
-    public void ReReadMemory(IntPtr processHandle)
-    {
-        Bytes = NativeApi.ReadVirtualMemory(processHandle, (IntPtr)BaseAddress, (uint)RegionSize);
     }
 }
