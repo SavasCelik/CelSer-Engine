@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngine", "src\CelSerEngine\CelSerEngine.csproj", "{075A088D-A969-4DFB-A2E0-1D898FBA0B85}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngineWpf", "src\CelSerEngineWpf\CelSerEngineWpf.csproj", "{075A088D-A969-4DFB-A2E0-1D898FBA0B85}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{515CE63A-73D7-4D39-BD22-0784F60BA1DF}"
 EndProject
