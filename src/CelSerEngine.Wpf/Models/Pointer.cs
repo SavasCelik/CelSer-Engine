@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace CelSerEngine.Models;
 
-public partial class Pointer : ProcessMemory
+public class Pointer : ProcessMemory
 {
     public string? ModuleName { get; set; }
     public string ModuleNameWithBaseOffset => $"{ModuleName} + {BaseOffset:X}";
