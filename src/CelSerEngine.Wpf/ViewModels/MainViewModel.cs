@@ -7,10 +7,11 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using CelSerEngine.Comparators;
-using CelSerEngine.Extensions;
+using CelSerEngine.Core.Comparators;
+using CelSerEngine.Core.Extensions;
 using CelSerEngine.Models;
-using CelSerEngine.Native;
+using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
 
 namespace CelSerEngine.ViewModels;
 
@@ -128,7 +129,7 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = false;
     }
 
-    private void AddFoundItems(List<ValueAddress> foundItems)
+    private void AddFoundItems(List<ProcessMemory> foundItems)
     {
         _scanResultsViewModel.SetScanItems(foundItems);
         FoundItemsDisplayString = $"Found: {foundItems.Count.ToString("n0", new CultureInfo("en-US"))}" +
@@ -139,7 +140,7 @@ public partial class MainViewModel : ObservableRecipient
     public void NewScan()
     {
         ShowFirstScanBtn();
-        var emptyList = new List<ValueAddress>();
+        var emptyList = new List<ProcessMemory>();
         _scanResultsViewModel.SetScanItems(emptyList);
         AddFoundItems(emptyList);
         GC.Collect();

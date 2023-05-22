@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CelSerEngine.Models;
+namespace CelSerEngine.Core.Models;
 
 public enum ScanCompareType
 {

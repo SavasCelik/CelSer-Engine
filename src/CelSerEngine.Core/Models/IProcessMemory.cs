@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CelSerEngine.Models;
+﻿namespace CelSerEngine.Core.Models;
 
 public interface IProcessMemory
 {

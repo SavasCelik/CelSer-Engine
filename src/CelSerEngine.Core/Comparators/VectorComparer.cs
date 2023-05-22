@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using CelSerEngine.Extensions;
-using CelSerEngine.Models;
+using CelSerEngine.Core.Extensions;
+using CelSerEngine.Core.Models;
 
-namespace CelSerEngine.Comparators
+namespace CelSerEngine.Core.Comparators
 {
     public class VectorComparer<T> : IScanComparer where T : struct
     {
@@ -37,7 +35,7 @@ namespace CelSerEngine.Comparators
             };
         }
 
-        public IEnumerable<ValueAddress> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
+        public IEnumerable<ProcessMemory> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
         {
             for (var pageIndex = 0; pageIndex < virtualMemoryPages.Count; pageIndex++)
             {
@@ -61,7 +59,7 @@ namespace CelSerEngine.Comparators
                                 var myArry = virtualMemoryPage.Bytes.AsSpan().Slice(j + i, _sizeOfT).ToArray();
 
                                 yield return 
-                                    new ValueAddress(
+                                    new ProcessMemory(
                                         virtualMemoryPage.BaseAddress, i + j,
                                         myArry.ByteArrayToObject(_scanConstraint.ScanDataType),
                                         _scanConstraint.ScanDataType);

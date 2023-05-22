@@ -1,4 +1,5 @@
-﻿using CelSerEngine.Extensions;
+﻿using CelSerEngine.Core.Extensions;
+using CelSerEngine.Core.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 

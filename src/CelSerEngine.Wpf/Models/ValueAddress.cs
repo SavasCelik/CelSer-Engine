@@ -1,4 +1,5 @@
-﻿using CelSerEngine.Models.ObservableModels;
+﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Models.ObservableModels;
 
 namespace CelSerEngine.Models;
 

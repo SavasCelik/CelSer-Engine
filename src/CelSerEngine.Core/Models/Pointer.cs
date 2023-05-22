@@ -1,17 +1,18 @@
-﻿using CelSerEngine.Models.ObservableModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace CelSerEngine.Models;
+﻿namespace CelSerEngine.Core.Models;
 
 public class Pointer : ProcessMemory
 {
+
     public string? ModuleName { get; set; }
     public string ModuleNameWithBaseOffset => $"{ModuleName} + {BaseOffset:X}";
     public List<IntPtr> Offsets { get; set; } = new List<IntPtr>();
     public IntPtr PointingTo { get; set; }
     public string OffsetsDisplayString => string.Join(", ", Offsets.Select(x => x.ToString("X")).Reverse());
+
+    public Pointer(IntPtr baseAddress, int baseOffset, dynamic value, ScanDataType scanDataType) : base(baseAddress, baseOffset, scanDataType)
+    {
+        Value = value;
+    }
 
     public Pointer Clone()
     {
@@ -19,21 +20,5 @@ public class Pointer : ProcessMemory
         clone.Offsets = clone.Offsets.ToList();
 
         return clone;
-    }
-
-    public ObservablePointer ToObservablePointer()
-    {
-        var observablePointer = new ObservablePointer(
-            (ulong)BaseAddress,
-            BaseOffset,
-            Value,
-            ScanDataType)
-        {
-            ModuleName = ModuleName ?? "",
-            Offsets = Offsets,
-            PointingTo = PointingTo
-    };
-
-        return observablePointer;
     }
 }
