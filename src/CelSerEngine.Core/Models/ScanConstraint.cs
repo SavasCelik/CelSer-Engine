@@ -1,4 +1,4 @@
-﻿namespace CelSerEngine.Models;
+﻿namespace CelSerEngine.Core.Models;
 
 public class ScanConstraint
 {

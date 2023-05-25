@@ -1,5 +1,6 @@
-﻿using CelSerEngine.Models;
-using CelSerEngine.Native;
+﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Models;
+using CelSerEngine.Core.Native;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -18,7 +19,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
     private List<ValueAddress> _scanItems;
 
     public const int MaxListedScanItems = 2_000_000;
-    public List<ValueAddress> AllScanItems { get; private set; }
+    public List<ProcessMemory> AllScanItems { get; private set; }
 
     private readonly TrackedScanItemsViewModel _trackedScanItemsViewModel;
     private readonly SelectProcessViewModel _selectProcessViewModel;
@@ -32,7 +33,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         _trackedScanItemsViewModel = trackedScanItemsViewModel;
         _selectProcessViewModel = selectProcessViewModel;
         _scanItems = new List<ValueAddress>(0);
-        AllScanItems = new List<ValueAddress>(0);
+        AllScanItems = new List<ProcessMemory>(0);
         _shownItemsStartIndex = 0;
         _shownItemsLength = 0;
 
@@ -44,10 +45,10 @@ public partial class ScanResultsViewModel : ObservableRecipient
         _timer.Start();
     }
 
-    public void SetScanItems(List<ValueAddress> scanItems)
+    public void SetScanItems(List<ProcessMemory> scanItems)
     {
         AllScanItems = scanItems;
-        ScanItems = AllScanItems.Take(MaxListedScanItems).ToList();
+        ScanItems = AllScanItems.Take(MaxListedScanItems).Select(x => new ValueAddress(x)).ToList();
     }
 
     [RelayCommand]

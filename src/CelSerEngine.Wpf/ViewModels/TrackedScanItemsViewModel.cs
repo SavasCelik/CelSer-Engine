@@ -1,6 +1,7 @@
-﻿using CelSerEngine.Extensions;
+﻿using CelSerEngine.Core.Extensions;
+using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
 using CelSerEngine.Models;
-using CelSerEngine.Native;
 using CelSerEngine.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -52,9 +53,9 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         {
             var trackedScanItemsCopy = TrackedScanItems.ToArray();
             NativeApi.UpdateAddresses(pHandle, trackedScanItemsCopy.Select(x => x.Item));
-            foreach (var item in trackedScanItemsCopy.Where(x => x.IsFreezed))
+            foreach (var trackedItem in trackedScanItemsCopy.Where(x => x.IsFreezed))
             {
-                NativeApi.WriteMemory(pHandle, item);
+                NativeApi.WriteMemory(pHandle, trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
             }
         });
     }
@@ -82,14 +83,14 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
 
         if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.ValueString, nameof(IProcessMemory.Value), out string newValue))
         {
-            foreach (var item in selectedTrackedItems)
+            foreach (var trackedItem in selectedTrackedItems)
             {
-                if (item.IsFreezed)
+                if (trackedItem.IsFreezed)
                 {
-                    item.SetValue = newValue.ToPrimitiveDataType(item.Item.ScanDataType);
+                    trackedItem.SetValue = newValue.ToPrimitiveDataType(trackedItem.Item.ScanDataType);
                 }
-                item.Item.Value = newValue.ToPrimitiveDataType(item.Item.ScanDataType);
-                NativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), item);
+                trackedItem.Item.Value = newValue.ToPrimitiveDataType(trackedItem.Item.ScanDataType);
+                NativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
             }
         }
     }

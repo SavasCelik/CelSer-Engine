@@ -1,4 +1,4 @@
-﻿using CelSerEngine.Native;
+﻿using CelSerEngine.Core.Native;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;

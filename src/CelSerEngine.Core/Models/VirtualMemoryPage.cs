@@ -1,12 +1,12 @@
-﻿namespace CelSerEngine.Models;
+﻿namespace CelSerEngine.Core.Models;
 
 public class VirtualMemoryPage
 {
-    public ulong BaseAddress { get; set; }
+    public IntPtr BaseAddress { get; set; }
     public ulong RegionSize { get; set; }
     public byte[] Bytes { get; set; }
     
-    public VirtualMemoryPage(ulong baseAddress, ulong regionSize, byte[] bytes)
+    public VirtualMemoryPage(IntPtr baseAddress, ulong regionSize, byte[] bytes)
     {
         BaseAddress = baseAddress;
         RegionSize = regionSize;
