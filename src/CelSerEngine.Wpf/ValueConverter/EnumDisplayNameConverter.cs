@@ -1,8 +1,7 @@
-﻿using CelSerEngine.Extensions;
+﻿using CelSerEngine.Core.Extensions;
 using System;
 using System.Globalization;
 using System.Windows.Data;
-
 
 namespace CelSerEngine.ValueConverter
 {

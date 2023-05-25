@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using CelSerEngine.Core.Comparators;
 using CelSerEngine.Core.Extensions;
-using CelSerEngine.Models;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 

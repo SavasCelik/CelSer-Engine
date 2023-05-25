@@ -16,11 +16,7 @@ public class ProcessMemory : IProcessMemory
         ScanDataType = scanDataType;
     }
 
-    public ProcessMemory(IntPtr baseAddress, int baseOffset, ScanDataType scanDataType)
+    public ProcessMemory(IntPtr baseAddress, int baseOffset, ScanDataType scanDataType) : this(baseAddress, baseOffset, 0, scanDataType)
     {
-        BaseAddress = baseAddress;
-        BaseOffset = baseOffset;
-        Value = "";
-        ScanDataType = scanDataType;
     }
 }

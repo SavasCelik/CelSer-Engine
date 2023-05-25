@@ -1,5 +1,7 @@
-﻿using CelSerEngine.Models;
-using CelSerEngine.Native;
+﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
+using CelSerEngine.Models;
+using CelSerEngine.Models.ObservableModels;
 using CelSerEngine.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -170,8 +172,9 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         if (selectedItem == null)
             return;
 
+        var observablePointer = new ObservablePointer(selectedItem);
         //TODO: bad workaround for circular dependency Fix this later
-        App.Current.Services.GetRequiredService<TrackedScanItemsViewModel>().TrackedScanItems.Add(new TrackedItem(selectedItem.ToObservablePointer()));
+        App.Current.Services.GetRequiredService<TrackedScanItemsViewModel>().TrackedScanItems.Add(new TrackedItem(observablePointer));
     }
 
     private IReadOnlyList<Pointer> GetStaticPointers(ProcessAdapter process)
@@ -188,7 +191,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
             var foundAddress = BitConverter.ToInt64(buffer);
             listOfBaseAddresses.Add(new Pointer
             {
-                ModuleName = process.MainModule.ModuleName,
+                ModuleName = process.MainModule.ModuleName ?? "",
                 BaseAddress = baseAddress,
                 BaseOffset = currentSize,
                 PointingTo = (IntPtr)foundAddress

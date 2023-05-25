@@ -48,7 +48,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
     public void SetScanItems(List<ProcessMemory> scanItems)
     {
         AllScanItems = scanItems;
-        ScanItems = AllScanItems.Take(MaxListedScanItems).ToList();
+        ScanItems = AllScanItems.Take(MaxListedScanItems).Select(x => new ValueAddress(x)).ToList();
     }
 
     [RelayCommand]
