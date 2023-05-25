@@ -1,0 +1,91 @@
+﻿<UserControl
+    x:Class="CelSerEngine.Views.TrackedScanItemsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:csevm="clr-namespace:CelSerEngine.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:intr="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:local="clr-namespace:CelSerEngine.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    DataContext="{Binding TrackedScanItemsViewModel, Source={StaticResource ViewModelLocator}}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <ContextMenu x:Key="RowMenu">
+            <MenuItem
+                Command="{Binding TrackedScanItemsViewModel.ShowChangeDescriptionDialogCommand, Source={StaticResource ViewModelLocator}}"
+                CommandParameter="{Binding Path=SelectedItems, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
+                Header="Change Description" />
+            <MenuItem
+                Command="{Binding TrackedScanItemsViewModel.ShowChangeValueDialogCommand, Source={StaticResource ViewModelLocator}}"
+                CommandParameter="{Binding Path=SelectedItems, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
+                Header="Change Value" />
+            <MenuItem
+                Command="{Binding TrackedScanItemsViewModel.ShowPointerScanDialogCommand, Source={StaticResource ViewModelLocator}}"
+                CommandParameter="{Binding Path=SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
+                Header="Pointer Scan for this Address" />
+        </ContextMenu>
+    </UserControl.Resources>
+    <DataGrid
+        Name="TrackedScanItemsDataGrid"
+        AutoGenerateColumns="False"
+        Background="White"
+        CanUserAddRows="False"
+        CanUserDeleteRows="False"
+        CanUserReorderColumns="False"
+        CanUserResizeRows="False"
+        CanUserSortColumns="False"
+        GridLinesVisibility="None"
+        HeadersVisibility="Column"
+        ItemsSource="{Binding TrackedScanItems}"
+        RowDetailsVisibilityMode="Visible"
+        SelectionMode="Extended"
+        SelectionUnit="FullRow"
+        VirtualizingPanel.VirtualizationMode="Recycling">
+        <intr:Interaction.Triggers>
+            <!--<intr:EventTrigger EventName="SelectionChanged">
+                    <intr:InvokeCommandAction Command="{Binding SomeSelectionsCommand}" CommandParameter="{Binding ElementName=AddressList, Path=SelectedItems}" />
+                </intr:EventTrigger>-->
+            <intr:EventTrigger EventName="MouseDoubleClick">
+                <intr:InvokeCommandAction Command="{Binding DblClickedCellCommand}" CommandParameter="{Binding ElementName=TrackedScanItemsDataGrid, Path=.}" />
+            </intr:EventTrigger>
+        </intr:Interaction.Triggers>
+        <DataGrid.RowStyle>
+            <Style TargetType="{x:Type DataGridRow}">
+                <Setter Property="ContextMenu" Value="{StaticResource RowMenu}" />
+            </Style>
+        </DataGrid.RowStyle>
+        <DataGrid.ColumnHeaderStyle>
+            <Style TargetType="{x:Type DataGridColumnHeader}">
+                <Setter Property="BorderThickness" Value="12" />
+            </Style>
+        </DataGrid.ColumnHeaderStyle>
+        <DataGrid.CellStyle>
+            <Style TargetType="DataGridCell">
+                <Setter Property="BorderThickness" Value="0" />
+            </Style>
+        </DataGrid.CellStyle>
+        <DataGrid.Columns>
+            <DataGridCheckBoxColumn
+                Width="50"
+                Binding="{Binding IsFreezed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Header="Freeze" />
+            <DataGridTextColumn
+                Width="150"
+                Binding="{Binding Description}"
+                Header="Description"
+                IsReadOnly="True" />
+            <DataGridTextColumn
+                Width="150"
+                Binding="{Binding Item.AddressDisplayString}"
+                Header="Address"
+                IsReadOnly="True" />
+            <DataGridTextColumn
+                Width="*"
+                Binding="{Binding Item.ValueString}"
+                Header="Value"
+                IsReadOnly="True" />
+        </DataGrid.Columns>
+    </DataGrid>
+</UserControl>
