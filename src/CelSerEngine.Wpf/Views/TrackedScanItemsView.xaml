@@ -83,7 +83,7 @@
                 IsReadOnly="True" />
             <DataGridTextColumn
                 Width="*"
-                Binding="{Binding Item.ValueString}"
+                Binding="{Binding Item.Value}"
                 Header="Value"
                 IsReadOnly="True" />
         </DataGrid.Columns>

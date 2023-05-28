@@ -53,7 +53,7 @@
                 Header="Address" />
             <DataGridTextColumn
                 Width="150"
-                Binding="{Binding ValueString}"
+                Binding="{Binding Value}"
                 Header="Value" />
             <DataGridTextColumn
                 Width="*"
