@@ -1,7 +1,7 @@
 ﻿using CelSerEngine.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CelSerEngine;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public class ViewModelLocator
 {
