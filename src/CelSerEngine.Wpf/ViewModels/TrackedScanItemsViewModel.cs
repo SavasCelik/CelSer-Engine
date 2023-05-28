@@ -87,9 +87,9 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
             {
                 if (trackedItem.IsFreezed)
                 {
-                    trackedItem.SetValue = newValue.ToPrimitiveDataType(trackedItem.Item.ScanDataType);
+                    trackedItem.SetValue = newValue;
                 }
-                trackedItem.Item.Value = newValue.ToPrimitiveDataType(trackedItem.Item.ScanDataType);
+                trackedItem.Item.Value = newValue;
                 NativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
             }
         }
