@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using System.Runtime.InteropServices;
 using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
 
@@ -16,7 +15,7 @@ namespace CelSerEngine.Core.Comparators
         {
             _scanConstraint = scanConstraint;
             _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseToStruct<T>());
-            _sizeOfT = Marshal.SizeOf(default(T));
+            _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
         }
 
         public int GetVectorSize()
@@ -35,34 +34,35 @@ namespace CelSerEngine.Core.Comparators
             };
         }
 
-        public IEnumerable<ProcessMemory> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
+        public IReadOnlyCollection<ProcessMemory> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
         {
+            var matchingProcessMemories = new List<ProcessMemory>();
+
             for (var pageIndex = 0; pageIndex < virtualMemoryPages.Count; pageIndex++)
             {
                 var virtualMemoryPage = virtualMemoryPages[pageIndex];
                 var remaining = (int)virtualMemoryPage.RegionSize % GetVectorSize();
+                var pageBytesAsSpan = virtualMemoryPage.Bytes.AsSpan();
 
                 for (var i = 0; i < (int)virtualMemoryPage.RegionSize - remaining; i += Vector<byte>.Count)
                 {
-                    var splitBuffer = virtualMemoryPage.Bytes.AsSpan().Slice(i, Vector<byte>.Count);
+                    var splitBuffer = pageBytesAsSpan.Slice(i, Vector<byte>.Count);
                     var compareResult = CompareTo(splitBuffer);
 
                     if (!compareResult.Equals(Vector<byte>.Zero))
                     {
-                        var desti = new byte[Vector<byte>.Count];
-                        Vector.AsVectorByte(compareResult).CopyTo(desti);
                         for (var j = 0; j < Vector<byte>.Count; j += _sizeOfT)
                         {
                             if (compareResult[j] != 0)
                             {
-                                var newIntPtr = (IntPtr)virtualMemoryPage.BaseAddress + i + j;
-                                var myArry = virtualMemoryPage.Bytes.AsSpan().Slice(j + i, _sizeOfT).ToArray();
+                                var offset = i + j;
+                                var memoryValue = pageBytesAsSpan.Slice(offset, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
 
-                                yield return 
+                                matchingProcessMemories.Add(
                                     new ProcessMemory(
-                                        virtualMemoryPage.BaseAddress, i + j,
-                                        myArry.ByteArrayToObject(_scanConstraint.ScanDataType),
-                                        _scanConstraint.ScanDataType);
+                                        virtualMemoryPage.BaseAddress, offset,
+                                        memoryValue,
+                                        _scanConstraint.ScanDataType));
                             }
                         }
                     }
@@ -71,6 +71,8 @@ namespace CelSerEngine.Core.Comparators
                 var progress = (float)pageIndex * 100 / virtualMemoryPages.Count;
                 progressBarUpdater?.Report(progress);
             }
+
+            return matchingProcessMemories;
         }
     }
 }

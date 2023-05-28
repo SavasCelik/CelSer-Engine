@@ -86,7 +86,7 @@ public partial class MainViewModel : ObservableRecipient
             var pages = NativeApi.GatherVirtualPages(processHandle).ToArray();
             var sw = new Stopwatch();
             sw.Start();
-            var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater).ToList();
+            var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater);
             sw.Stop();
             Debug.WriteLine(sw.Elapsed);
             // Slower but has visiual effect
@@ -121,7 +121,7 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = false;
     }
 
-    private void AddFoundItems(List<ProcessMemory> foundItems)
+    private void AddFoundItems(IReadOnlyCollection<ProcessMemory> foundItems)
     {
         _scanResultsViewModel.SetScanItems(foundItems);
         FoundItemsDisplayString = $"Found: {foundItems.Count.ToString("n0", new CultureInfo("en-US"))}" +

@@ -139,7 +139,7 @@ public sealed class NativeApi
         var typeSize = processMemory.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
         ReadVirtualMemory(hProcess, processMemory.Address, (uint)typeSize, buffer);
-        processMemory.Value = buffer.ByteArrayToObject(processMemory.ScanDataType);
+        processMemory.Value = buffer.ToScanDataTypeString(processMemory.ScanDataType);
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
@@ -191,7 +191,7 @@ public sealed class NativeApi
         var typeSize = pointerAddress.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
         ReadVirtualMemory(hProcess, pointerAddress.PointingTo, (uint)typeSize, buffer);
-        pointerAddress.Value = buffer.ByteArrayToObject(pointerAddress.ScanDataType);
+        pointerAddress.Value = buffer.ToScanDataTypeString(pointerAddress.ScanDataType);
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 

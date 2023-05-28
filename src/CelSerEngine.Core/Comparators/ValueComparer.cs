@@ -51,24 +51,29 @@ public class ValueComparer : IScanComparer
         };
     }
 
-    public IEnumerable<ProcessMemory> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
+    public IReadOnlyCollection<ProcessMemory> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
     {
+        var matchingProcessMemories = new List<ProcessMemory>();
+
         foreach (var virtualMemoryPage in virtualMemoryPages)
         {
+            var pageBytesAsSpan = virtualMemoryPage.Bytes.AsSpan();
+
             for (var i = 0; i < (int)virtualMemoryPage.RegionSize; i += _sizeOfT)
             {
                 if (i + _sizeOfT > (int)virtualMemoryPage.RegionSize)
                 {
                     break;
                 }
-                var bufferValue = virtualMemoryPage.Bytes.AsSpan().Slice(i, _sizeOfT).ToArray();
-                var valueObject = bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType);
+                var memoryValue = pageBytesAsSpan.Slice(i, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
 
-                if (MeetsTheScanConstraint(valueObject, _userInput, _scanConstraint))
+                if (MeetsTheScanConstraint(memoryValue, _userInput, _scanConstraint))
                 {
-                    yield return new ProcessMemory(virtualMemoryPage.BaseAddress, i, valueObject, _scanConstraint.ScanDataType);
+                    matchingProcessMemories.Add(new ProcessMemory(virtualMemoryPage.BaseAddress, i, memoryValue, _scanConstraint.ScanDataType));
                 }
             }
         }
+
+        return matchingProcessMemories;
     }
 }
