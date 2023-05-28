@@ -94,8 +94,8 @@ public sealed class NativeApi
         where T : struct
     {
         var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
-        var bytesToWrite = new byte[typeSize];
-        IntPtr ptr = Marshal.AllocHGlobal(typeSize);
+        var bytesToWrite = _byteArrayPool.Rent(typeSize);
+        var ptr = Marshal.AllocHGlobal(typeSize);
         Marshal.StructureToPtr(newValue, ptr, true);
         Marshal.Copy(ptr, bytesToWrite, 0, typeSize);
         Marshal.FreeHGlobal(ptr);
@@ -112,6 +112,8 @@ public sealed class NativeApi
             bytesToWrite,
             (uint)typeSize,
             out uint _);
+
+        _byteArrayPool.Return(bytesToWrite);
     }
 
     public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemory> virtualAddresses)
