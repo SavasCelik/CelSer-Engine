@@ -30,27 +30,27 @@ public static class ByteArrayExtension
         };
     }
 
-    public static object ByteArrayToObject(this byte[] byteArray, ScanDataType scanDataType)
+    public static string ByteArrayToObject(this byte[] byteArray, ScanDataType scanDataType)
     {
         if (ScanDataType.Short == scanDataType)
         {
-            return BitConverter.ToInt16(byteArray);
+            return BitConverter.ToInt16(byteArray).ToString();
         }
         if (ScanDataType.Integer == scanDataType)
         {
-            return BitConverter.ToInt32(byteArray);
+            return BitConverter.ToInt32(byteArray).ToString();
         }
         if (ScanDataType.Float == scanDataType)
         {
-            return BitConverter.ToSingle(byteArray);
+            return BitConverter.ToSingle(byteArray).ToString();
         }
         if (ScanDataType.Double == scanDataType)
         {
-            return BitConverter.ToDouble(byteArray);
+            return BitConverter.ToDouble(byteArray).ToString();
         }
         if (ScanDataType.Long == scanDataType)
         {
-            return BitConverter.ToInt64(byteArray);
+            return BitConverter.ToInt64(byteArray).ToString();
         }
 
         throw new NotImplementedException("");
