@@ -6,14 +6,14 @@ namespace CelSerEngine.Models;
 
 public partial class ValueAddress : ObservableProcessMemory
 {
-    public dynamic? PrevoiusValue { get; set; }
+    public string? PrevoiusValue { get; set; }
 
-    public ValueAddress(IntPtr baseAddress, int baseOffset, dynamic value, ScanDataType scanDataType) : base(baseAddress, baseOffset, 0, scanDataType)
+    public ValueAddress(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType) : base(baseAddress, baseOffset, "leer", scanDataType)
     {
         AddressDisplayString = Address.ToString("X");
     }
 
-    public ValueAddress(ProcessMemory processMemory) : this(processMemory.BaseAddress, processMemory.BaseOffset, 0, processMemory.ScanDataType)
+    public ValueAddress(ProcessMemory processMemory) : this(processMemory.BaseAddress, processMemory.BaseOffset, "leer", processMemory.ScanDataType)
     {
     }
 }

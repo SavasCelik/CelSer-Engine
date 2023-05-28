@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using CelSerEngine.Core.Comparators;
-using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 
@@ -80,17 +79,14 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = true;
         await Task.Run(() =>
         {
-            var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
-            {
-                UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
-            };
+            var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
             //var comparer = new ValueComparer(SelectedScanConstraint);
             var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
             var pages = NativeApi.GatherVirtualPages(processHandle).ToArray();
             var sw = new Stopwatch();
             sw.Start();
-            var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater).ToList();
+            var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater);
             sw.Stop();
             Debug.WriteLine(sw.Elapsed);
             // Slower but has visiual effect
@@ -119,16 +115,13 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = true;
         var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
         NativeApi.UpdateAddresses(processHandle, _scanResultsViewModel.AllScanItems);
-        var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
-        {
-            UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
-        };
-        var foundItems = _scanResultsViewModel.AllScanItems.Where(valueAddress => ValueComparer.CompareDataByScanConstraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint.ScanCompareType)).ToList();
+        var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
+        var foundItems = _scanResultsViewModel.AllScanItems.Where(valueAddress => ValueComparer.MeetsTheScanConstraint(valueAddress.Value, scanConstraint.UserInput, scanConstraint)).ToList();
         AddFoundItems(foundItems);
         Scanning = false;
     }
 
-    private void AddFoundItems(List<ProcessMemory> foundItems)
+    private void AddFoundItems(IReadOnlyCollection<ProcessMemory> foundItems)
     {
         _scanResultsViewModel.SetScanItems(foundItems);
         FoundItemsDisplayString = $"Found: {foundItems.Count.ToString("n0", new CultureInfo("en-US"))}" +

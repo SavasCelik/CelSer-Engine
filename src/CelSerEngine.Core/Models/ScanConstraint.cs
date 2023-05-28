@@ -2,14 +2,14 @@
 
 public class ScanConstraint
 {
-    public dynamic UserInput { get; set; }
+    public string UserInput { get; set; }
     public ScanDataType ScanDataType { get; set; }
     public ScanCompareType ScanCompareType { get; set; }
 
-    public ScanConstraint(ScanCompareType scanCompareType, ScanDataType dataType)
+    public ScanConstraint(ScanCompareType scanCompareType, ScanDataType dataType, string userInput)
     {
         ScanDataType = dataType;
         ScanCompareType = scanCompareType;
-        UserInput = "";
+        UserInput = userInput;
     }
 }

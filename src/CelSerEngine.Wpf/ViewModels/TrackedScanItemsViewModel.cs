@@ -81,15 +81,15 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     {
         var selectedTrackedItems = selectedItems.Cast<TrackedItem>().ToArray();
 
-        if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.ValueString, nameof(IProcessMemory.Value), out string newValue))
+        if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.Value, nameof(IProcessMemory.Value), out string newValue))
         {
             foreach (var trackedItem in selectedTrackedItems)
             {
                 if (trackedItem.IsFreezed)
                 {
-                    trackedItem.SetValue = newValue.ToPrimitiveDataType(trackedItem.Item.ScanDataType);
+                    trackedItem.SetValue = newValue;
                 }
-                trackedItem.Item.Value = newValue.ToPrimitiveDataType(trackedItem.Item.ScanDataType);
+                trackedItem.Item.Value = newValue;
                 NativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
             }
         }

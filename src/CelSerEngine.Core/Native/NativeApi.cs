@@ -64,10 +64,41 @@ public sealed class NativeApi
             throw new Exception("Failed reading memory");
     }
 
-    public static void WriteMemory(IntPtr hProcess, IProcessMemory trackedScanItem, dynamic newValue)
+    public static void WriteMemory(IntPtr hProcess, IProcessMemory trackedScanItem, string newValue)
+    {
+        switch (trackedScanItem.ScanDataType)
+        {
+            case ScanDataType.Short:
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<short>());
+                break;
+            case ScanDataType.Integer:
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<int>());
+                break;
+            case ScanDataType.Float:
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<float>());
+                break;
+            case ScanDataType.Double:
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<double>());
+                break;
+            case ScanDataType.Long:
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<long>());
+                break;
+            default:
+                throw new NotImplementedException($"{nameof(WriteMemory)} for Type: {trackedScanItem.ScanDataType} is not implemented");
+
+        }
+        
+    }
+
+    private static void WriteMemory<T>(IntPtr hProcess, IProcessMemory trackedScanItem, T newValue)
+        where T : struct
     {
         var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
-        var bytesToWrite = BitConverter.GetBytes(newValue);
+        var bytesToWrite = _byteArrayPool.Rent(typeSize);
+        var ptr = Marshal.AllocHGlobal(typeSize);
+        Marshal.StructureToPtr(newValue, ptr, true);
+        Marshal.Copy(ptr, bytesToWrite, 0, typeSize);
+        Marshal.FreeHGlobal(ptr);
         var memoryAddress = trackedScanItem.Address;
 
         if (trackedScanItem is IPointer pointerItem)
@@ -81,6 +112,8 @@ public sealed class NativeApi
             bytesToWrite,
             (uint)typeSize,
             out uint _);
+
+        _byteArrayPool.Return(bytesToWrite);
     }
 
     public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemory> virtualAddresses)
@@ -108,7 +141,7 @@ public sealed class NativeApi
         var typeSize = processMemory.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
         ReadVirtualMemory(hProcess, processMemory.Address, (uint)typeSize, buffer);
-        processMemory.Value = buffer.ByteArrayToObject(processMemory.ScanDataType);
+        processMemory.Value = buffer.ToScanDataTypeString(processMemory.ScanDataType);
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
@@ -160,7 +193,7 @@ public sealed class NativeApi
         var typeSize = pointerAddress.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
         ReadVirtualMemory(hProcess, pointerAddress.PointingTo, (uint)typeSize, buffer);
-        pointerAddress.Value = buffer.ByteArrayToObject(pointerAddress.ScanDataType);
+        pointerAddress.Value = buffer.ToScanDataTypeString(pointerAddress.ScanDataType);
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
