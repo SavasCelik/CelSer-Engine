@@ -116,7 +116,7 @@ public partial class MainViewModel : ObservableRecipient
         var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
         NativeApi.UpdateAddresses(processHandle, _scanResultsViewModel.AllScanItems);
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
-        var foundItems = _scanResultsViewModel.AllScanItems.Where(valueAddress => ValueComparer.CompareDataByScanConstraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint)).ToList();
+        var foundItems = _scanResultsViewModel.AllScanItems.Where(valueAddress => ValueComparer.MeetsTheScanConstraint(valueAddress.Value, scanConstraint.UserInput, scanConstraint)).ToList();
         AddFoundItems(foundItems);
         Scanning = false;
     }
