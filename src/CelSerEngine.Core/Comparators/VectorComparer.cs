@@ -5,7 +5,7 @@ using CelSerEngine.Core.Models;
 
 namespace CelSerEngine.Core.Comparators
 {
-    public class VectorComparer<T> : IScanComparer where T : struct
+    public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
     {
         private readonly ScanConstraint _scanConstraint;
         private readonly Vector<T> _userInputAsVector;
@@ -15,7 +15,7 @@ namespace CelSerEngine.Core.Comparators
         public VectorComparer(ScanConstraint scanConstraint)
         {
             _scanConstraint = scanConstraint;
-            _userInputAsVector = new Vector<T>((T)scanConstraint.UserInput);
+            _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseToINumberT<T>());
             _sizeOfT = Marshal.SizeOf(default(T));
         }
 

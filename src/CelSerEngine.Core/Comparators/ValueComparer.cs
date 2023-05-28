@@ -1,12 +1,13 @@
 ﻿using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
+using System.Numerics;
 
 namespace CelSerEngine.Core.Comparators;
 
 public class ValueComparer : IScanComparer
 {
     private readonly ScanConstraint _scanConstraint;
-    private dynamic _userInput;
+    private string _userInput;
     private readonly int _sizeOfT;
 
     public ValueComparer(ScanConstraint scanConstraint)
@@ -16,15 +17,32 @@ public class ValueComparer : IScanComparer
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
     }
 
-    public static bool CompareDataByScanConstraintType(dynamic lhs, dynamic rhs, ScanCompareType scanConstraintType)
+    public static bool CompareDataByScanConstraintType(string lhs, string rhs, ScanConstraint scanConstraint)
     {
-        if (!((Type)lhs.GetType()).IsValueType)
-            throw new ArgumentException("lhs must be a ValueType (struct)");
+        return scanConstraint.ScanDataType switch
+        {
+            ScanDataType.Short => CompareDataByScanConstraintType<short>(lhs, rhs, scanConstraint),
+            ScanDataType.Integer => CompareDataByScanConstraintType<int>(lhs, rhs, scanConstraint),
+            ScanDataType.Float => CompareDataByScanConstraintType<float>(lhs, rhs, scanConstraint),
+            ScanDataType.Double => CompareDataByScanConstraintType<double>(lhs, rhs, scanConstraint),
+            ScanDataType.Long => CompareDataByScanConstraintType<long>(lhs, rhs, scanConstraint),
+            _ => throw new NotImplementedException($"Parsing string to Type: {scanConstraint.ScanDataType} not implemented")
+        };
+    }
 
-        if (!((Type)rhs.GetType()).IsValueType)
-            throw new ArgumentException("rhs must be a ValueType (struct)");
+    public static bool CompareDataByScanConstraintType<T>(string lhs, string rhs, ScanConstraint scanConstraint)
+        where T : INumber<T>
+    {
+        T lhsValue = lhs.ParseToINumberT<T>();
+        T rhsValue = rhs.ParseToINumberT<T>();
 
-        return scanConstraintType switch
+        return CompareDataByScanConstraintType(lhsValue, rhsValue, scanConstraint);
+    }
+
+    public static bool CompareDataByScanConstraintType<T>(T lhs, T rhs, ScanConstraint scanConstraint) 
+        where T : INumber<T>
+    {
+        return scanConstraint.ScanCompareType switch
         {
             ScanCompareType.ExactValue => lhs == rhs,
             ScanCompareType.SmallerThan => lhs < rhs,
@@ -46,7 +64,7 @@ public class ValueComparer : IScanComparer
                 var bufferValue = virtualMemoryPage.Bytes.AsSpan().Slice(i, _sizeOfT).ToArray();
                 var valueObject = bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType);
 
-                if (CompareDataByScanConstraintType(valueObject, _userInput, _scanConstraint.ScanCompareType))
+                if (CompareDataByScanConstraintType(valueObject, _userInput, _scanConstraint))
                 {
                     yield return new ProcessMemory(virtualMemoryPage.BaseAddress, i, bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType), _scanConstraint.ScanDataType);
                 }

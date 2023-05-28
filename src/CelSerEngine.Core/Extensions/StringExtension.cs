@@ -1,4 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
+using System.Globalization;
+using System.Numerics;
 
 namespace CelSerEngine.Core.Extensions;
 
@@ -32,5 +34,10 @@ public static class StringExtension
         }
 
         throw new ArgumentOutOfRangeException($"Method ToPrimitiveDataType has no conversion for {scanDataType.GetDisplayName()}");
+    }
+
+    public static T ParseToINumberT<T>(this string stringValue) where T : INumber<T>
+    {
+        return T.Parse(stringValue, CultureInfo.InvariantCulture);
     }
 }

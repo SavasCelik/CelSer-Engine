@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using CelSerEngine.Core.Comparators;
-using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 
@@ -80,10 +79,7 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = true;
         await Task.Run(() =>
         {
-            var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
-            {
-                UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
-            };
+            var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
             //var comparer = new ValueComparer(SelectedScanConstraint);
             var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
@@ -119,11 +115,8 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = true;
         var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
         NativeApi.UpdateAddresses(processHandle, _scanResultsViewModel.AllScanItems);
-        var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType)
-        {
-            UserInput = userInput.ToPrimitiveDataType(SelectedScanDataType)
-        };
-        var foundItems = _scanResultsViewModel.AllScanItems.Where(valueAddress => ValueComparer.CompareDataByScanConstraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint.ScanCompareType)).ToList();
+        var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
+        var foundItems = _scanResultsViewModel.AllScanItems.Where(valueAddress => ValueComparer.CompareDataByScanConstraintType(valueAddress.Value, scanConstraint.UserInput, scanConstraint)).ToList();
         AddFoundItems(foundItems);
         Scanning = false;
     }

@@ -11,7 +11,7 @@ public partial class TrackedItem : ObservableObject
     private string _description;
 
     public ObservableProcessMemory Item { get; set; }
-    public dynamic? SetValue { get; set; }
+    public string? SetValue { get; set; }
 
     partial void OnIsFreezedChanged(bool value)
     {
