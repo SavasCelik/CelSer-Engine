@@ -2,43 +2,42 @@
 using System;
 using System.Windows;
 
-namespace CelSerEngine.XamlBehaviors
+namespace CelSerEngine.XamlBehaviors;
+
+/// <summary>
+/// https://stackoverflow.com/questions/34271498/how-to-handle-scrollviewer-scrollchanged-event-in-mvvm#answer-34272606
+/// </summary>
+public class RoutedEventTrigger : EventTriggerBase<DependencyObject>
 {
-    /// <summary>
-    /// https://stackoverflow.com/questions/34271498/how-to-handle-scrollviewer-scrollchanged-event-in-mvvm#answer-34272606
-    /// </summary>
-    public class RoutedEventTrigger : EventTriggerBase<DependencyObject>
+    public RoutedEvent? RoutedEvent { get; set; }
+
+    protected override void OnAttached()
     {
-        public RoutedEvent? RoutedEvent { get; set; }
+        var associatedElement = AssociatedObject as FrameworkElement;
 
-        protected override void OnAttached()
+        if (AssociatedObject is Behavior behavior)
         {
-            var associatedElement = AssociatedObject as FrameworkElement;
-
-            if (AssociatedObject is Behavior behavior)
-            {
-                associatedElement = ((IAttachedObject)behavior).AssociatedObject as FrameworkElement;
-            }
-
-            if (associatedElement == null)
-            {
-                throw new ArgumentException("Routed Event trigger can only be associated to framework elements");
-            }
-
-            if (RoutedEvent != null)
-            {
-                associatedElement.AddHandler(RoutedEvent, new RoutedEventHandler(OnRoutedEvent));
-            }
+            associatedElement = ((IAttachedObject)behavior).AssociatedObject as FrameworkElement;
         }
 
-        void OnRoutedEvent(object sender, RoutedEventArgs args)
+        if (associatedElement == null)
         {
-            base.OnEvent(args);
+            throw new ArgumentException("Routed Event trigger can only be associated to framework elements");
         }
 
-        protected override string GetEventName()
+        if (RoutedEvent != null)
         {
-            return RoutedEvent!.Name;
+            associatedElement.AddHandler(RoutedEvent, new RoutedEventHandler(OnRoutedEvent));
         }
+    }
+
+    void OnRoutedEvent(object sender, RoutedEventArgs args)
+    {
+        base.OnEvent(args);
+    }
+
+    protected override string GetEventName()
+    {
+        return RoutedEvent!.Name;
     }
 }
