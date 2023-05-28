@@ -69,19 +69,19 @@ public sealed class NativeApi
         switch (trackedScanItem.ScanDataType)
         {
             case ScanDataType.Short:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToINumberT<short>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<short>());
                 break;
             case ScanDataType.Integer:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToINumberT<int>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<int>());
                 break;
             case ScanDataType.Float:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToINumberT<float>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<float>());
                 break;
             case ScanDataType.Double:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToINumberT<double>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<double>());
                 break;
             case ScanDataType.Long:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToINumberT<long>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<long>());
                 break;
             default:
                 throw new NotImplementedException($"{nameof(WriteMemory)} for Type: {trackedScanItem.ScanDataType} is not implemented");
