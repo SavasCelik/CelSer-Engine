@@ -17,29 +17,29 @@ public class ValueComparer : IScanComparer
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
     }
 
-    public static bool CompareDataByScanConstraintType(string lhs, string rhs, ScanConstraint scanConstraint)
+    public static bool MeetsTheScanConstraint(string lhs, string rhs, ScanConstraint scanConstraint)
     {
         return scanConstraint.ScanDataType switch
         {
-            ScanDataType.Short => CompareDataByScanConstraintType<short>(lhs, rhs, scanConstraint),
-            ScanDataType.Integer => CompareDataByScanConstraintType<int>(lhs, rhs, scanConstraint),
-            ScanDataType.Float => CompareDataByScanConstraintType<float>(lhs, rhs, scanConstraint),
-            ScanDataType.Double => CompareDataByScanConstraintType<double>(lhs, rhs, scanConstraint),
-            ScanDataType.Long => CompareDataByScanConstraintType<long>(lhs, rhs, scanConstraint),
+            ScanDataType.Short => MeetsTheScanConstraint<short>(lhs, rhs, scanConstraint),
+            ScanDataType.Integer => MeetsTheScanConstraint<int>(lhs, rhs, scanConstraint),
+            ScanDataType.Float => MeetsTheScanConstraint<float>(lhs, rhs, scanConstraint),
+            ScanDataType.Double => MeetsTheScanConstraint<double>(lhs, rhs, scanConstraint),
+            ScanDataType.Long => MeetsTheScanConstraint<long>(lhs, rhs, scanConstraint),
             _ => throw new NotImplementedException($"Parsing string to Type: {scanConstraint.ScanDataType} not implemented")
         };
     }
 
-    public static bool CompareDataByScanConstraintType<T>(string lhs, string rhs, ScanConstraint scanConstraint)
+    public static bool MeetsTheScanConstraint<T>(string lhs, string rhs, ScanConstraint scanConstraint)
         where T : INumber<T>
     {
         T lhsValue = lhs.ParseToStruct<T>();
         T rhsValue = rhs.ParseToStruct<T>();
 
-        return CompareDataByScanConstraintType(lhsValue, rhsValue, scanConstraint);
+        return MeetsTheScanConstraint(lhsValue, rhsValue, scanConstraint);
     }
 
-    public static bool CompareDataByScanConstraintType<T>(T lhs, T rhs, ScanConstraint scanConstraint) 
+    public static bool MeetsTheScanConstraint<T>(T lhs, T rhs, ScanConstraint scanConstraint) 
         where T : INumber<T>
     {
         return scanConstraint.ScanCompareType switch
@@ -64,9 +64,9 @@ public class ValueComparer : IScanComparer
                 var bufferValue = virtualMemoryPage.Bytes.AsSpan().Slice(i, _sizeOfT).ToArray();
                 var valueObject = bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType);
 
-                if (CompareDataByScanConstraintType(valueObject, _userInput, _scanConstraint))
+                if (MeetsTheScanConstraint(valueObject, _userInput, _scanConstraint))
                 {
-                    yield return new ProcessMemory(virtualMemoryPage.BaseAddress, i, bufferValue.ByteArrayToObject(_scanConstraint.ScanDataType), _scanConstraint.ScanDataType);
+                    yield return new ProcessMemory(virtualMemoryPage.BaseAddress, i, valueObject, _scanConstraint.ScanDataType);
                 }
             }
         }
