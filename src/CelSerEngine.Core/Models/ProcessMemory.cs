@@ -15,8 +15,4 @@ public class ProcessMemory : IProcessMemory
         Value = value;
         ScanDataType = scanDataType;
     }
-
-    public ProcessMemory(IntPtr baseAddress, int baseOffset, ScanDataType scanDataType) : this(baseAddress, baseOffset, "leer", scanDataType)
-    {
-    }
 }
