@@ -222,7 +222,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
                 var bufferValue = BitConverter.ToInt64(page.Bytes, i);
                 var entry = new Pointer
                 {
-                    BaseAddress = new IntPtr((long)page.BaseAddress),
+                    BaseAddress = page.BaseAddress,
                     BaseOffset = i,
                     PointingTo = (IntPtr)bufferValue
                 };
