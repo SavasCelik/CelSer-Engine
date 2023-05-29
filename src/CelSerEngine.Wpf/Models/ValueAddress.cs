@@ -8,12 +8,12 @@ public partial class ValueAddress : ObservableProcessMemory
 {
     public string? PrevoiusValue { get; set; }
 
-    public ValueAddress(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType) : base(baseAddress, baseOffset, "leer", scanDataType)
+    public ValueAddress(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType) : base(baseAddress, baseOffset, value, scanDataType)
     {
         AddressDisplayString = Address.ToString("X");
     }
 
-    public ValueAddress(ProcessMemory processMemory) : this(processMemory.BaseAddress, processMemory.BaseOffset, "leer", processMemory.ScanDataType)
+    public ValueAddress(ProcessMemory processMemory) : this(processMemory.BaseAddress, processMemory.BaseOffset, processMemory.Value, processMemory.ScanDataType)
     {
     }
 }

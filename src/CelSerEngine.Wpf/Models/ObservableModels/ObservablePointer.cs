@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System;
 using CelSerEngine.Core.Models;
-using System.Diagnostics.CodeAnalysis;
 
 namespace CelSerEngine.Models.ObservableModels;
 
@@ -17,12 +16,12 @@ public partial class ObservablePointer : ObservableProcessMemory
     public List<IntPtr> Offsets { get; set; } = new List<IntPtr>();
     public override string AddressDisplayString => $"P->{PointingTo:X}";
 
-    public ObservablePointer(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType) : base(baseAddress, baseOffset, "leer", scanDataType)
+    public ObservablePointer(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType) : base(baseAddress, baseOffset, value, scanDataType)
     {
         _moduleName = "No ModuleName";
     }
 
-    public ObservablePointer(Pointer pointer) : base(pointer.BaseAddress, pointer.BaseOffset, "leer", pointer.ScanDataType)
+    public ObservablePointer(Pointer pointer) : base(pointer.BaseAddress, pointer.BaseOffset, pointer.Value, pointer.ScanDataType)
     {
         _moduleName = pointer.ModuleName;
         _pointingTo = pointer.PointingTo;
