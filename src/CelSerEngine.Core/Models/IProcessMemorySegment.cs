@@ -1,6 +1,6 @@
 ﻿namespace CelSerEngine.Core.Models;
 
-public interface IProcessMemory
+public interface IProcessMemorySegment
 {
     public IntPtr BaseAddress { get; set; }
     public int BaseOffset { get; set; }

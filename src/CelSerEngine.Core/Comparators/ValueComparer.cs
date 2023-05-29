@@ -51,9 +51,9 @@ public class ValueComparer : IScanComparer
         };
     }
 
-    public IReadOnlyCollection<ProcessMemory> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
+    public IReadOnlyCollection<IProcessMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
     {
-        var matchingProcessMemories = new List<ProcessMemory>();
+        var matchingProcessMemories = new List<IProcessMemorySegment>();
 
         foreach (var virtualMemoryPage in virtualMemoryPages)
         {
@@ -69,7 +69,7 @@ public class ValueComparer : IScanComparer
 
                 if (MeetsTheScanConstraint(memoryValue, _userInput, _scanConstraint))
                 {
-                    matchingProcessMemories.Add(new ProcessMemory(virtualMemoryPage.BaseAddress, i, memoryValue, _scanConstraint.ScanDataType));
+                    matchingProcessMemories.Add(new ProcessMemorySegment(virtualMemoryPage.BaseAddress, i, memoryValue, _scanConstraint.ScanDataType));
                 }
             }
         }

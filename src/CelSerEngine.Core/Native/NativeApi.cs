@@ -64,7 +64,7 @@ public sealed class NativeApi
             throw new Exception("Failed reading memory");
     }
 
-    public static void WriteMemory(IntPtr hProcess, IProcessMemory trackedScanItem, string newValue)
+    public static void WriteMemory(IntPtr hProcess, IProcessMemorySegment trackedScanItem, string newValue)
     {
         switch (trackedScanItem.ScanDataType)
         {
@@ -90,7 +90,7 @@ public sealed class NativeApi
         
     }
 
-    private static void WriteMemory<T>(IntPtr hProcess, IProcessMemory trackedScanItem, T newValue)
+    private static void WriteMemory<T>(IntPtr hProcess, IProcessMemorySegment trackedScanItem, T newValue)
         where T : struct
     {
         var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
@@ -116,7 +116,7 @@ public sealed class NativeApi
         _byteArrayPool.Return(bytesToWrite);
     }
 
-    public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemory> virtualAddresses)
+    public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemorySegment> virtualAddresses)
     {
         foreach (var address in virtualAddresses)
         {
@@ -133,7 +133,7 @@ public sealed class NativeApi
         }
     }
 
-    public static void UpdateProcessMemory(IntPtr hProcess, IProcessMemory processMemory)
+    public static void UpdateProcessMemory(IntPtr hProcess, IProcessMemorySegment processMemory)
     {
         if (processMemory == null)
             return;

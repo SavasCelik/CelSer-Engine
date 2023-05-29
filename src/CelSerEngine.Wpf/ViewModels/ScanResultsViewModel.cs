@@ -19,7 +19,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
     private List<ValueAddress> _scanItems;
 
     public const int MaxListedScanItems = 2_000_000;
-    public IReadOnlyCollection<IProcessMemory> AllScanItems { get; private set; }
+    public IReadOnlyCollection<IProcessMemorySegment> AllScanItems { get; private set; }
 
     private readonly TrackedScanItemsViewModel _trackedScanItemsViewModel;
     private readonly SelectProcessViewModel _selectProcessViewModel;
@@ -33,7 +33,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         _trackedScanItemsViewModel = trackedScanItemsViewModel;
         _selectProcessViewModel = selectProcessViewModel;
         _scanItems = new List<ValueAddress>(0);
-        AllScanItems = new List<IProcessMemory>(0);
+        AllScanItems = new List<IProcessMemorySegment>(0);
         _shownItemsStartIndex = 0;
         _shownItemsLength = 0;
 
@@ -45,7 +45,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         _timer.Start();
     }
 
-    public void SetScanItems(IReadOnlyCollection<IProcessMemory> scanItems)
+    public void SetScanItems(IReadOnlyCollection<IProcessMemorySegment> scanItems)
     {
         AllScanItems = scanItems;
         ScanItems = AllScanItems.Take(MaxListedScanItems).Select(x => new ValueAddress(x)).ToList();

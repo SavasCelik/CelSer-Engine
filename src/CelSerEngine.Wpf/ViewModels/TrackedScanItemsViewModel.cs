@@ -66,7 +66,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         if (dataGrid.CurrentColumn?.Header is not string colHeaderName)
             return;
 
-        if (colHeaderName == nameof(IProcessMemory.Value))
+        if (colHeaderName == nameof(IProcessMemorySegment.Value))
         {
             ShowChangeValueDialog(dataGrid.SelectedItems);
         }
@@ -81,7 +81,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     {
         var selectedTrackedItems = selectedItems.Cast<TrackedItem>().ToArray();
 
-        if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.Value, nameof(IProcessMemory.Value), out string newValue))
+        if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.Value, nameof(IProcessMemorySegment.Value), out string newValue))
         {
             foreach (var trackedItem in selectedTrackedItems)
             {

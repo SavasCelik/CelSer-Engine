@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace CelSerEngine.Wpf.Services;
 public class MemoryScanService : IMemoryScanService
 {
-    public async Task<IReadOnlyCollection<IProcessMemory>> ScanProcessMemory(ScanConstraint scanConstraint, IntPtr processHandle, IProgress<float> progressUpdater)
+    public async Task<IReadOnlyCollection<IProcessMemorySegment>> ScanProcessMemory(ScanConstraint scanConstraint, IntPtr processHandle, IProgress<float> progressUpdater)
     {
         var matchingMemories = await Task.Run(() =>
         {

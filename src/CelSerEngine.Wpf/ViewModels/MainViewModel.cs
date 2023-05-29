@@ -103,7 +103,7 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = false;
     }
 
-    private void AddFoundItems(IReadOnlyCollection<IProcessMemory> foundItems)
+    private void AddFoundItems(IReadOnlyCollection<IProcessMemorySegment> foundItems)
     {
         _scanResultsViewModel.SetScanItems(foundItems);
         FoundItemsDisplayString = $"Found: {foundItems.Count.ToString("n0", new CultureInfo("en-US"))}" +
@@ -114,7 +114,7 @@ public partial class MainViewModel : ObservableRecipient
     public void NewScan()
     {
         ShowFirstScanBtn();
-        var emptyList = new List<ProcessMemory>();
+        var emptyList = new List<IProcessMemorySegment>();
         _scanResultsViewModel.SetScanItems(emptyList);
         AddFoundItems(emptyList);
         GC.Collect();
