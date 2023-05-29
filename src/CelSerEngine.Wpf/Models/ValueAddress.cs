@@ -12,7 +12,7 @@ public partial class ValueAddress : ObservableProcessMemory
         AddressDisplayString = Address.ToString("X");
     }
 
-    public ValueAddress(ProcessMemory processMemory) : this(processMemory.BaseAddress, processMemory.BaseOffset, processMemory.Value, processMemory.ScanDataType)
+    public ValueAddress(IProcessMemory processMemory) : this(processMemory.BaseAddress, processMemory.BaseOffset, processMemory.Value, processMemory.ScanDataType)
     {
     }
 }
