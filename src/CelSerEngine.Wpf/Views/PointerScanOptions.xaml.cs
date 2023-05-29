@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace CelSerEngine.Views;
+namespace CelSerEngine.Wpf.Views;
 
 /// <summary>
 /// Interaction logic for PointerScanOptions.xaml

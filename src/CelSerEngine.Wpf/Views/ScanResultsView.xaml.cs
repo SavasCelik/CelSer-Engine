@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace CelSerEngine.Views;
+namespace CelSerEngine.Wpf.Views;
 
 public partial class ScanResultsView : UserControl
 {

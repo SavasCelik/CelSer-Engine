@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Markup;
 
-namespace CelSerEngine.MarkupExtensions;
+namespace CelSerEngine.Wpf.MarkupExtensions;
 
 /// <summary>
 /// https://brianlagunas.com/a-better-way-to-data-bind-enums-in-wpf/

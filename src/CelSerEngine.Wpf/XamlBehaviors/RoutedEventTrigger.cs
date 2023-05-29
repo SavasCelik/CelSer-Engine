@@ -2,7 +2,7 @@
 using System;
 using System.Windows;
 
-namespace CelSerEngine.XamlBehaviors;
+namespace CelSerEngine.Wpf.XamlBehaviors;
 
 /// <summary>
 /// https://stackoverflow.com/questions/34271498/how-to-handle-scrollviewer-scrollchanged-event-in-mvvm#answer-34272606

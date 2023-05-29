@@ -1,9 +1,9 @@
-﻿using CelSerEngine.ViewModels;
+﻿using CelSerEngine.Wpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Windows;
 
-namespace CelSerEngine;
+namespace CelSerEngine.Wpf;
 
 /// <summary>
 /// Interaction logic for App.xaml

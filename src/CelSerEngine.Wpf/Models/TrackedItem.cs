@@ -1,7 +1,7 @@
-﻿using CelSerEngine.Models.ObservableModels;
+﻿using CelSerEngine.Wpf.Models.ObservableModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace CelSerEngine.Models;
+namespace CelSerEngine.Wpf.Models;
 
 public partial class TrackedItem : ObservableObject
 {

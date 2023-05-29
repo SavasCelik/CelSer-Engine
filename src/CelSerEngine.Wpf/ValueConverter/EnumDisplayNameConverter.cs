@@ -3,7 +3,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace CelSerEngine.ValueConverter;
+namespace CelSerEngine.Wpf.ValueConverter;
 
 /// <summary>
 /// Inspired by this post
