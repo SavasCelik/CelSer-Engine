@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 using CelSerEngine.Core.Models;
 
-namespace CelSerEngine.Models.ObservableModels;
+namespace CelSerEngine.Wpf.Models.ObservableModels;
 
 public partial class ObservablePointer : ObservableProcessMemory
 {

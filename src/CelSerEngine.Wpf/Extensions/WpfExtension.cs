@@ -1,6 +1,6 @@
 ﻿using System.Windows.Media;
 
-namespace CelSerEngine.Extensions;
+namespace CelSerEngine.Wpf.Extensions;
 
 public static class WpfExtension
 {
@@ -12,16 +12,12 @@ public static class WpfExtension
         {
             child = VisualTreeHelper.GetChild(referenceVisual, i) as Visual;
             if (child != null && child is T)
-            {
                 break;
-            }
             else if (child != null)
             {
                 child = GetVisualChild<T>(child);
                 if (child != null && child is T)
-                {
                     break;
-                }
             }
         }
 

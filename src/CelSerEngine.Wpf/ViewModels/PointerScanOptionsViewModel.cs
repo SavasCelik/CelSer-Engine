@@ -1,8 +1,8 @@
-﻿using CelSerEngine.Views;
+﻿using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class PointerScanOptionsViewModel : ObservableRecipient
 {

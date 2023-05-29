@@ -11,7 +11,7 @@ using CelSerEngine.Core.Comparators;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 //[INotifyPropertyChanged]
 public partial class MainViewModel : ObservableRecipient

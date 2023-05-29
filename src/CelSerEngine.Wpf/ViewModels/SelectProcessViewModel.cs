@@ -1,12 +1,12 @@
-﻿using CelSerEngine.Models;
-using CelSerEngine.Views;
+﻿using CelSerEngine.Wpf.Models;
+using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class SelectProcessViewModel : ObservableRecipient
 {

@@ -1,8 +1,8 @@
 ﻿using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
-using CelSerEngine.Models;
-using CelSerEngine.Views;
+using CelSerEngine.Wpf.Models;
+using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class TrackedScanItemsViewModel : ObservableRecipient
 {

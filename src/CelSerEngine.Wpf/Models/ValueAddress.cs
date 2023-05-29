@@ -1,8 +1,8 @@
 ﻿using CelSerEngine.Core.Models;
-using CelSerEngine.Models.ObservableModels;
+using CelSerEngine.Wpf.Models.ObservableModels;
 using System;
 
-namespace CelSerEngine.Models;
+namespace CelSerEngine.Wpf.Models;
 
 public partial class ValueAddress : ObservableProcessMemory
 {

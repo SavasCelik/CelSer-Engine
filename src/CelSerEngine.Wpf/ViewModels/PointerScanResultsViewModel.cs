@@ -1,8 +1,8 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
-using CelSerEngine.Models;
-using CelSerEngine.Models.ObservableModels;
-using CelSerEngine.Views;
+using CelSerEngine.Wpf.Models;
+using CelSerEngine.Wpf.Models.ObservableModels;
+using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class PointerScanResultsViewModel : ObservableRecipient
 {

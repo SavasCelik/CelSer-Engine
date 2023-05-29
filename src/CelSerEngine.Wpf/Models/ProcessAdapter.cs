@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 
-namespace CelSerEngine.Models;
+namespace CelSerEngine.Wpf.Models;
 
 public class ProcessAdapter
 {
