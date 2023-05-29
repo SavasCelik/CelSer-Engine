@@ -1,5 +1,4 @@
-﻿using CelSerEngine.Wpf.Models.ObservableModels;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace CelSerEngine.Wpf.Models;
 

@@ -1,5 +1,4 @@
 ﻿using CelSerEngine.Core.Models;
-using CelSerEngine.Wpf.Models.ObservableModels;
 using System;
 
 namespace CelSerEngine.Wpf.Models;

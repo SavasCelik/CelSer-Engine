@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
-namespace CelSerEngine.Wpf.Models.ObservableModels;
+namespace CelSerEngine.Wpf.Models;
 
 public partial class ObservableProcessMemory : ObservableObject, IProcessMemory
 {
