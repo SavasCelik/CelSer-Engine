@@ -13,7 +13,7 @@ public class MemoryScanService : IMemoryScanService
     {
         var matchingMemories = await Task.Run(() =>
         {
-            var pages = NativeApi.GatherVirtualPages(processHandle).ToArray();
+            var pages = NativeApi.GatherVirtualPages(processHandle);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
             return comparer.GetMatchingValueAddresses(pages, progressUpdater);
         }).ConfigureAwait(false);
