@@ -20,4 +20,15 @@ public class MemoryScanService : IMemoryScanService
 
         return matchingMemories;
     }
+
+    public async Task<IReadOnlyCollection<IProcessMemorySegment>> FilterProcessMemorySegmentsByScanConstraint(IReadOnlyCollection<IProcessMemorySegment> memorySegments, ScanConstraint scanConstraint, IntPtr processHandle, IProgress<float> progressUpdater)
+    {
+        var matchingMemories = await Task.Run(() =>
+        {
+            NativeApi.UpdateAddresses(processHandle, memorySegments);
+           return memorySegments.Where(valueAddress => ValueComparer.MeetsTheScanConstraint(valueAddress.Value, scanConstraint.UserInput, scanConstraint)).ToArray();
+        }).ConfigureAwait(false);
+
+        return matchingMemories;
+    }
 }
