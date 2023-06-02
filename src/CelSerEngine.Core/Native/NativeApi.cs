@@ -220,12 +220,12 @@ public sealed class NativeApi
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
-    public static IList<VirtualMemoryPage> GatherVirtualPages(IntPtr hProcess)
+    public static IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(IntPtr hProcess)
     {
         if (hProcess == IntPtr.Zero)
             throw new ArgumentNullException(nameof(hProcess));
 
-        var virtualMemoryPages = new List<VirtualMemoryPage>();
+        var virtualMemoryRegions = new List<VirtualMemoryRegion>();
         GetSystemInfo(out var systemInfo);
 
         // IntPtr proc_min_address = (IntPtr)0x00007ff78cb10000;
@@ -258,8 +258,8 @@ public sealed class NativeApi
                 //VirtualProtectEx(pHandle, new IntPtr((long)mem_basic_info.BaseAddress), new UIntPtr(mem_basic_info.RegionSize), 0x40, out var prt);
                 memoryBasicInfos.Add(mem_basic_info);
                 var memoryBytes = ReadVirtualMemory(hProcess, (IntPtr)mem_basic_info.BaseAddress, (uint)mem_basic_info.RegionSize);
-                var virtualMemoryPage = new VirtualMemoryPage((IntPtr)mem_basic_info.BaseAddress, mem_basic_info.RegionSize, memoryBytes);
-                virtualMemoryPages.Add(virtualMemoryPage);
+                var virtualMemoryRegion = new VirtualMemoryRegion((IntPtr)mem_basic_info.BaseAddress, mem_basic_info.RegionSize, memoryBytes);
+                virtualMemoryRegions.Add(virtualMemoryRegion);
             }
 
             // move to the next memory chunk
@@ -267,6 +267,6 @@ public sealed class NativeApi
             proc_min_address = new IntPtr((long)proc_min_address_l);
         }
 
-        return virtualMemoryPages;
+        return virtualMemoryRegions;
     }
 }

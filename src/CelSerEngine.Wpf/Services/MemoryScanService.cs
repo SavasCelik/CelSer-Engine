@@ -13,9 +13,9 @@ public class MemoryScanService : IMemoryScanService
     {
         var matchingMemories = await Task.Run(() =>
         {
-            var pages = NativeApi.GatherVirtualPages(processHandle);
+            var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(processHandle);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-            return comparer.GetMatchingValueAddresses(pages, progressUpdater);
+            return comparer.GetMatchingValueAddresses(virtualMemoryRegions, progressUpdater);
         }).ConfigureAwait(false);
 
         return matchingMemories;
