@@ -4,12 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using CelSerEngine.Core.Comparators;
 using CelSerEngine.Core.Models;
-using CelSerEngine.Core.Native;
 using CelSerEngine.Wpf.Services;
 
 namespace CelSerEngine.Wpf.ViewModels;
