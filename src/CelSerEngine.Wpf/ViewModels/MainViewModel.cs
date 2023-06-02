@@ -89,7 +89,7 @@ public partial class MainViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    public void NextScan(string userInput)
+    public async Task NextScan(string userInput)
     {
         if (string.IsNullOrWhiteSpace(userInput))
             return;
@@ -97,13 +97,13 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = true;
         var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
-        NativeApi.UpdateAddresses(processHandle, _scanResultsViewModel.AllScanItems);
-        var foundItems = _scanResultsViewModel.AllScanItems.Where(valueAddress => ValueComparer.MeetsTheScanConstraint(valueAddress.Value, scanConstraint.UserInput, scanConstraint)).ToList();
+        var allItems = _scanResultsViewModel.AllScanItems;
+        var foundItems = await _memoryScanService.FilterProcessMemorySegmentsByScanConstraintAsync(allItems, scanConstraint, processHandle, _progressBarUpdater);
         AddFoundItems(foundItems);
         Scanning = false;
     }
 
-    private void AddFoundItems(IReadOnlyCollection<IProcessMemorySegment> foundItems)
+    private void AddFoundItems(IList<IProcessMemorySegment> foundItems)
     {
         _scanResultsViewModel.SetScanItems(foundItems);
         FoundItemsDisplayString = $"Found: {foundItems.Count.ToString("n0", new CultureInfo("en-US"))}" +

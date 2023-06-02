@@ -3,13 +3,15 @@ using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CelSerEngine.Wpf.Services;
 public class MemoryScanService : IMemoryScanService
 {
-    public async Task<IReadOnlyCollection<IProcessMemorySegment>> ScanProcessMemory(ScanConstraint scanConstraint, IntPtr processHandle, IProgress<float> progressUpdater)
+    public async Task<IList<IProcessMemorySegment>> ScanProcessMemoryAsync(
+        ScanConstraint scanConstraint,
+        IntPtr processHandle,
+        IProgress<float> progressUpdater)
     {
         var matchingMemories = await Task.Run(() =>
         {
@@ -21,14 +23,27 @@ public class MemoryScanService : IMemoryScanService
         return matchingMemories;
     }
 
-    public async Task<IReadOnlyCollection<IProcessMemorySegment>> FilterProcessMemorySegmentsByScanConstraint(IReadOnlyCollection<IProcessMemorySegment> memorySegments, ScanConstraint scanConstraint, IntPtr processHandle, IProgress<float> progressUpdater)
+    public async Task<IList<IProcessMemorySegment>> FilterProcessMemorySegmentsByScanConstraintAsync(
+        IList<IProcessMemorySegment> memorySegments,
+        ScanConstraint scanConstraint,
+        IntPtr processHandle,
+        IProgress<float> progressUpdater)
     {
-        var matchingMemories = await Task.Run(() =>
+        // TODO: this has to be better in performance try benchmarking linkedlist and using vectorcomparer
+        var filteredMemorySegments = await Task.Run(() =>
         {
             NativeApi.UpdateAddresses(processHandle, memorySegments);
-           return memorySegments.Where(valueAddress => ValueComparer.MeetsTheScanConstraint(valueAddress.Value, scanConstraint.UserInput, scanConstraint)).ToArray();
+            var passedMemorySegments = new List<IProcessMemorySegment>();
+
+            for (var i = 0; i < memorySegments.Count; i++)
+            {
+                if (ValueComparer.MeetsTheScanConstraint(memorySegments[i].Value, scanConstraint.UserInput, scanConstraint))
+                    passedMemorySegments.Add(memorySegments[i]);
+            }
+
+           return passedMemorySegments;
         }).ConfigureAwait(false);
 
-        return matchingMemories;
+        return filteredMemorySegments;
     }
 }
