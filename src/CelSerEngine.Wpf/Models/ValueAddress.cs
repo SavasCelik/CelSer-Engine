@@ -3,7 +3,7 @@ using System;
 
 namespace CelSerEngine.Wpf.Models;
 
-public partial class ValueAddress : ObservableProcessMemorySegment
+public partial class ValueAddress : ObservableMemorySegment
 {
     public string? PrevoiusValue { get; set; }
 
@@ -12,7 +12,7 @@ public partial class ValueAddress : ObservableProcessMemorySegment
         AddressDisplayString = Address.ToString("X");
     }
 
-    public ValueAddress(IProcessMemorySegment processMemory) : this(processMemory.BaseAddress, processMemory.BaseOffset, processMemory.Value, processMemory.ScanDataType)
+    public ValueAddress(IMemorySegment memorySegment) : this(memorySegment.BaseAddress, memorySegment.BaseOffset, memorySegment.Value, memorySegment.ScanDataType)
     {
     }
 }

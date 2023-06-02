@@ -95,12 +95,12 @@ public partial class MainViewModel : ObservableRecipient
         var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
         var allItems = _scanResultsViewModel.AllScanItems;
-        var foundItems = await _memoryScanService.FilterProcessMemorySegmentsByScanConstraintAsync(allItems, scanConstraint, processHandle, _progressBarUpdater);
+        var foundItems = await _memoryScanService.FilterMemorySegmentsByScanConstraintAsync(allItems, scanConstraint, processHandle, _progressBarUpdater);
         AddFoundItems(foundItems);
         Scanning = false;
     }
 
-    private void AddFoundItems(IList<IProcessMemorySegment> foundItems)
+    private void AddFoundItems(IList<IMemorySegment> foundItems)
     {
         _scanResultsViewModel.SetScanItems(foundItems);
         FoundItemsDisplayString = $"Found: {foundItems.Count.ToString("n0", new CultureInfo("en-US"))}" +
@@ -111,7 +111,7 @@ public partial class MainViewModel : ObservableRecipient
     public void NewScan()
     {
         ShowFirstScanBtn();
-        var emptyList = new List<IProcessMemorySegment>();
+        var emptyList = new List<IMemorySegment>();
         _scanResultsViewModel.SetScanItems(emptyList);
         AddFoundItems(emptyList);
         GC.Collect();

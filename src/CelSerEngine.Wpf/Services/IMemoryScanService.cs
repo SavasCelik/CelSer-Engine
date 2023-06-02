@@ -6,13 +6,13 @@ using System;
 namespace CelSerEngine.Wpf.Services;
 public interface IMemoryScanService
 {
-    public Task<IList<IProcessMemorySegment>> ScanProcessMemoryAsync(
+    public Task<IList<IMemorySegment>> ScanProcessMemoryAsync(
         ScanConstraint scanConstraint,
         IntPtr processHandle,
         IProgress<float> progressUpdater);
 
-    public Task<IList<IProcessMemorySegment>> FilterProcessMemorySegmentsByScanConstraintAsync(
-        IList<IProcessMemorySegment> memorySegments,
+    public Task<IList<IMemorySegment>> FilterMemorySegmentsByScanConstraintAsync(
+        IList<IMemorySegment> memorySegments,
         ScanConstraint scanConstraint,
         IntPtr processHandle,
         IProgress<float> progressUpdater);

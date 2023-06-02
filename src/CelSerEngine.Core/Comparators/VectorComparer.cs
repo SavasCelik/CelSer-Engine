@@ -34,9 +34,9 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
         };
     }
 
-    public IList<IProcessMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
+    public IList<IMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
     {
-        var matchingProcessMemories = new List<IProcessMemorySegment>();
+        var matchingProcessMemories = new List<IMemorySegment>();
 
         for (var regionIndex = 0; regionIndex < virtualMemoryRegions.Count; regionIndex++)
         {
@@ -59,7 +59,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
                             var memoryValue = regionBytesAsSpan.Slice(offset, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
 
                             matchingProcessMemories.Add(
-                                new ProcessMemorySegment(
+                                new MemorySegment(
                                     virtualMemoryRegion.BaseAddress, offset,
                                     memoryValue,
                                     _scanConstraint.ScanDataType));

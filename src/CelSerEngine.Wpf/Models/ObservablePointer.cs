@@ -5,7 +5,7 @@ using CelSerEngine.Core.Models;
 
 namespace CelSerEngine.Wpf.Models;
 
-public partial class ObservablePointer : ObservableProcessMemorySegment
+public partial class ObservablePointer : ObservableMemorySegment
 {
     [ObservableProperty]
     private string _moduleName;

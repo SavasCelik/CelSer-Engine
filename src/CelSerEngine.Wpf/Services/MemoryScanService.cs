@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace CelSerEngine.Wpf.Services;
 public class MemoryScanService : IMemoryScanService
 {
-    public async Task<IList<IProcessMemorySegment>> ScanProcessMemoryAsync(
+    public async Task<IList<IMemorySegment>> ScanProcessMemoryAsync(
         ScanConstraint scanConstraint,
         IntPtr processHandle,
         IProgress<float> progressUpdater)
@@ -23,8 +23,8 @@ public class MemoryScanService : IMemoryScanService
         return matchingMemories;
     }
 
-    public async Task<IList<IProcessMemorySegment>> FilterProcessMemorySegmentsByScanConstraintAsync(
-        IList<IProcessMemorySegment> memorySegments,
+    public async Task<IList<IMemorySegment>> FilterMemorySegmentsByScanConstraintAsync(
+        IList<IMemorySegment> memorySegments,
         ScanConstraint scanConstraint,
         IntPtr processHandle,
         IProgress<float> progressUpdater)
@@ -33,7 +33,7 @@ public class MemoryScanService : IMemoryScanService
         var filteredMemorySegments = await Task.Run(() =>
         {
             NativeApi.UpdateAddresses(processHandle, memorySegments);
-            var passedMemorySegments = new List<IProcessMemorySegment>();
+            var passedMemorySegments = new List<IMemorySegment>();
 
             for (var i = 0; i < memorySegments.Count; i++)
             {

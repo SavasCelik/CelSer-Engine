@@ -64,7 +64,7 @@ public sealed class NativeApi
             throw new Exception("Failed reading memory");
     }
 
-    public static void WriteMemory(IntPtr hProcess, IProcessMemorySegment trackedScanItem, string newValue)
+    public static void WriteMemory(IntPtr hProcess, IMemorySegment trackedScanItem, string newValue)
     {
         switch (trackedScanItem.ScanDataType)
         {
@@ -90,7 +90,7 @@ public sealed class NativeApi
         
     }
 
-    private static void WriteMemory<T>(IntPtr hProcess, IProcessMemorySegment trackedScanItem, T newValue)
+    private static void WriteMemory<T>(IntPtr hProcess, IMemorySegment trackedScanItem, T newValue)
         where T : struct
     {
         var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
@@ -116,7 +116,7 @@ public sealed class NativeApi
         _byteArrayPool.Return(bytesToWrite);
     }
 
-    public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemorySegment> virtualAddresses)
+    public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses)
     {
         foreach (var address in virtualAddresses)
         {
@@ -129,19 +129,19 @@ public sealed class NativeApi
                 continue;
             }
 
-            UpdateProcessMemory(hProcess, address);
+            UpdateMemorySegmennt(hProcess, address);
         }
     }
 
-    public static void UpdateProcessMemory(IntPtr hProcess, IProcessMemorySegment processMemory)
+    public static void UpdateMemorySegmennt(IntPtr hProcess, IMemorySegment memorySegment)
     {
-        if (processMemory == null)
+        if (memorySegment == null)
             return;
 
-        var typeSize = processMemory.ScanDataType.GetPrimitiveSize();
+        var typeSize = memorySegment.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
-        ReadVirtualMemory(hProcess, processMemory.Address, (uint)typeSize, buffer);
-        processMemory.Value = buffer.ToScanDataTypeString(processMemory.ScanDataType);
+        ReadVirtualMemory(hProcess, memorySegment.Address, (uint)typeSize, buffer);
+        memorySegment.Value = buffer.ToScanDataTypeString(memorySegment.ScanDataType);
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 

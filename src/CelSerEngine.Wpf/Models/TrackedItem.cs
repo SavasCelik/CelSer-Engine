@@ -9,7 +9,7 @@ public partial class TrackedItem : ObservableObject
     [ObservableProperty]
     private string _description;
 
-    public ObservableProcessMemorySegment Item { get; set; }
+    public ObservableMemorySegment Item { get; set; }
     public string? SetValue { get; set; }
 
     partial void OnIsFreezedChanged(bool value)
@@ -17,7 +17,7 @@ public partial class TrackedItem : ObservableObject
         SetValue = value ? Item.Value : null;
     }
 
-    public TrackedItem(ObservableProcessMemorySegment item)
+    public TrackedItem(ObservableMemorySegment item)
     {
         Item = item;
         _description = "Description";
