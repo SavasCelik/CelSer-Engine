@@ -4,12 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using CelSerEngine.Core.Comparators;
 using CelSerEngine.Core.Models;
-using CelSerEngine.Core.Native;
+using CelSerEngine.Wpf.Services;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
@@ -35,14 +33,16 @@ public partial class MainViewModel : ObservableRecipient
     private const string WindowTitleBase = "CelSer Engine";
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly ScanResultsViewModel _scanResultsViewModel;
+    private readonly IMemoryScanService _memoryScanService;
     private readonly IProgress<float> _progressBarUpdater;
     public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
     public bool Scanning { get; set; }
 
-    public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel)
+    public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _scanResultsViewModel = scanResultsViewModel;
+        _memoryScanService = memoryScanService;
         _windowTitle = WindowTitleBase;
         _firstScanVisibility = Visibility.Visible;
         _newScanVisibility = Visibility.Hidden;
@@ -77,51 +77,30 @@ public partial class MainViewModel : ObservableRecipient
 
         HideFirstScanBtn();
         Scanning = true;
-        await Task.Run(() =>
-        {
-            var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
-            var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-            //var comparer = new ValueComparer(SelectedScanConstraint);
-            var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
-            var pages = NativeApi.GatherVirtualPages(processHandle).ToArray();
-            var sw = new Stopwatch();
-            sw.Start();
-            var foundItems2 = comparer.GetMatchingValueAddresses(pages, _progressBarUpdater);
-            sw.Stop();
-            Debug.WriteLine(sw.Elapsed);
-            // Slower but has visiual effect
-            //foreach (var page in foundItems2)
-            //{
-            //    Application.Current.Dispatcher.Invoke(new Action(() =>
-            //    {
-            //        ScanItems.Add(page);
-            //        FoundItems = "Found: " + ScanItems.Count;
-            //    }));
-
-            //}
-
-            AddFoundItems(foundItems2);
-            _progressBarUpdater.Report(0);
-        });
+        var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
+        var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
+        var foundItems = await _memoryScanService.ScanProcessMemoryAsync(scanConstraint, processHandle, _progressBarUpdater);
+        AddFoundItems(foundItems);
+        _progressBarUpdater.Report(0);
         Scanning = false;
     }
 
     [RelayCommand]
-    public void NextScan(string userInput)
+    public async Task NextScan(string userInput)
     {
         if (string.IsNullOrWhiteSpace(userInput))
             return;
 
         Scanning = true;
         var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
-        NativeApi.UpdateAddresses(processHandle, _scanResultsViewModel.AllScanItems);
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
-        var foundItems = _scanResultsViewModel.AllScanItems.Where(valueAddress => ValueComparer.MeetsTheScanConstraint(valueAddress.Value, scanConstraint.UserInput, scanConstraint)).ToList();
+        var allItems = _scanResultsViewModel.AllScanItems;
+        var foundItems = await _memoryScanService.FilterMemorySegmentsByScanConstraintAsync(allItems, scanConstraint, processHandle, _progressBarUpdater);
         AddFoundItems(foundItems);
         Scanning = false;
     }
 
-    private void AddFoundItems(IReadOnlyCollection<ProcessMemory> foundItems)
+    private void AddFoundItems(IList<IMemorySegment> foundItems)
     {
         _scanResultsViewModel.SetScanItems(foundItems);
         FoundItemsDisplayString = $"Found: {foundItems.Count.ToString("n0", new CultureInfo("en-US"))}" +
@@ -132,7 +111,7 @@ public partial class MainViewModel : ObservableRecipient
     public void NewScan()
     {
         ShowFirstScanBtn();
-        var emptyList = new List<ProcessMemory>();
+        var emptyList = new List<IMemorySegment>();
         _scanResultsViewModel.SetScanItems(emptyList);
         AddFoundItems(emptyList);
         GC.Collect();

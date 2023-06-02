@@ -1,6 +1,6 @@
 ﻿namespace CelSerEngine.Core.Models;
 
-public class ProcessMemory : IProcessMemory
+public class MemorySegment : IMemorySegment
 {
     public IntPtr BaseAddress { get; set; }
     public int BaseOffset { get; set; }
@@ -8,7 +8,7 @@ public class ProcessMemory : IProcessMemory
     public string Value { get; set; }
     public ScanDataType ScanDataType { get; set; } = ScanDataType.Integer;
 
-    public ProcessMemory(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType)
+    public MemorySegment(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType)
     {
         BaseAddress = baseAddress;
         BaseOffset = baseOffset;

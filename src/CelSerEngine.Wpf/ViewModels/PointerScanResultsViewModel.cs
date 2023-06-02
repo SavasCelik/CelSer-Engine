@@ -1,7 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Wpf.Models;
-using CelSerEngine.Wpf.Models.ObservableModels;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -207,22 +206,22 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
 
     private IReadOnlyList<Pointer> GetHeapPointers(ProcessAdapter process)
     {
-        var pages = NativeApi.GatherVirtualPages(process.GetProcessHandle());
+        var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(process.GetProcessHandle());
         var allAddresses = new List<Pointer>();
 
-        foreach (var page in pages)
+        foreach (var virtualMemoryRegion in virtualMemoryRegions)
         {
-            var pageSpan = page.Bytes.AsSpan();
-            for (int i = 0; i < (int)page.RegionSize; i += _pointerSize)
+            var regionBytesAsSpan = virtualMemoryRegion.Bytes.AsSpan();
+            for (int i = 0; i < (int)virtualMemoryRegion.RegionSize; i += _pointerSize)
             {
-                if (i + _pointerSize > (int)page.RegionSize)
+                if (i + _pointerSize > (int)virtualMemoryRegion.RegionSize)
                 {
                     continue;
                 }
-                var bufferValue = BitConverter.ToInt64(page.Bytes, i);
+                var bufferValue = BitConverter.ToInt64(virtualMemoryRegion.Bytes, i);
                 var entry = new Pointer
                 {
-                    BaseAddress = new IntPtr((long)page.BaseAddress),
+                    BaseAddress = virtualMemoryRegion.BaseAddress,
                     BaseOffset = i,
                     PointingTo = (IntPtr)bufferValue
                 };

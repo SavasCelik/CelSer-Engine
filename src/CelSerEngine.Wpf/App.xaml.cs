@@ -1,4 +1,5 @@
-﻿using CelSerEngine.Wpf.ViewModels;
+﻿using CelSerEngine.Wpf.Services;
+using CelSerEngine.Wpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Windows;
@@ -39,6 +40,7 @@ public sealed partial class App : Application
         services.AddSingleton<ScanResultsViewModel>();
         services.AddSingleton<PointerScanOptionsViewModel>();
         services.AddSingleton<PointerScanResultsViewModel>();
+        services.AddSingleton<IMemoryScanService, MemoryScanService>();
 
         return services.BuildServiceProvider();
     }

@@ -34,19 +34,19 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
         };
     }
 
-    public IReadOnlyCollection<ProcessMemory> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
+    public IList<IMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
     {
-        var matchingProcessMemories = new List<ProcessMemory>();
+        var matchingProcessMemories = new List<IMemorySegment>();
 
-        for (var pageIndex = 0; pageIndex < virtualMemoryPages.Count; pageIndex++)
+        for (var regionIndex = 0; regionIndex < virtualMemoryRegions.Count; regionIndex++)
         {
-            var virtualMemoryPage = virtualMemoryPages[pageIndex];
-            var remaining = (int)virtualMemoryPage.RegionSize % GetVectorSize();
-            var pageBytesAsSpan = virtualMemoryPage.Bytes.AsSpan();
+            var virtualMemoryRegion = virtualMemoryRegions[regionIndex];
+            var remaining = (int)virtualMemoryRegion.RegionSize % GetVectorSize();
+            var regionBytesAsSpan = virtualMemoryRegion.Bytes.AsSpan();
 
-            for (var i = 0; i < (int)virtualMemoryPage.RegionSize - remaining; i += Vector<byte>.Count)
+            for (var i = 0; i < (int)virtualMemoryRegion.RegionSize - remaining; i += Vector<byte>.Count)
             {
-                var splitBuffer = pageBytesAsSpan.Slice(i, Vector<byte>.Count);
+                var splitBuffer = regionBytesAsSpan.Slice(i, Vector<byte>.Count);
                 var compareResult = CompareTo(splitBuffer);
 
                 if (!compareResult.Equals(Vector<byte>.Zero))
@@ -56,11 +56,11 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
                         if (compareResult[j] != 0)
                         {
                             var offset = i + j;
-                            var memoryValue = pageBytesAsSpan.Slice(offset, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
+                            var memoryValue = regionBytesAsSpan.Slice(offset, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
 
                             matchingProcessMemories.Add(
-                                new ProcessMemory(
-                                    virtualMemoryPage.BaseAddress, offset,
+                                new MemorySegment(
+                                    virtualMemoryRegion.BaseAddress, offset,
                                     memoryValue,
                                     _scanConstraint.ScanDataType));
                         }
@@ -68,7 +68,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
                 }
             }
 
-            var progress = (float)pageIndex * 100 / virtualMemoryPages.Count;
+            var progress = (float)regionIndex * 100 / virtualMemoryRegions.Count;
             progressBarUpdater?.Report(progress);
         }
 

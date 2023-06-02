@@ -64,7 +64,7 @@ public sealed class NativeApi
             throw new Exception("Failed reading memory");
     }
 
-    public static void WriteMemory(IntPtr hProcess, IProcessMemory trackedScanItem, string newValue)
+    public static void WriteMemory(IntPtr hProcess, IMemorySegment trackedScanItem, string newValue)
     {
         switch (trackedScanItem.ScanDataType)
         {
@@ -90,7 +90,7 @@ public sealed class NativeApi
         
     }
 
-    private static void WriteMemory<T>(IntPtr hProcess, IProcessMemory trackedScanItem, T newValue)
+    private static void WriteMemory<T>(IntPtr hProcess, IMemorySegment trackedScanItem, T newValue)
         where T : struct
     {
         var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
@@ -116,7 +116,7 @@ public sealed class NativeApi
         _byteArrayPool.Return(bytesToWrite);
     }
 
-    public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IProcessMemory> virtualAddresses)
+    public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses)
     {
         foreach (var address in virtualAddresses)
         {
@@ -129,19 +129,19 @@ public sealed class NativeApi
                 continue;
             }
 
-            UpdateProcessMemory(hProcess, address);
+            UpdateMemorySegmennt(hProcess, address);
         }
     }
 
-    public static void UpdateProcessMemory(IntPtr hProcess, IProcessMemory processMemory)
+    public static void UpdateMemorySegmennt(IntPtr hProcess, IMemorySegment memorySegment)
     {
-        if (processMemory == null)
+        if (memorySegment == null)
             return;
 
-        var typeSize = processMemory.ScanDataType.GetPrimitiveSize();
+        var typeSize = memorySegment.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
-        ReadVirtualMemory(hProcess, processMemory.Address, (uint)typeSize, buffer);
-        processMemory.Value = buffer.ToScanDataTypeString(processMemory.ScanDataType);
+        ReadVirtualMemory(hProcess, memorySegment.Address, (uint)typeSize, buffer);
+        memorySegment.Value = buffer.ToScanDataTypeString(memorySegment.ScanDataType);
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
@@ -220,12 +220,12 @@ public sealed class NativeApi
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
-    public static IList<VirtualMemoryPage> GatherVirtualPages(IntPtr hProcess)
+    public static IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(IntPtr hProcess)
     {
         if (hProcess == IntPtr.Zero)
             throw new ArgumentNullException(nameof(hProcess));
 
-        var virtualMemoryPages = new List<VirtualMemoryPage>();
+        var virtualMemoryRegions = new List<VirtualMemoryRegion>();
         GetSystemInfo(out var systemInfo);
 
         // IntPtr proc_min_address = (IntPtr)0x00007ff78cb10000;
@@ -258,8 +258,8 @@ public sealed class NativeApi
                 //VirtualProtectEx(pHandle, new IntPtr((long)mem_basic_info.BaseAddress), new UIntPtr(mem_basic_info.RegionSize), 0x40, out var prt);
                 memoryBasicInfos.Add(mem_basic_info);
                 var memoryBytes = ReadVirtualMemory(hProcess, (IntPtr)mem_basic_info.BaseAddress, (uint)mem_basic_info.RegionSize);
-                var virtualMemoryPage = new VirtualMemoryPage((IntPtr)mem_basic_info.BaseAddress, mem_basic_info.RegionSize, memoryBytes);
-                virtualMemoryPages.Add(virtualMemoryPage);
+                var virtualMemoryRegion = new VirtualMemoryRegion((IntPtr)mem_basic_info.BaseAddress, mem_basic_info.RegionSize, memoryBytes);
+                virtualMemoryRegions.Add(virtualMemoryRegion);
             }
 
             // move to the next memory chunk
@@ -267,6 +267,6 @@ public sealed class NativeApi
             proc_min_address = new IntPtr((long)proc_min_address_l);
         }
 
-        return virtualMemoryPages;
+        return virtualMemoryRegions;
     }
 }

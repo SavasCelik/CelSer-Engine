@@ -51,25 +51,25 @@ public class ValueComparer : IScanComparer
         };
     }
 
-    public IReadOnlyCollection<ProcessMemory> GetMatchingValueAddresses(IList<VirtualMemoryPage> virtualMemoryPages, IProgress<float> progressBarUpdater)
+    public IList<IMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
     {
-        var matchingProcessMemories = new List<ProcessMemory>();
+        var matchingProcessMemories = new List<IMemorySegment>();
 
-        foreach (var virtualMemoryPage in virtualMemoryPages)
+        foreach (var virtualMemoryRegion in virtualMemoryRegions)
         {
-            var pageBytesAsSpan = virtualMemoryPage.Bytes.AsSpan();
+            var regionBytesAsSpan = virtualMemoryRegion.Bytes.AsSpan();
 
-            for (var i = 0; i < (int)virtualMemoryPage.RegionSize; i += _sizeOfT)
+            for (var i = 0; i < (int)virtualMemoryRegion.RegionSize; i += _sizeOfT)
             {
-                if (i + _sizeOfT > (int)virtualMemoryPage.RegionSize)
+                if (i + _sizeOfT > (int)virtualMemoryRegion.RegionSize)
                 {
                     break;
                 }
-                var memoryValue = pageBytesAsSpan.Slice(i, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
+                var memoryValue = regionBytesAsSpan.Slice(i, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
 
                 if (MeetsTheScanConstraint(memoryValue, _userInput, _scanConstraint))
                 {
-                    matchingProcessMemories.Add(new ProcessMemory(virtualMemoryPage.BaseAddress, i, memoryValue, _scanConstraint.ScanDataType));
+                    matchingProcessMemories.Add(new MemorySegment(virtualMemoryRegion.BaseAddress, i, memoryValue, _scanConstraint.ScanDataType));
                 }
             }
         }

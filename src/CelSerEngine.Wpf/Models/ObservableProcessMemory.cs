@@ -2,9 +2,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
-namespace CelSerEngine.Wpf.Models.ObservableModels;
+namespace CelSerEngine.Wpf.Models;
 
-public partial class ObservableProcessMemory : ObservableObject, IProcessMemory
+public partial class ObservableMemorySegment : ObservableObject, IMemorySegment
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(AddressDisplayString))]
@@ -20,7 +20,7 @@ public partial class ObservableProcessMemory : ObservableObject, IProcessMemory
     public ScanDataType ScanDataType { get; set; }
     public virtual string AddressDisplayString { get; set; }
 
-    public ObservableProcessMemory(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType)
+    public ObservableMemorySegment(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType)
     {
         _baseAddress = baseAddress;
         _baseOffset = baseOffset;

@@ -1,6 +1,6 @@
 ﻿namespace CelSerEngine.Core.Models;
 
-public class Pointer : ProcessMemory
+public class Pointer : MemorySegment
 {
 
     public string ModuleName { get; set; }
