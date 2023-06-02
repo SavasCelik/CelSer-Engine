@@ -4,5 +4,5 @@ namespace CelSerEngine.Core.Comparators;
 
 public interface IScanComparer
 {
-    public IReadOnlyCollection<IProcessMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater);
+    public IList<IProcessMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater);
 }

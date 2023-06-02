@@ -34,7 +34,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
         };
     }
 
-    public IReadOnlyCollection<IProcessMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
+    public IList<IProcessMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
     {
         var matchingProcessMemories = new List<IProcessMemorySegment>();
 

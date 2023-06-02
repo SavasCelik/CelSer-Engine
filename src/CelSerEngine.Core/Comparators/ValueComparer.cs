@@ -51,7 +51,7 @@ public class ValueComparer : IScanComparer
         };
     }
 
-    public IReadOnlyCollection<IProcessMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
+    public IList<IProcessMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
     {
         var matchingProcessMemories = new List<IProcessMemorySegment>();
 
