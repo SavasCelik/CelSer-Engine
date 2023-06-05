@@ -122,7 +122,7 @@ public class MemoryScanService : IMemoryScanService
                         continue;
                     }
 
-                    alreadyTracking.Add(pointer.Address);
+                    //alreadyTracking.Add(pointer.Address);
 
                     var newAddy = IntPtr.Zero;
                     for (int i = 0; i < pointerScanOptions.MaxOffset; i += _pointerSize)
@@ -213,17 +213,18 @@ public class MemoryScanService : IMemoryScanService
                     continue;
 
                 var bufferValue = BitConverter.ToInt64(regionBytesAsSpan[i..]);
-
-                if (bufferValue == 0 || bufferValue % 4 != 0)
-                    continue;
-
-                var entry = new Pointer
+                var pointer = new Pointer
                 {
                     BaseAddress = virtualMemoryRegion.BaseAddress,
                     BaseOffset = i,
                     PointingTo = new IntPtr(bufferValue)
                 };
-                allAddresses.Add(entry);
+
+
+                if (pointer.PointingTo == 0 || pointer.Address % 4 != 0)
+                    continue;
+
+                allAddresses.Add(pointer);
             }
         }
 
