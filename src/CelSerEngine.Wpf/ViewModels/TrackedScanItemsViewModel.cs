@@ -1,5 +1,4 @@
-﻿using CelSerEngine.Core.Extensions;
-using CelSerEngine.Core.Models;
+﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
