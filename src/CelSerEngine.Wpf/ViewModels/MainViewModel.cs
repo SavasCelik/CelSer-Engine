@@ -123,7 +123,7 @@ public partial class MainViewModel : ObservableRecipient
         if (_selectProcessViewModel.ShowSelectProcessDialog())
         {
             var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
-            Debug.WriteLine("Opening Process was successfull");
+            Debug.WriteLine($"Opening Process {processHandle:X} was successfull");
         }
     }
 }

@@ -16,7 +16,7 @@ namespace CelSerEngine.Wpf.ViewModels;
 public partial class ScanResultsViewModel : ObservableRecipient
 {
     [ObservableProperty]
-    private List<ValueAddress> _scanItems;
+    private IList<ValueAddress> _scanItems;
 
     public const int MaxListedScanItems = 2_000_000;
     public IList<IMemorySegment> AllScanItems { get; private set; }
@@ -32,8 +32,8 @@ public partial class ScanResultsViewModel : ObservableRecipient
     {
         _trackedScanItemsViewModel = trackedScanItemsViewModel;
         _selectProcessViewModel = selectProcessViewModel;
-        _scanItems = new List<ValueAddress>(0);
-        AllScanItems = new List<IMemorySegment>(0);
+        _scanItems = new List<ValueAddress>();
+        AllScanItems = new List<IMemorySegment>();
         _shownItemsStartIndex = 0;
         _shownItemsLength = 0;
 
