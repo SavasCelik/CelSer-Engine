@@ -17,16 +17,12 @@ public partial class SelectProcessViewModel : ObservableRecipient
     [ObservableProperty]
     private string _searchProcessText;
 
-    private readonly IList<ProcessAdapter> _allProcesses;
+    private IList<ProcessAdapter> _allProcesses;
 
     public SelectProcessViewModel()
     {
         _searchProcessText = "";
-        _allProcesses = Process.GetProcesses()
-            .OrderBy(p => p.ProcessName)
-            .Select(p => new ProcessAdapter(p))
-            .Where(pa => pa.MainModule != null)
-            .ToList();
+        _allProcesses = new List<ProcessAdapter>();
         _processes = _allProcesses;
     }
 
@@ -45,6 +41,11 @@ public partial class SelectProcessViewModel : ObservableRecipient
     public bool ShowSelectProcessDialog()
     {
         SearchProcessText = "";
+        _allProcesses = Process.GetProcesses()
+            .OrderBy(p => p.ProcessName)
+            .Select(p => new ProcessAdapter(p))
+            .Where(pa => pa.MainModule != null)
+            .ToList();
         Processes = _allProcesses;
 
         var selectProcessWidnwow = new SelectProcess
