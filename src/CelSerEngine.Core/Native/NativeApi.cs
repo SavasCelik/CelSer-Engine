@@ -122,8 +122,8 @@ public sealed class NativeApi
         {
             if (address == null)
                 continue;
-            //ObservablePointer
-            if (address is Pointer pointerScanItem)
+
+            if (address is IPointer pointerScanItem)
             {
                 UpdatePointerAddress(hProcess, pointerScanItem);
                 continue;
@@ -183,7 +183,7 @@ public sealed class NativeApi
     //    trackedPointerScanItem.DetermineAddressDisplayString();
     //}
 
-    public static void UpdatePointerAddress(IntPtr hProcess, Pointer? pointerAddress)
+    public static void UpdatePointerAddress(IntPtr hProcess, IPointer? pointerAddress)
     {
         if (pointerAddress == null)
             return;
@@ -197,7 +197,7 @@ public sealed class NativeApi
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
-    public static void ResolvePointerPath(IntPtr hProcess, Pointer pointerAddress)
+    public static void ResolvePointerPath(IntPtr hProcess, IPointer pointerAddress)
     {
         var buffer = _byteArrayPool.Rent(sizeof(long));
         ReadVirtualMemory(hProcess, pointerAddress.Address, sizeof(long), buffer);

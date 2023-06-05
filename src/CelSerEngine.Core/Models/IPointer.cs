@@ -1,7 +1,7 @@
 ﻿namespace CelSerEngine.Core.Models;
-public interface IPointer
+public interface IPointer : IMemorySegment
 {
     public IntPtr PointingTo { get; set; }
     public string ModuleName { get; set; }
-    public List<IntPtr> Offsets { get; set; }
+    public IList<IntPtr> Offsets { get; set; }
 }
