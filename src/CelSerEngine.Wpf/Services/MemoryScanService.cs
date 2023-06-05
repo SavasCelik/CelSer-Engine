@@ -61,6 +61,8 @@ public class MemoryScanService : IMemoryScanService
 
     public async Task<IList<Pointer>> ScanForPointersAsync(PointerScanOptions pointerScanOptions)
     {
+        //var heapPointers = GetHeapPointers(pointerScanOptions.ProcessAdapter);
+        //var uu = heapPointers.Where(x => x.Address == 0x07E90B60).ToList();
         var result = await Task.Run(() =>
         {
             var staticPointers = GetStaticPointers(pointerScanOptions.ProcessAdapter);
