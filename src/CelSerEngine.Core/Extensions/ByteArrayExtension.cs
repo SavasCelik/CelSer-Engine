@@ -13,7 +13,7 @@ public static class ByteArrayExtension
             ScanDataType.Float => BitConverter.ToSingle(byteArray).ToString(),
             ScanDataType.Double => BitConverter.ToDouble(byteArray).ToString(),
             ScanDataType.Long => BitConverter.ToInt64(byteArray).ToString(),
-            _ => throw new NotImplementedException("")
+            _ => throw new NotSupportedException($"Type: {scanDataType} is not supported")
         };
     }
 
@@ -26,7 +26,7 @@ public static class ByteArrayExtension
             ScanDataType.Float => BitConverter.ToSingle(byteArray).ToString(),
             ScanDataType.Double => BitConverter.ToDouble(byteArray).ToString(),
             ScanDataType.Long => BitConverter.ToInt64(byteArray).ToString(),
-            _ => throw new NotImplementedException("")
+            _ => throw new NotSupportedException($"Type: {scanDataType} is not supported")
         };
     }
 }
