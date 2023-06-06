@@ -4,7 +4,7 @@ namespace CelSerEngine.Core.Extensions;
 
 public static class ByteArrayExtension
 {
-    public static string ToScanDataTypeString(this byte[] byteArray, ScanDataType scanDataType)
+    public static string ConvertToString(this byte[] byteArray, ScanDataType scanDataType)
     {
         return scanDataType switch
         {
@@ -17,7 +17,7 @@ public static class ByteArrayExtension
         };
     }
 
-    public static string ToScanDataTypeString(this Span<byte> byteArray, ScanDataType scanDataType)
+    public static string ConvertToString(this Span<byte> byteArray, ScanDataType scanDataType)
     {
         return scanDataType switch
         {

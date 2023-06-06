@@ -65,7 +65,7 @@ public class ValueComparer : IScanComparer
                 {
                     break;
                 }
-                var memoryValue = regionBytesAsSpan.Slice(i, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
+                var memoryValue = regionBytesAsSpan.Slice(i, _sizeOfT).ConvertToString(_scanConstraint.ScanDataType);
 
                 if (MeetsTheScanConstraint(memoryValue, _userInput, _scanConstraint))
                 {

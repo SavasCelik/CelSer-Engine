@@ -56,7 +56,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
                         if (compareResult[j] != 0)
                         {
                             var offset = i + j;
-                            var memoryValue = regionBytesAsSpan.Slice(offset, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
+                            var memoryValue = regionBytesAsSpan.Slice(offset, _sizeOfT).ConvertToString(_scanConstraint.ScanDataType);
 
                             matchingProcessMemories.Add(
                                 new MemorySegment(
