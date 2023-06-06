@@ -33,8 +33,8 @@ public class ValueComparer : IScanComparer
     public static bool MeetsTheScanConstraint<T>(string lhs, string rhs, ScanConstraint scanConstraint)
         where T : INumber<T>
     {
-        T lhsValue = lhs.ParseToStruct<T>();
-        T rhsValue = rhs.ParseToStruct<T>();
+        T lhsValue = lhs.ParseNumber<T>();
+        T rhsValue = rhs.ParseNumber<T>();
 
         return MeetsTheScanConstraint(lhsValue, rhsValue, scanConstraint);
     }

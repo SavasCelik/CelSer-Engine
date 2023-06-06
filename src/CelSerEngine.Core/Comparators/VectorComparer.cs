@@ -14,7 +14,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
     public VectorComparer(ScanConstraint scanConstraint)
     {
         _scanConstraint = scanConstraint;
-        _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseToStruct<T>());
+        _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseNumber<T>());
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
     }
 
