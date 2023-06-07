@@ -29,7 +29,7 @@ public class MemoryScanService : IMemoryScanService
         {
             var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(processHandle);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-            return comparer.GetMatchingValueAddresses(virtualMemoryRegions, progressUpdater);
+            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, progressUpdater);
         }).ConfigureAwait(false);
 
         return matchingMemories;

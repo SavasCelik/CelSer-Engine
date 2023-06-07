@@ -34,13 +34,14 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
         };
     }
 
-    public IList<IMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
+    public IList<IMemorySegment> GetMatchingMemorySegments(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float>? progressBarUpdater = null)
     {
         var matchingProcessMemories = new List<IMemorySegment>();
 
         for (var regionIndex = 0; regionIndex < virtualMemoryRegions.Count; regionIndex++)
         {
             var virtualMemoryRegion = virtualMemoryRegions[regionIndex];
+            // TODO: search the remaining section with a normal for loop
             var remaining = (int)virtualMemoryRegion.RegionSize % GetVectorSize();
             var regionBytesAsSpan = virtualMemoryRegion.Bytes.AsSpan();
 
