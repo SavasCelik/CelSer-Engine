@@ -69,19 +69,19 @@ public sealed class NativeApi
         switch (trackedScanItem.ScanDataType)
         {
             case ScanDataType.Short:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<short>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<short>());
                 break;
             case ScanDataType.Integer:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<int>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<int>());
                 break;
             case ScanDataType.Float:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<float>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<float>());
                 break;
             case ScanDataType.Double:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<double>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<double>());
                 break;
             case ScanDataType.Long:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseToStruct<long>());
+                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<long>());
                 break;
             default:
                 throw new NotImplementedException($"{nameof(WriteMemory)} for Type: {trackedScanItem.ScanDataType} is not implemented");
@@ -122,8 +122,8 @@ public sealed class NativeApi
         {
             if (address == null)
                 continue;
-            //ObservablePointer
-            if (address is Pointer pointerScanItem)
+
+            if (address is IPointer pointerScanItem)
             {
                 UpdatePointerAddress(hProcess, pointerScanItem);
                 continue;
@@ -141,7 +141,7 @@ public sealed class NativeApi
         var typeSize = memorySegment.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
         ReadVirtualMemory(hProcess, memorySegment.Address, (uint)typeSize, buffer);
-        memorySegment.Value = buffer.ToScanDataTypeString(memorySegment.ScanDataType);
+        memorySegment.Value = buffer.ConvertToString(memorySegment.ScanDataType);
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
@@ -183,7 +183,7 @@ public sealed class NativeApi
     //    trackedPointerScanItem.DetermineAddressDisplayString();
     //}
 
-    public static void UpdatePointerAddress(IntPtr hProcess, Pointer? pointerAddress)
+    public static void UpdatePointerAddress(IntPtr hProcess, IPointer? pointerAddress)
     {
         if (pointerAddress == null)
             return;
@@ -193,11 +193,11 @@ public sealed class NativeApi
         var typeSize = pointerAddress.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
         ReadVirtualMemory(hProcess, pointerAddress.PointingTo, (uint)typeSize, buffer);
-        pointerAddress.Value = buffer.ToScanDataTypeString(pointerAddress.ScanDataType);
+        pointerAddress.Value = buffer.ConvertToString(pointerAddress.ScanDataType);
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
-    public static void ResolvePointerPath(IntPtr hProcess, Pointer pointerAddress)
+    public static void ResolvePointerPath(IntPtr hProcess, IPointer pointerAddress)
     {
         var buffer = _byteArrayPool.Rent(sizeof(long));
         ReadVirtualMemory(hProcess, pointerAddress.Address, sizeof(long), buffer);

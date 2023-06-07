@@ -5,7 +5,7 @@ using CelSerEngine.Core.Models;
 
 namespace CelSerEngine.Wpf.Models;
 
-public partial class ObservablePointer : ObservableMemorySegment
+public partial class ObservablePointer : ObservableMemorySegment, IPointer
 {
     [ObservableProperty]
     private string _moduleName;
@@ -13,7 +13,7 @@ public partial class ObservablePointer : ObservableMemorySegment
     [NotifyPropertyChangedFor(nameof(AddressDisplayString))]
     public IntPtr _pointingTo;
     public string ModuleNameWithBaseOffset => $"{ModuleName} + {BaseOffset:X}";
-    public List<IntPtr> Offsets { get; set; } = new List<IntPtr>();
+    public IList<IntPtr> Offsets { get; set; } = new List<IntPtr>();
     public override string AddressDisplayString => $"P->{PointingTo:X}";
 
     public ObservablePointer(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType) : base(baseAddress, baseOffset, value, scanDataType)

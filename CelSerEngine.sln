@@ -9,6 +9,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{515CE63A-73D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngine.Core", "src\CelSerEngine.Core\CelSerEngine.Core.csproj", "{81617885-7392-4DF9-A6C9-5AE93C9928E4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{108185D4-63DE-42F8-A620-2936B87E9838}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CelSerEngine.Core.UnitTests", "CelSerEngine.Core.UnitTests\CelSerEngine.Core.UnitTests.csproj", "{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +27,10 @@ Global
 		{81617885-7392-4DF9-A6C9-5AE93C9928E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{81617885-7392-4DF9-A6C9-5AE93C9928E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{81617885-7392-4DF9-A6C9-5AE93C9928E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -30,6 +38,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{075A088D-A969-4DFB-A2E0-1D898FBA0B85} = {515CE63A-73D7-4D39-BD22-0784F60BA1DF}
 		{81617885-7392-4DF9-A6C9-5AE93C9928E4} = {515CE63A-73D7-4D39-BD22-0784F60BA1DF}
+		{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6} = {108185D4-63DE-42F8-A620-2936B87E9838}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30031E47-D3BE-4D7C-AF3D-C6AAB0EF3CE1}

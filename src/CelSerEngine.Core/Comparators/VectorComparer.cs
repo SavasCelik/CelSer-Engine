@@ -14,7 +14,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
     public VectorComparer(ScanConstraint scanConstraint)
     {
         _scanConstraint = scanConstraint;
-        _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseToStruct<T>());
+        _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseNumber<T>());
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
     }
 
@@ -34,14 +34,15 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
         };
     }
 
-    public IList<IMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
+    public IList<IMemorySegment> GetMatchingMemorySegments(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float>? progressBarUpdater = null)
     {
         var matchingProcessMemories = new List<IMemorySegment>();
 
         for (var regionIndex = 0; regionIndex < virtualMemoryRegions.Count; regionIndex++)
         {
             var virtualMemoryRegion = virtualMemoryRegions[regionIndex];
-            var remaining = (int)virtualMemoryRegion.RegionSize % GetVectorSize();
+            // TODO: search the remaining section with a normal for loop
+            var remaining = (int)virtualMemoryRegion.RegionSize % Vector<byte>.Count;
             var regionBytesAsSpan = virtualMemoryRegion.Bytes.AsSpan();
 
             for (var i = 0; i < (int)virtualMemoryRegion.RegionSize - remaining; i += Vector<byte>.Count)
@@ -56,7 +57,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
                         if (compareResult[j] != 0)
                         {
                             var offset = i + j;
-                            var memoryValue = regionBytesAsSpan.Slice(offset, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
+                            var memoryValue = regionBytesAsSpan.Slice(offset, _sizeOfT).ConvertToString(_scanConstraint.ScanDataType);
 
                             matchingProcessMemories.Add(
                                 new MemorySegment(

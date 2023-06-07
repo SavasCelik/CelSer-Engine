@@ -29,7 +29,7 @@ public class MemoryScanService : IMemoryScanService
         {
             var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(processHandle);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-            return comparer.GetMatchingValueAddresses(virtualMemoryRegions, progressUpdater);
+            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, progressUpdater);
         }).ConfigureAwait(false);
 
         return matchingMemories;
@@ -61,6 +61,8 @@ public class MemoryScanService : IMemoryScanService
 
     public async Task<IList<Pointer>> ScanForPointersAsync(PointerScanOptions pointerScanOptions)
     {
+        //var heapPointers = GetHeapPointers(pointerScanOptions.ProcessAdapter);
+        //var uu = heapPointers.Where(x => x.Address == 0x07E90B60).ToList();
         var result = await Task.Run(() =>
         {
             var staticPointers = GetStaticPointers(pointerScanOptions.ProcessAdapter);
@@ -122,7 +124,7 @@ public class MemoryScanService : IMemoryScanService
                         continue;
                     }
 
-                    alreadyTracking.Add(pointer.Address);
+                    //alreadyTracking.Add(pointer.Address);
 
                     var newAddy = IntPtr.Zero;
                     for (int i = 0; i < pointerScanOptions.MaxOffset; i += _pointerSize)
@@ -213,17 +215,18 @@ public class MemoryScanService : IMemoryScanService
                     continue;
 
                 var bufferValue = BitConverter.ToInt64(regionBytesAsSpan[i..]);
-
-                if (bufferValue == 0 || bufferValue % 4 != 0)
-                    continue;
-
-                var entry = new Pointer
+                var pointer = new Pointer
                 {
                     BaseAddress = virtualMemoryRegion.BaseAddress,
                     BaseOffset = i,
                     PointingTo = new IntPtr(bufferValue)
                 };
-                allAddresses.Add(entry);
+
+
+                if (pointer.PointingTo == 0 || pointer.Address % 4 != 0)
+                    continue;
+
+                allAddresses.Add(pointer);
             }
         }
 

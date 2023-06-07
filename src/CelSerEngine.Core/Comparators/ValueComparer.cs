@@ -33,8 +33,8 @@ public class ValueComparer : IScanComparer
     public static bool MeetsTheScanConstraint<T>(string lhs, string rhs, ScanConstraint scanConstraint)
         where T : INumber<T>
     {
-        T lhsValue = lhs.ParseToStruct<T>();
-        T rhsValue = rhs.ParseToStruct<T>();
+        T lhsValue = lhs.ParseNumber<T>();
+        T rhsValue = rhs.ParseNumber<T>();
 
         return MeetsTheScanConstraint(lhsValue, rhsValue, scanConstraint);
     }
@@ -51,7 +51,7 @@ public class ValueComparer : IScanComparer
         };
     }
 
-    public IList<IMemorySegment> GetMatchingValueAddresses(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float> progressBarUpdater)
+    public IList<IMemorySegment> GetMatchingMemorySegments(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float>? progressBarUpdater = null)
     {
         var matchingProcessMemories = new List<IMemorySegment>();
 
@@ -65,7 +65,7 @@ public class ValueComparer : IScanComparer
                 {
                     break;
                 }
-                var memoryValue = regionBytesAsSpan.Slice(i, _sizeOfT).ToScanDataTypeString(_scanConstraint.ScanDataType);
+                var memoryValue = regionBytesAsSpan.Slice(i, _sizeOfT).ConvertToString(_scanConstraint.ScanDataType);
 
                 if (MeetsTheScanConstraint(memoryValue, _userInput, _scanConstraint))
                 {
