@@ -42,7 +42,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
         {
             var virtualMemoryRegion = virtualMemoryRegions[regionIndex];
             // TODO: search the remaining section with a normal for loop
-            var remaining = (int)virtualMemoryRegion.RegionSize % GetVectorSize();
+            var remaining = (int)virtualMemoryRegion.RegionSize % Vector<byte>.Count;
             var regionBytesAsSpan = virtualMemoryRegion.Bytes.AsSpan();
 
             for (var i = 0; i < (int)virtualMemoryRegion.RegionSize - remaining; i += Vector<byte>.Count)
