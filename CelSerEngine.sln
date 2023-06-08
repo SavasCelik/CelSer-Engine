@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngine.Core", "src\Ce
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{108185D4-63DE-42F8-A620-2936B87E9838}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CelSerEngine.Core.UnitTests", "CelSerEngine.Core.UnitTests\CelSerEngine.Core.UnitTests.csproj", "{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CelSerEngine.Core.UnitTests", "tests\CelSerEngine.Core.UnitTests\CelSerEngine.Core.UnitTests.csproj", "{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
