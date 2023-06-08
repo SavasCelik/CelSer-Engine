@@ -10,17 +10,11 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
     private readonly Vector<T> _userInputAsVector;
     private readonly int _sizeOfT;
 
-
     public VectorComparer(ScanConstraint scanConstraint)
     {
         _scanConstraint = scanConstraint;
         _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseNumber<T>());
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
-    }
-
-    public int GetVectorSize()
-    {
-        return Vector<T>.Count;
     }
 
     public Vector<byte> CompareTo(ReadOnlySpan<byte> bytes)
