@@ -63,8 +63,11 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
                 }
             }
 
-            var progress = (float)regionIndex * 100 / virtualMemoryRegions.Count;
-            progressBarUpdater?.Report(progress);
+            if (progressBarUpdater != null)
+            {
+                var progress = (float)regionIndex * 100 / virtualMemoryRegions.Count;
+                progressBarUpdater.Report(progress);
+            }
         }
 
         return matchingProcessMemories;
