@@ -139,4 +139,48 @@ public class VectorComparerTests
 
         return 0;
     }
-}
+
+    [Theory]
+    [MemberData(nameof(Short_Scan_TestData))]
+    public void GetMatchingMemorySegments_Short_ReturnsCorrectCount(ScanCompareType scanCompareType, short[] values, string searchedValue, int expectedCount)
+    {
+        var scanConstraint = new ScanConstraint(scanCompareType, ScanDataType.Short, searchedValue);
+        var valuesByteArray = MemoryMarshal.AsBytes(values.AsSpan()).ToArray();
+        var virtualMemoryRegions = new List<VirtualMemoryRegion>()
+        {
+            new VirtualMemoryRegion(new IntPtr(0x1337), (ulong)valuesByteArray.Length, valuesByteArray)
+        };
+        var comparer = new VectorComparer<short>(scanConstraint);
+
+        // Act
+        IList<IMemorySegment> foundSegments = comparer.GetMatchingMemorySegments(virtualMemoryRegions, null);
+
+        // Assert
+        Assert.Equal(expectedCount, foundSegments.Count);
+    }
+
+    public static IEnumerable<object[]> Short_Scan_TestData()
+    {
+        var values = new short[32] { 7, 452, 2, 7, 11, 19, 5, 2, 9, 26, 16, 452, 8, 17, 4, 7, 20, 10, 30, 13, 1, 25, 6, 12, 3, 24, 15, 30, 22, 21, 18, 27 };
+
+        // ExactValue
+        yield return new object[] { ScanCompareType.ExactValue, values, "452", 2 };
+        yield return new object[] { ScanCompareType.ExactValue, values, "7", 3 };
+        yield return new object[] { ScanCompareType.ExactValue, values, "2", 2 };
+        yield return new object[] { ScanCompareType.ExactValue, values, "11", 1 };
+        yield return new object[] { ScanCompareType.ExactValue, values, "679", 0 };
+
+        // SmallerThan
+        yield return new object[] { ScanCompareType.SmallerThan, values, "452", 30 };
+        yield return new object[] { ScanCompareType.SmallerThan, values, "7", 7 };
+        yield return new object[] { ScanCompareType.SmallerThan, values, "2", 1 };
+        yield return new object[] { ScanCompareType.SmallerThan, values, "679", 32 };
+
+        // BiggerThan
+        yield return new object[] { ScanCompareType.BiggerThan, values, "452", 0 };
+        yield return new object[] { ScanCompareType.BiggerThan, values, "7", 22 };
+        yield return new object[] { ScanCompareType.BiggerThan, values, "2", 29 };
+        yield return new object[] { ScanCompareType.BiggerThan, values, "679", 0 };
+    }
+}   
+
