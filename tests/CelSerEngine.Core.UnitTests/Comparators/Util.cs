@@ -4,7 +4,7 @@ namespace CelSerEngine.Core.UnitTests.Comparators;
 
 public static class Util
 {
-    private static Random s_random = Random.Shared;
+    private static readonly Random s_random = Random.Shared;
 
     public static T[] GenerateRandomValues<T>(int numValues, int min = 1, int max = 100) where T : struct
     {
