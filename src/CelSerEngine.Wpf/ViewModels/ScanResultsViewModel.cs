@@ -26,7 +26,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
     private readonly INativeApi _nativeApi;
     private int _shownItemsStartIndex;
     private int _shownItemsLength;
-    private static readonly object _locker = new();
+    private static readonly object s_locker = new();
     private readonly DispatcherTimer _timer;
 
     public ScanResultsViewModel(TrackedScanItemsViewModel trackedScanItemsViewModel, SelectProcessViewModel selectProcessViewModel, INativeApi nativeApi)
@@ -69,7 +69,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         if (scrollChangedEventArgs == null)
             return;
 
-        lock (_locker)
+        lock (s_locker)
         {
             _shownItemsStartIndex = Convert.ToInt32(scrollChangedEventArgs.VerticalOffset);
             _shownItemsLength = Convert.ToInt32(scrollChangedEventArgs.ViewportHeight);
@@ -89,7 +89,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         await Task.Run(() =>
         {
             ValueAddress[]? shownItems = null;
-            lock (_locker)
+            lock (s_locker)
             {
                 if (_shownItemsStartIndex + _shownItemsLength == 0)
                 {
