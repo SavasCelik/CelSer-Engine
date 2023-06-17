@@ -237,21 +237,20 @@ public class MemoryScanService : IMemoryScanService
 
     private IList<Pointer> GetStaticPointers(ProcessAdapter process)
     {
-        var baseAddress = process.MainModule!.BaseAddress;
-        var regionSize = process.MainModule!.ModuleMemorySize;
+        var mainModule = _nativeApi.GetProcessMainModule(process.Process.Id);
         var currentSize = 0;
         var listOfBaseAddresses = new List<Pointer>();
         var buffer = _byteArrayPool.Rent(_pointerSize);
         var processHandle = process.GetProcessHandle(_nativeApi);
 
-        while (currentSize < regionSize)
+        while (currentSize < mainModule.Size)
         {
-            _nativeApi.ReadVirtualMemory(processHandle, baseAddress + currentSize, (uint)_pointerSize, buffer);
+            _nativeApi.ReadVirtualMemory(processHandle, mainModule.BaseAddress + currentSize, (uint)_pointerSize, buffer);
             var foundAddress = BitConverter.ToInt64(buffer);
             listOfBaseAddresses.Add(new Pointer
             {
-                ModuleName = process.MainModule.ModuleName ?? "",
-                BaseAddress = baseAddress,
+                ModuleName = mainModule.Name,
+                BaseAddress = mainModule.BaseAddress,
                 BaseOffset = currentSize,
                 PointingTo = (IntPtr)foundAddress
             });

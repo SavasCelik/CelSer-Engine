@@ -72,7 +72,7 @@ public sealed class NativeApi : INativeApi
 
         CloseHandle(snapshotHandle);
 
-        return new ProcessModuleInfo(moduleEntry.modBaseAddr, moduleEntry.modBaseSize);
+        return new ProcessModuleInfo(moduleEntry.szModule, moduleEntry.modBaseAddr, moduleEntry.modBaseSize);
     }
     
     public byte[] ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead)
