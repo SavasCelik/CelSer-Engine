@@ -9,6 +9,7 @@ using System.Buffers;
 
 namespace CelSerEngine.Core.Native;
 
+// TODO: Close handles when failed, return LastErrors
 public sealed class NativeApi : INativeApi
 {
     public readonly ArrayPool<byte> _byteArrayPool;
@@ -46,6 +47,32 @@ public sealed class NativeApi : INativeApi
             ref clientId);
 
         return hProcess;
+    }
+
+    public ProcessModuleInfo GetProcessMainModule(int processId)
+    {
+        var snapshotHandle = CreateToolhelp32Snapshot(CreateToolhelp32SnapshotFlags.TH32CS_SNAPMODULE, processId);
+
+        if (snapshotHandle == IntPtr.Zero)
+        {
+            CloseHandle(snapshotHandle);
+            throw new Exception("Failed to create snapshot.");
+        }
+
+        var moduleEntry = new MODULEENTRY32
+        {
+            dwSize = Marshal.SizeOf(typeof(MODULEENTRY32))
+        };
+
+        if (!Module32First(snapshotHandle, ref moduleEntry))
+        {
+            CloseHandle(snapshotHandle);
+            throw new Exception("Failed to get module information.");
+        }
+
+        CloseHandle(snapshotHandle);
+
+        return new ProcessModuleInfo(moduleEntry.modBaseAddr, moduleEntry.modBaseSize);
     }
     
     public byte[] ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead)
