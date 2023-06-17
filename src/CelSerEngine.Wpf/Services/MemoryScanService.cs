@@ -13,11 +13,13 @@ public class MemoryScanService : IMemoryScanService
 {
     private int _pointerSize;
     private readonly ArrayPool<byte> _byteArrayPool;
+    private readonly INativeApi _nativeApi;
 
-    public MemoryScanService()
+    public MemoryScanService(INativeApi nativeApi)
     {
         _byteArrayPool = ArrayPool<byte>.Shared;
         _pointerSize = sizeof(long);
+        _nativeApi = nativeApi;
     }
 
     public async Task<IList<IMemorySegment>> ScanProcessMemoryAsync(
@@ -27,7 +29,7 @@ public class MemoryScanService : IMemoryScanService
     {
         var matchingMemories = await Task.Run(() =>
         {
-            var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(processHandle);
+            var virtualMemoryRegions = _nativeApi.GatherVirtualMemoryRegions(processHandle);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
             return comparer.GetMatchingMemorySegments(virtualMemoryRegions, progressUpdater);
         }).ConfigureAwait(false);
@@ -44,7 +46,7 @@ public class MemoryScanService : IMemoryScanService
         // TODO: this has to be better in performance try benchmarking linkedlist and using vectorcomparer
         var filteredMemorySegments = await Task.Run(() =>
         {
-            NativeApi.UpdateAddresses(processHandle, memorySegments);
+            _nativeApi.UpdateAddresses(processHandle, memorySegments);
             var passedMemorySegments = new List<IMemorySegment>();
 
             for (var i = 0; i < memorySegments.Count; i++)
@@ -203,7 +205,7 @@ public class MemoryScanService : IMemoryScanService
 
     private IList<Pointer> GetHeapPointers(ProcessAdapter process)
     {
-        var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(process.GetProcessHandle());
+        var virtualMemoryRegions = _nativeApi.GatherVirtualMemoryRegions(process.GetProcessHandle(_nativeApi));
         var allAddresses = new List<Pointer>();
 
         foreach (var virtualMemoryRegion in virtualMemoryRegions)
@@ -240,10 +242,11 @@ public class MemoryScanService : IMemoryScanService
         var currentSize = 0;
         var listOfBaseAddresses = new List<Pointer>();
         var buffer = _byteArrayPool.Rent(_pointerSize);
+        var processHandle = process.GetProcessHandle(_nativeApi);
 
         while (currentSize < regionSize)
         {
-            NativeApi.ReadVirtualMemory(process.GetProcessHandle(), baseAddress + currentSize, (uint)_pointerSize, buffer);
+            _nativeApi.ReadVirtualMemory(processHandle, baseAddress + currentSize, (uint)_pointerSize, buffer);
             var foundAddress = BitConverter.ToInt64(buffer);
             listOfBaseAddresses.Add(new Pointer
             {

@@ -49,10 +49,10 @@ public class ProcessAdapter
         }
     }
 
-    public IntPtr GetProcessHandle()
+    public IntPtr GetProcessHandle(INativeApi nativeApi)
     {
         if (_processHandle == IntPtr.Zero)
-            _processHandle = NativeApi.OpenProcess(Process.Id);
+            _processHandle = nativeApi.OpenProcess(Process.Id);
 
         return _processHandle;
     }

@@ -22,12 +22,14 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     private readonly DispatcherTimer _timer;
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly PointerScanOptionsViewModel _pointerScanOptionsViewModel;
+    private readonly INativeApi _nativeApi;
 
-    public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel, PointerScanOptionsViewModel pointerScanOptionsViewModel)
+    public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel, PointerScanOptionsViewModel pointerScanOptionsViewModel, INativeApi nativeApi)
     {
         _trackedScanItems = new ObservableCollection<TrackedItem>();
         _selectProcessViewModel = selectProcessViewModel;
         _pointerScanOptionsViewModel = pointerScanOptionsViewModel;
+        _nativeApi = nativeApi;
         _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(0.1)
@@ -51,10 +53,10 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         await Task.Run(() =>
         {
             var trackedScanItemsCopy = TrackedScanItems.ToArray();
-            NativeApi.UpdateAddresses(pHandle, trackedScanItemsCopy.Select(x => x.Item));
+            _nativeApi.UpdateAddresses(pHandle, trackedScanItemsCopy.Select(x => x.Item));
             foreach (var trackedItem in trackedScanItemsCopy.Where(x => x.IsFreezed))
             {
-                NativeApi.WriteMemory(pHandle, trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
+                _nativeApi.WriteMemory(pHandle, trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
             }
         });
     }
@@ -89,7 +91,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
                     trackedItem.SetValue = newValue;
                 }
                 trackedItem.Item.Value = newValue;
-                NativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
+                _nativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
             }
         }
     }

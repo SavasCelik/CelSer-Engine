@@ -23,15 +23,17 @@ public partial class ScanResultsViewModel : ObservableRecipient
 
     private readonly TrackedScanItemsViewModel _trackedScanItemsViewModel;
     private readonly SelectProcessViewModel _selectProcessViewModel;
+    private readonly INativeApi _nativeApi;
     private int _shownItemsStartIndex;
     private int _shownItemsLength;
     private static readonly object _locker = new();
     private readonly DispatcherTimer _timer;
 
-    public ScanResultsViewModel(TrackedScanItemsViewModel trackedScanItemsViewModel, SelectProcessViewModel selectProcessViewModel)
+    public ScanResultsViewModel(TrackedScanItemsViewModel trackedScanItemsViewModel, SelectProcessViewModel selectProcessViewModel, INativeApi nativeApi)
     {
         _trackedScanItemsViewModel = trackedScanItemsViewModel;
         _selectProcessViewModel = selectProcessViewModel;
+        _nativeApi = nativeApi;
         _scanItems = new List<ValueAddress>();
         AllScanItems = new List<IMemorySegment>();
         _shownItemsStartIndex = 0;
@@ -96,7 +98,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
                 shownItems ??= ScanItems.ToArray().AsSpan().Slice(_shownItemsStartIndex, _shownItemsLength).ToArray();
             }
 
-            NativeApi.UpdateAddresses(pHandle, shownItems);
+            _nativeApi.UpdateAddresses(pHandle, shownItems);
             Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressDisplayString);
             Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressDisplayString);
         });
