@@ -1,9 +1,9 @@
-﻿using System;
+﻿namespace CelSerEngine.Core.Models;
 
-namespace CelSerEngine.Wpf.Models;
 public class PointerScanOptions
 {
-    public ProcessAdapter ProcessAdapter { get; set; }
+    public int ProcessId { get; set; }
+    public IntPtr ProcessHandle { get; set; }
     public IntPtr SearchedAddress { get; set; }
     public int MaxLevel { get; set; }
     public int MaxOffset { get; set; }

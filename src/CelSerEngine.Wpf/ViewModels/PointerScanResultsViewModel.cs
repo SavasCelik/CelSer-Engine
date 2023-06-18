@@ -1,4 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
+using CelSerEngine.Core.Scanners;
 using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.Views;
@@ -16,22 +18,26 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
 {
     [ObservableProperty]
     public IList<Pointer> _foundPointers;
-
+    private readonly PointerScanner _pointerScanner;
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly IMemoryScanService _memoryScanService;
+    private readonly INativeApi _nativeApi;
 
-    public PointerScanResultsViewModel(SelectProcessViewModel selectProcessViewModel, IMemoryScanService memoryScanService)
+    public PointerScanResultsViewModel(SelectProcessViewModel selectProcessViewModel, IMemoryScanService memoryScanService, INativeApi nativeApi)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _memoryScanService = memoryScanService;
+        _nativeApi = nativeApi;
         _foundPointers = new List<Pointer>();
+        _pointerScanner = new PointerScanner(_nativeApi);
     }
 
     public async Task StartPointerScanAsync(PointerScanOptions pointerScanOptions)
     {
         var selectedProcess = _selectProcessViewModel.SelectedProcess!;
-        pointerScanOptions.ProcessAdapter = selectedProcess;
-        var foundPointers = await _memoryScanService.ScanForPointersAsync(pointerScanOptions);
+        pointerScanOptions.ProcessId = selectedProcess.Process.Id;
+        pointerScanOptions.ProcessHandle = selectedProcess.GetProcessHandle(_nativeApi); ;
+        var foundPointers = await _pointerScanner.ScanForPointersAsync(pointerScanOptions);
         FoundPointers = foundPointers;
     }
 
@@ -42,8 +48,10 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
             return;
 
         var selectedProcess = _selectProcessViewModel.SelectedProcess!;
+        var processId = selectedProcess.Process.Id;
+        var processHandle = selectedProcess.GetProcessHandle(_nativeApi);
         var searchedAddress = new IntPtr(long.Parse(nextAddress, NumberStyles.HexNumber));
-        var foundPointers = await _memoryScanService.RescanPointers(FoundPointers, selectedProcess, searchedAddress);
+        var foundPointers = await _pointerScanner.RescanPointers(FoundPointers, processId, processHandle, searchedAddress);
         FoundPointers = foundPointers;
     }
 
