@@ -1,0 +1,2 @@
+SearchedAddress: 0x863AAE8
+Everything else stays the same as in ScanOptiong.txt

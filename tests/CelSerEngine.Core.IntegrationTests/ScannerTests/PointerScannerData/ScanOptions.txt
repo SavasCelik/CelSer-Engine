@@ -1,0 +1,8 @@
+SearchedAddress: 0x1526B78
+ExpectedOffsets: "10, 18, 0, 18"
+ModuleBaseAddress: 0x100000000
+ModuleSize: 0x344000
+MaxLevel: 4,
+MaxOffset: > 0x18,
+ProcessId: w/e
+ProcessHandle: w/e

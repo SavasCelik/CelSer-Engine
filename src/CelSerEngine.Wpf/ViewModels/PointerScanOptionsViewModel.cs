@@ -1,4 +1,4 @@
-﻿using CelSerEngine.Wpf.Models;
+﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;

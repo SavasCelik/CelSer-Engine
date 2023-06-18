@@ -1,7 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace CelSerEngine.Core.Native;
 
+[SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member")]
 internal static class Structs
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -50,5 +52,22 @@ internal static class Structs
         public uint Attributes;
         public int SecurityDescriptor;
         public int SecurityQualityOfService;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MODULEENTRY32
+    {
+        public int dwSize;
+        public uint th32ModuleID;
+        public uint th32ProcessID;
+        public uint GlblcntUsage;
+        public uint ProccntUsage;
+        public IntPtr modBaseAddr;
+        public uint modBaseSize;
+        public IntPtr hModule;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string szModule;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        public string szExePath;
     }
 }

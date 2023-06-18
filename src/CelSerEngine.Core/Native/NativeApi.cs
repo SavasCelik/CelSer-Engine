@@ -9,11 +9,17 @@ using System.Buffers;
 
 namespace CelSerEngine.Core.Native;
 
-public sealed class NativeApi
+// TODO: Close handles when failed, return LastErrors
+public sealed class NativeApi : INativeApi
 {
-    public static readonly ArrayPool<byte> _byteArrayPool = ArrayPool<byte>.Shared;
+    public readonly ArrayPool<byte> _byteArrayPool;
 
-    public static IntPtr OpenProcess(string processName)
+    public NativeApi()
+    {
+        _byteArrayPool = ArrayPool<byte>.Shared;
+    }
+
+    public IntPtr OpenProcess(string processName)
     {
         var processList = Process.GetProcessesByName(processName);
 
@@ -25,7 +31,7 @@ public sealed class NativeApi
         return OpenProcess(process.Id);
     }
 
-    public static IntPtr OpenProcess(int processId)
+    public IntPtr OpenProcess(int processId)
     {
         Debug.WriteLine($"ProcessID: {processId}");
 
@@ -42,8 +48,34 @@ public sealed class NativeApi
 
         return hProcess;
     }
+
+    public ProcessModuleInfo GetProcessMainModule(int processId)
+    {
+        var snapshotHandle = CreateToolhelp32Snapshot(CreateToolhelp32SnapshotFlags.TH32CS_SNAPMODULE, processId);
+
+        if (snapshotHandle == IntPtr.Zero)
+        {
+            CloseHandle(snapshotHandle);
+            throw new Exception("Failed to create snapshot.");
+        }
+
+        var moduleEntry = new MODULEENTRY32
+        {
+            dwSize = Marshal.SizeOf(typeof(MODULEENTRY32))
+        };
+
+        if (!Module32First(snapshotHandle, ref moduleEntry))
+        {
+            CloseHandle(snapshotHandle);
+            throw new Exception("Failed to get module information.");
+        }
+
+        CloseHandle(snapshotHandle);
+
+        return new ProcessModuleInfo(moduleEntry.szModule, moduleEntry.modBaseAddr, moduleEntry.modBaseSize);
+    }
     
-    public static byte[] ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead)
+    public byte[] ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead)
     {
         var buffer = new byte[numberOfBytesToRead];
         ReadVirtualMemory(hProcess, address, numberOfBytesToRead, buffer);
@@ -51,7 +83,7 @@ public sealed class NativeApi
         return buffer;
     }
     
-    public static void ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer)
+    public void ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer)
     {
         var result = NtReadVirtualMemory(
             hProcess,
@@ -64,7 +96,7 @@ public sealed class NativeApi
             throw new Exception("Failed reading memory");
     }
 
-    public static void WriteMemory(IntPtr hProcess, IMemorySegment trackedScanItem, string newValue)
+    public void WriteMemory(IntPtr hProcess, IMemorySegment trackedScanItem, string newValue)
     {
         switch (trackedScanItem.ScanDataType)
         {
@@ -90,7 +122,7 @@ public sealed class NativeApi
         
     }
 
-    private static void WriteMemory<T>(IntPtr hProcess, IMemorySegment trackedScanItem, T newValue)
+    private void WriteMemory<T>(IntPtr hProcess, IMemorySegment trackedScanItem, T newValue)
         where T : struct
     {
         var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
@@ -116,7 +148,7 @@ public sealed class NativeApi
         _byteArrayPool.Return(bytesToWrite);
     }
 
-    public static void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses)
+    public void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses)
     {
         foreach (var address in virtualAddresses)
         {
@@ -133,7 +165,7 @@ public sealed class NativeApi
         }
     }
 
-    public static void UpdateMemorySegmennt(IntPtr hProcess, IMemorySegment memorySegment)
+    public void UpdateMemorySegmennt(IntPtr hProcess, IMemorySegment memorySegment)
     {
         if (memorySegment == null)
             return;
@@ -183,7 +215,7 @@ public sealed class NativeApi
     //    trackedPointerScanItem.DetermineAddressDisplayString();
     //}
 
-    public static void UpdatePointerAddress(IntPtr hProcess, IPointer? pointerAddress)
+    public void UpdatePointerAddress(IntPtr hProcess, IPointer? pointerAddress)
     {
         if (pointerAddress == null)
             return;
@@ -197,7 +229,7 @@ public sealed class NativeApi
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
-    public static void ResolvePointerPath(IntPtr hProcess, IPointer pointerAddress)
+    public void ResolvePointerPath(IntPtr hProcess, IPointer pointerAddress)
     {
         var buffer = _byteArrayPool.Rent(sizeof(long));
         ReadVirtualMemory(hProcess, pointerAddress.Address, sizeof(long), buffer);
@@ -220,7 +252,7 @@ public sealed class NativeApi
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
-    public static IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(IntPtr hProcess)
+    public IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(IntPtr hProcess)
     {
         if (hProcess == IntPtr.Zero)
             throw new ArgumentNullException(nameof(hProcess));

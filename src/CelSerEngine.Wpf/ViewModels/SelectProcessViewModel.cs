@@ -1,4 +1,5 @@
-﻿using CelSerEngine.Wpf.Models;
+﻿using CelSerEngine.Core.Native;
+using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
@@ -18,12 +19,14 @@ public partial class SelectProcessViewModel : ObservableRecipient
     private string _searchProcessText;
 
     private IList<ProcessAdapter> _allProcesses;
+    private readonly INativeApi _nativeApi;
 
-    public SelectProcessViewModel()
+    public SelectProcessViewModel(INativeApi nativeApi)
     {
         _searchProcessText = "";
         _allProcesses = new List<ProcessAdapter>();
         _processes = _allProcesses;
+        _nativeApi = nativeApi;
     }
 
     partial void OnSearchProcessTextChanged(string value)
@@ -59,7 +62,7 @@ public partial class SelectProcessViewModel : ObservableRecipient
     public IntPtr GetSelectedProcessHandle()
     {
         if (SelectedProcess != null)
-            return SelectedProcess.GetProcessHandle();
+            return SelectedProcess.GetProcessHandle(_nativeApi);
 
         return IntPtr.Zero;
     }
