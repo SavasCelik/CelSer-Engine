@@ -3,6 +3,7 @@ using CelSerEngine.Core.Native;
 using System.Buffers;
 
 namespace CelSerEngine.Core.Scanners;
+
 public class PointerScanner
 {
     private readonly INativeApi _nativeApi;
@@ -18,8 +19,6 @@ public class PointerScanner
 
     public async Task<IList<Pointer>> ScanForPointersAsync(PointerScanOptions pointerScanOptions)
     {
-        //var heapPointers = GetHeapPointers(pointerScanOptions.ProcessAdapter);
-        //var uu = heapPointers.Where(x => x.Address == 0x07E90B60).ToList();
         var result = await Task.Run(() =>
         {
             var staticPointers = GetStaticPointers(pointerScanOptions.ProcessId, pointerScanOptions.ProcessHandle);
@@ -160,17 +159,18 @@ public class PointerScanner
 
     private IList<Pointer> GetStaticPointers(int processId, IntPtr processHandle)
     {
-        // BaseAddress = 0x0000000100000000
-        // moduleSIze = 3424256 or 0x344000
         var mainModule = _nativeApi.GetProcessMainModule(processId);
-        var currentSize = 0;
         var listOfBaseAddresses = new List<Pointer>();
         var buffer = _byteArrayPool.Rent(_pointerSize);
 
-        while (currentSize < mainModule.Size)
+        for (var currentSize = 0; currentSize < mainModule.Size; currentSize += _pointerSize)
         {
             _nativeApi.ReadVirtualMemory(processHandle, mainModule.BaseAddress + currentSize, (uint)_pointerSize, buffer);
             var foundAddress = BitConverter.ToInt64(buffer);
+
+            if (foundAddress == 0)
+                continue;
+
             listOfBaseAddresses.Add(new Pointer
             {
                 ModuleName = mainModule.Name,
@@ -178,8 +178,6 @@ public class PointerScanner
                 BaseOffset = currentSize,
                 PointingTo = (IntPtr)foundAddress
             });
-
-            currentSize += _pointerSize;
         }
 
         _byteArrayPool.Return(buffer, clearArray: true);
