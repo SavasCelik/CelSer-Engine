@@ -32,6 +32,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ScannerTests\PointerScannerData\RescanOptions.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="ScannerTests\PointerScannerData\rescan_regions.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="ScannerTests\PointerScannerData\Rescan_VirtualMemoryRegions.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -1,8 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using System.Buffers;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace CelSerEngine.Core.Scanners;
 
