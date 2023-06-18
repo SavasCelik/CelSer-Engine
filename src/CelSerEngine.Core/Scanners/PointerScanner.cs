@@ -1,6 +1,8 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using System.Buffers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CelSerEngine.Core.Scanners;
 
@@ -121,7 +123,7 @@ public class PointerScanner
         return result;
     }
 
-    public async Task<IList<Pointer>> RescanPointers(IEnumerable<Pointer> pointers, int processId, IntPtr processHandle, IntPtr searchedAddress)
+    public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> pointers, int processId, IntPtr processHandle, IntPtr searchedAddress)
     {
         var result = await Task.Run(() =>
         {
