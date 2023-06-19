@@ -9,14 +9,10 @@ using System.Threading.Tasks;
 namespace CelSerEngine.Wpf.Services;
 public class MemoryScanService : IMemoryScanService
 {
-    private int _pointerSize;
-    private readonly ArrayPool<byte> _byteArrayPool;
     private readonly INativeApi _nativeApi;
 
     public MemoryScanService(INativeApi nativeApi)
     {
-        _byteArrayPool = ArrayPool<byte>.Shared;
-        _pointerSize = sizeof(long);
         _nativeApi = nativeApi;
     }
 
