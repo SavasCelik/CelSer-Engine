@@ -59,7 +59,7 @@ public class PointerScannerTests
         var searchedAddressAfterRescan = new IntPtr(0x863AAE8);
         stubVirtualMemoryRegions =
             JsonSerializer.Deserialize<IList<VirtualMemoryRegion>>(
-                await File.ReadAllTextAsync("ScannerTests/PointerScannerData/rescan_regions.json"),
+                await File.ReadAllTextAsync("ScannerTests/PointerScannerData/Rescan_VirtualMemoryRegions.json"),
                 jsonOprions)!;
 
         stubNativeApi
