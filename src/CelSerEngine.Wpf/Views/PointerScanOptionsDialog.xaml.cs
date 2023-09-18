@@ -1,13 +1,13 @@
 ﻿using System.Windows;
 
-namespace CelSerEngine.Views;
+namespace CelSerEngine.Wpf.Views;
 
 /// <summary>
-/// Interaction logic for PointerScanOptions.xaml
+/// Interaction logic for PointerScanOptionsDialog.xaml
 /// </summary>
-public partial class PointerScanOptions : Window
+public partial class PointerScanOptionsDialog : Window
 {
-    public PointerScanOptions()
+    public PointerScanOptionsDialog()
     {
         InitializeComponent();
     }

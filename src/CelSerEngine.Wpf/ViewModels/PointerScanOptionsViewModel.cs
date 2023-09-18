@@ -1,8 +1,12 @@
-﻿using CelSerEngine.Views;
+﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System;
+using System.Globalization;
+using System.Threading.Tasks;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class PointerScanOptionsViewModel : ObservableRecipient
 {
@@ -24,16 +28,23 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    public void StartPointerScan()
+    public async Task StartPointerScan()
     {
-        _pointerScanResultsViewModel.StartPointerScan(this);
+        var pointerScanAddress = long.Parse(PointerScanAddress, NumberStyles.HexNumber);
+        var pointerScanOptions = new PointerScanOptions()
+        {
+            SearchedAddress = new IntPtr(pointerScanAddress),
+            MaxLevel = MaxLevel,
+            MaxOffset = MaxOffset,
+        };
+        await _pointerScanResultsViewModel.StartPointerScanAsync(pointerScanOptions);
         _pointerScanResultsViewModel.ShowPointerScanResultsDialog();
     }
 
     public bool ShowPointerScanDialog(string pointerScanAddress = "")
     {
         PointerScanAddress = pointerScanAddress;
-        var pointerScanOpstionsDlg = new PointerScanOptions()
+        var pointerScanOpstionsDlg = new PointerScanOptionsDialog()
         {
             Owner = App.Current.MainWindow
         };

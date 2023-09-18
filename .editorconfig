@@ -105,6 +105,7 @@ csharp_style_conditional_delegate_call = true
 csharp_prefer_static_local_function = true
 csharp_preferred_modifier_order = public,private,protected,internal,file,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,required,volatile,async
 csharp_style_prefer_readonly_struct = true
+csharp_style_prefer_readonly_struct_member = true
 
 # Code-block preferences
 csharp_prefer_braces = when_multiline
@@ -126,7 +127,7 @@ csharp_style_prefer_tuple_swap = true
 csharp_style_prefer_utf8_string_literals = true
 csharp_style_throw_expression = true
 csharp_style_unused_value_assignment_preference = discard_variable
-csharp_style_unused_value_expression_statement_preference = discard_variable:suggestion
+csharp_style_unused_value_expression_statement_preference = discard_variable
 
 # 'using' directive preferences
 csharp_using_directive_placement = outside_namespace
@@ -201,9 +202,17 @@ dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion
 dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols = non_field_members
 dotnet_naming_rule.non_field_members_should_be_pascal_case.style = pascal_case
 
-dotnet_naming_rule.private_or_internal_field_should_be__fieldname.severity = suggestion
+dotnet_naming_rule.private_or_internal_field_should_be__fieldname.severity = warning
 dotnet_naming_rule.private_or_internal_field_should_be__fieldname.symbols = private_or_internal_field
 dotnet_naming_rule.private_or_internal_field_should_be__fieldname.style = _fieldname
+
+dotnet_naming_rule.private_const_field_should_be_pascal_case.severity = warning
+dotnet_naming_rule.private_const_field_should_be_pascal_case.symbols = private_const_field
+dotnet_naming_rule.private_const_field_should_be_pascal_case.style = pascal_case
+
+dotnet_naming_rule.private_or_internal_static_field_should_be_s_fieldname.severity = warning
+dotnet_naming_rule.private_or_internal_static_field_should_be_s_fieldname.symbols = private_or_internal_static_field
+dotnet_naming_rule.private_or_internal_static_field_should_be_s_fieldname.style = s_fieldname
 
 # Symbol specifications
 
@@ -215,6 +224,10 @@ dotnet_naming_symbols.private_or_internal_field.applicable_kinds = field
 dotnet_naming_symbols.private_or_internal_field.applicable_accessibilities = internal, private, private_protected
 dotnet_naming_symbols.private_or_internal_field.required_modifiers = 
 
+dotnet_naming_symbols.private_or_internal_static_field.applicable_kinds = field
+dotnet_naming_symbols.private_or_internal_static_field.applicable_accessibilities = internal, private, private_protected
+dotnet_naming_symbols.private_or_internal_static_field.required_modifiers = static
+
 dotnet_naming_symbols.types.applicable_kinds = class, struct, interface, enum
 dotnet_naming_symbols.types.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 dotnet_naming_symbols.types.required_modifiers = 
@@ -222,6 +235,10 @@ dotnet_naming_symbols.types.required_modifiers =
 dotnet_naming_symbols.non_field_members.applicable_kinds = property, event, method
 dotnet_naming_symbols.non_field_members.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 dotnet_naming_symbols.non_field_members.required_modifiers = 
+
+dotnet_naming_symbols.private_const_field.applicable_kinds = field
+dotnet_naming_symbols.private_const_field.applicable_accessibilities = private
+dotnet_naming_symbols.private_const_field.required_modifiers = const
 
 # Naming styles
 
@@ -239,3 +256,8 @@ dotnet_naming_style._fieldname.required_prefix = _
 dotnet_naming_style._fieldname.required_suffix = 
 dotnet_naming_style._fieldname.word_separator = 
 dotnet_naming_style._fieldname.capitalization = camel_case
+
+dotnet_naming_style.s_fieldname.required_prefix = s_
+dotnet_naming_style.s_fieldname.required_suffix = 
+dotnet_naming_style.s_fieldname.word_separator = 
+dotnet_naming_style.s_fieldname.capitalization = camel_case

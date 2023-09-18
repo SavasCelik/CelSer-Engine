@@ -3,25 +3,24 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace CelSerEngine.ValueConverter
+namespace CelSerEngine.Wpf.ValueConverter;
+
+/// <summary>
+/// Inspired by this post
+/// https://brianlagunas.com/a-better-way-to-data-bind-enums-in-wpf/
+/// </summary>
+[ValueConversion(typeof(Enum), typeof(string))]
+public class EnumDisplayNameConverter : IValueConverter
 {
-    /// <summary>
-    /// Inspired by this post
-    /// https://brianlagunas.com/a-better-way-to-data-bind-enums-in-wpf/
-    /// </summary>
-    [ValueConversion(typeof(Enum), typeof(string))]
-    public class EnumDisplayNameConverter : IValueConverter
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            var enumValue = value as Enum;
+        var enumValue = value as Enum;
 
-            return enumValue?.GetDisplayName() ?? "No Value";
-        }
+        return enumValue?.GetDisplayName() ?? "No Value";
+    }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotSupportedException();
-        }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
     }
 }

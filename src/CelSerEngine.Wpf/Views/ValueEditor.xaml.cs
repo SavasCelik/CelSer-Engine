@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace CelSerEngine.Views;
+namespace CelSerEngine.Wpf.Views;
 
 public partial class ValueEditor : Window
 {

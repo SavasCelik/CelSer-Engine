@@ -1,12 +1,13 @@
-﻿using CelSerEngine.Models;
-using CelSerEngine.Views;
+﻿using CelSerEngine.Core.Native;
+using CelSerEngine.Wpf.Models;
+using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class SelectProcessViewModel : ObservableRecipient
 {
@@ -17,17 +18,15 @@ public partial class SelectProcessViewModel : ObservableRecipient
     [ObservableProperty]
     private string _searchProcessText;
 
-    private readonly IList<ProcessAdapter> _allProcesses;
+    private IList<ProcessAdapter> _allProcesses;
+    private readonly INativeApi _nativeApi;
 
-    public SelectProcessViewModel()
+    public SelectProcessViewModel(INativeApi nativeApi)
     {
         _searchProcessText = "";
-        _allProcesses = Process.GetProcesses()
-            .OrderBy(p => p.ProcessName)
-            .Select(p => new ProcessAdapter(p))
-            .Where(pa => pa.MainModule != null)
-            .ToList();
+        _allProcesses = new List<ProcessAdapter>();
         _processes = _allProcesses;
+        _nativeApi = nativeApi;
     }
 
     partial void OnSearchProcessTextChanged(string value)
@@ -45,6 +44,11 @@ public partial class SelectProcessViewModel : ObservableRecipient
     public bool ShowSelectProcessDialog()
     {
         SearchProcessText = "";
+        _allProcesses = Process.GetProcesses()
+            .OrderBy(p => p.ProcessName)
+            .Select(p => new ProcessAdapter(p))
+            .Where(pa => pa.MainModule != null)
+            .ToList();
         Processes = _allProcesses;
 
         var selectProcessWidnwow = new SelectProcess
@@ -58,7 +62,7 @@ public partial class SelectProcessViewModel : ObservableRecipient
     public IntPtr GetSelectedProcessHandle()
     {
         if (SelectedProcess != null)
-            return SelectedProcess.GetProcessHandle();
+            return SelectedProcess.GetProcessHandle(_nativeApi);
 
         return IntPtr.Zero;
     }

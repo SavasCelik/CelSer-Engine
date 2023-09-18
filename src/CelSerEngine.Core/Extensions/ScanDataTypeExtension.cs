@@ -13,7 +13,7 @@ public static class ScanDataTypeExtension
             ScanDataType.Float => sizeof(float),
             ScanDataType.Double => sizeof(double),
             ScanDataType.Long => sizeof(long),
-            _ => throw new Exception($"Type: {scanDataType} is not supported")
+            _ => throw new NotSupportedException($"Type: {scanDataType} is not supported")
         };
     }
 }

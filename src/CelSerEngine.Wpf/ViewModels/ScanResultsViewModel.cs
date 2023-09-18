@@ -1,6 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
-using CelSerEngine.Models;
 using CelSerEngine.Core.Native;
+using CelSerEngine.Wpf.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -11,29 +11,31 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class ScanResultsViewModel : ObservableRecipient
 {
     [ObservableProperty]
-    private List<ValueAddress> _scanItems;
+    private IList<ValueAddress> _scanItems;
 
     public const int MaxListedScanItems = 2_000_000;
-    public List<ProcessMemory> AllScanItems { get; private set; }
+    public IList<IMemorySegment> AllScanItems { get; private set; }
 
     private readonly TrackedScanItemsViewModel _trackedScanItemsViewModel;
     private readonly SelectProcessViewModel _selectProcessViewModel;
+    private readonly INativeApi _nativeApi;
     private int _shownItemsStartIndex;
     private int _shownItemsLength;
-    private static readonly object _locker = new();
+    private static readonly object s_locker = new();
     private readonly DispatcherTimer _timer;
 
-    public ScanResultsViewModel(TrackedScanItemsViewModel trackedScanItemsViewModel, SelectProcessViewModel selectProcessViewModel)
+    public ScanResultsViewModel(TrackedScanItemsViewModel trackedScanItemsViewModel, SelectProcessViewModel selectProcessViewModel, INativeApi nativeApi)
     {
         _trackedScanItemsViewModel = trackedScanItemsViewModel;
         _selectProcessViewModel = selectProcessViewModel;
-        _scanItems = new List<ValueAddress>(0);
-        AllScanItems = new List<ProcessMemory>(0);
+        _nativeApi = nativeApi;
+        _scanItems = new List<ValueAddress>();
+        AllScanItems = new List<IMemorySegment>();
         _shownItemsStartIndex = 0;
         _shownItemsLength = 0;
 
@@ -45,7 +47,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         _timer.Start();
     }
 
-    public void SetScanItems(List<ProcessMemory> scanItems)
+    public void SetScanItems(IList<IMemorySegment> scanItems)
     {
         AllScanItems = scanItems;
         ScanItems = AllScanItems.Take(MaxListedScanItems).Select(x => new ValueAddress(x)).ToList();
@@ -67,7 +69,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         if (scrollChangedEventArgs == null)
             return;
 
-        lock (_locker)
+        lock (s_locker)
         {
             _shownItemsStartIndex = Convert.ToInt32(scrollChangedEventArgs.VerticalOffset);
             _shownItemsLength = Convert.ToInt32(scrollChangedEventArgs.ViewportHeight);
@@ -87,7 +89,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
         await Task.Run(() =>
         {
             ValueAddress[]? shownItems = null;
-            lock (_locker)
+            lock (s_locker)
             {
                 if (_shownItemsStartIndex + _shownItemsLength == 0)
                 {
@@ -96,7 +98,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
                 shownItems ??= ScanItems.ToArray().AsSpan().Slice(_shownItemsStartIndex, _shownItemsLength).ToArray();
             }
 
-            NativeApi.UpdateAddresses(pHandle, shownItems);
+            _nativeApi.UpdateAddresses(pHandle, shownItems);
             Debug.WriteLine("Visible Item First:\t" + shownItems?.FirstOrDefault()?.AddressDisplayString);
             Debug.WriteLine("Visible Item Last:\t" + shownItems?.LastOrDefault()?.AddressDisplayString);
         });

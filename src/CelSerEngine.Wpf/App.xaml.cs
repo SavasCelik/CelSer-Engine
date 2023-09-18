@@ -1,9 +1,11 @@
-﻿using CelSerEngine.ViewModels;
+﻿using CelSerEngine.Core.Native;
+using CelSerEngine.Wpf.Services;
+using CelSerEngine.Wpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Windows;
 
-namespace CelSerEngine;
+namespace CelSerEngine.Wpf;
 
 /// <summary>
 /// Interaction logic for App.xaml
@@ -39,6 +41,8 @@ public sealed partial class App : Application
         services.AddSingleton<ScanResultsViewModel>();
         services.AddSingleton<PointerScanOptionsViewModel>();
         services.AddSingleton<PointerScanResultsViewModel>();
+        services.AddSingleton<IMemoryScanService, MemoryScanService>();
+        services.AddSingleton<INativeApi, NativeApi>();
 
         return services.BuildServiceProvider();
     }

@@ -1,8 +1,7 @@
-﻿using CelSerEngine.Core.Extensions;
-using CelSerEngine.Core.Models;
+﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
-using CelSerEngine.Models;
-using CelSerEngine.Views;
+using CelSerEngine.Wpf.Models;
+using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace CelSerEngine.ViewModels;
+namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class TrackedScanItemsViewModel : ObservableRecipient
 {
@@ -23,12 +22,14 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     private readonly DispatcherTimer _timer;
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly PointerScanOptionsViewModel _pointerScanOptionsViewModel;
+    private readonly INativeApi _nativeApi;
 
-    public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel, PointerScanOptionsViewModel pointerScanOptionsViewModel)
+    public TrackedScanItemsViewModel(SelectProcessViewModel selectProcessViewModel, PointerScanOptionsViewModel pointerScanOptionsViewModel, INativeApi nativeApi)
     {
         _trackedScanItems = new ObservableCollection<TrackedItem>();
         _selectProcessViewModel = selectProcessViewModel;
         _pointerScanOptionsViewModel = pointerScanOptionsViewModel;
+        _nativeApi = nativeApi;
         _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(0.1)
@@ -47,15 +48,15 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         if (pHandle == IntPtr.Zero)
             return;
 
-        // TODO Maybe IProcessMemory should have an Update class? instead of calling NativeApi.UpdateAddresses.
+        // TODO Maybe IMemorySegment should have an Update class? instead of calling NativeApi.UpdateAddresses.
         // Then e could check in the class its self whether it a pointer or not
         await Task.Run(() =>
         {
             var trackedScanItemsCopy = TrackedScanItems.ToArray();
-            NativeApi.UpdateAddresses(pHandle, trackedScanItemsCopy.Select(x => x.Item));
+            _nativeApi.UpdateAddresses(pHandle, trackedScanItemsCopy.Select(x => x.Item));
             foreach (var trackedItem in trackedScanItemsCopy.Where(x => x.IsFreezed))
             {
-                NativeApi.WriteMemory(pHandle, trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
+                _nativeApi.WriteMemory(pHandle, trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
             }
         });
     }
@@ -66,7 +67,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
         if (dataGrid.CurrentColumn?.Header is not string colHeaderName)
             return;
 
-        if (colHeaderName == nameof(IProcessMemory.Value))
+        if (colHeaderName == nameof(IMemorySegment.Value))
         {
             ShowChangeValueDialog(dataGrid.SelectedItems);
         }
@@ -81,16 +82,16 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     {
         var selectedTrackedItems = selectedItems.Cast<TrackedItem>().ToArray();
 
-        if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.ValueString, nameof(IProcessMemory.Value), out string newValue))
+        if (ShowChangePropertyDialog(selectedTrackedItems.First().Item.Value, nameof(IMemorySegment.Value), out string newValue))
         {
             foreach (var trackedItem in selectedTrackedItems)
             {
                 if (trackedItem.IsFreezed)
                 {
-                    trackedItem.SetValue = newValue.ToPrimitiveDataType(trackedItem.Item.ScanDataType);
+                    trackedItem.SetValue = newValue;
                 }
-                trackedItem.Item.Value = newValue.ToPrimitiveDataType(trackedItem.Item.ScanDataType);
-                NativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
+                trackedItem.Item.Value = newValue;
+                _nativeApi.WriteMemory(_selectProcessViewModel.GetSelectedProcessHandle(), trackedItem.Item, trackedItem.SetValue ?? trackedItem.Item.Value);
             }
         }
     }

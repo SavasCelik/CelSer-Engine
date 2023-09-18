@@ -1,19 +1,18 @@
 ﻿using CelSerEngine.Core.Models;
-using CelSerEngine.Models.ObservableModels;
 using System;
 
-namespace CelSerEngine.Models;
+namespace CelSerEngine.Wpf.Models;
 
-public partial class ValueAddress : ObservableProcessMemory
+public partial class ValueAddress : ObservableMemorySegment
 {
-    public dynamic? PrevoiusValue { get; set; }
+    public string? PrevoiusValue { get; set; }
 
-    public ValueAddress(IntPtr baseAddress, int baseOffset, dynamic value, ScanDataType scanDataType) : base(baseAddress, baseOffset, 0, scanDataType)
+    public ValueAddress(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType) : base(baseAddress, baseOffset, value, scanDataType)
     {
         AddressDisplayString = Address.ToString("X");
     }
 
-    public ValueAddress(ProcessMemory processMemory) : this(processMemory.BaseAddress, processMemory.BaseOffset, 0, processMemory.ScanDataType)
+    public ValueAddress(IMemorySegment memorySegment) : this(memorySegment.BaseAddress, memorySegment.BaseOffset, memorySegment.Value, memorySegment.ScanDataType)
     {
     }
 }
