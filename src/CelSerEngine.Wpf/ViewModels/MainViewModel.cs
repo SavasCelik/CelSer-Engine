@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Wpf.Services;
+using CelSerEngine.Wpf.Views;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
@@ -72,6 +73,9 @@ public partial class MainViewModel : ObservableRecipient
     [RelayCommand]
     public async Task FirstScan(string userInput)
     {
+        var scriptEditorView = new ScriptEditorView();
+        scriptEditorView.Show();
+
         if (string.IsNullOrWhiteSpace(userInput))
             return;
 

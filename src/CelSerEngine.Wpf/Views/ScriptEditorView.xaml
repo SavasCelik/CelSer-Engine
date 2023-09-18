@@ -9,5 +9,15 @@
     Width="800"
     Height="450"
     mc:Ignorable="d">
-    <Grid />
+    <Grid>
+        <TextBox
+            Width="464"
+            Height="292"
+            Margin="10,10,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Text="TextBox"
+            TextWrapping="Wrap" />
+
+    </Grid>
 </Window>
