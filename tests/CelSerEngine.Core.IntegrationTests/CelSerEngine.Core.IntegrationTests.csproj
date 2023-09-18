@@ -28,10 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="ScannerTests\PointerScannerData\RescanOptions.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

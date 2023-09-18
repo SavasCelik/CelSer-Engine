@@ -19,6 +19,7 @@ public class PointerScannerTests
         var moduleBaseAddress = new IntPtr(0x100000000);
         var moduleSize = (uint)0x344000;
 
+        // first scan
         var jsonOprions = new JsonSerializerOptions();
         jsonOprions.Converters.Add(new IntPtrJsonConverter());
         var stubVirtualMemoryRegions = 
@@ -55,11 +56,12 @@ public class PointerScannerTests
 
         Assert.Single(expectedPointer);
 
+        // Rescan
         foundPointers = new List<Pointer>(expectedPointer);
         var searchedAddressAfterRescan = new IntPtr(0x863AAE8);
         stubVirtualMemoryRegions =
             JsonSerializer.Deserialize<IList<VirtualMemoryRegion>>(
-                await File.ReadAllTextAsync("ScannerTests/PointerScannerData/rescan_regions.json"),
+                await File.ReadAllTextAsync("ScannerTests/PointerScannerData/Rescan_VirtualMemoryRegions.json"),
                 jsonOprions)!;
 
         stubNativeApi
