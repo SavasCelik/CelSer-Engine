@@ -10,14 +10,11 @@
     Height="450"
     mc:Ignorable="d">
     <Grid>
-        <TextBox
-            Width="464"
-            Height="292"
-            Margin="10,10,0,0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Text="TextBox"
-            TextWrapping="Wrap" />
+        <avalonEdit:TextEditor
+            xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+            Name="textEditor"
+            FontSize="10pt"
+            SyntaxHighlighting="C#" />
 
     </Grid>
 </Window>
