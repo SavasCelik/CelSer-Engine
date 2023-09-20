@@ -11,4 +11,5 @@ public class ViewModelLocator
     public PointerScanOptionsViewModel PointerScanOptionsViewModel => App.Current.Services.GetRequiredService<PointerScanOptionsViewModel>();
     public PointerScanResultsViewModel PointerScanResultsViewModel => App.Current.Services.GetRequiredService<PointerScanResultsViewModel>();
     public ScriptEditorViewModel ScriptEditorViewModel => App.Current.Services.GetRequiredService<ScriptEditorViewModel>();
+    public ScriptOverviewViewModel ScriptOverviewViewModel => App.Current.Services.GetRequiredService<ScriptOverviewViewModel>();
 }

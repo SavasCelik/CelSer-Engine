@@ -42,6 +42,7 @@ public sealed partial class App : Application
         services.AddSingleton<PointerScanOptionsViewModel>();
         services.AddSingleton<PointerScanResultsViewModel>();
         services.AddSingleton<ScriptEditorViewModel>();
+        services.AddSingleton<ScriptOverviewViewModel>();
         services.AddSingleton<IMemoryScanService, MemoryScanService>();
         services.AddSingleton<INativeApi, NativeApi>();
 
