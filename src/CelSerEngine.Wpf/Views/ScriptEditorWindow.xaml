@@ -9,6 +9,7 @@
     Title="ScriptEditorWindow"
     Width="800"
     Height="450"
+    DataContext="{Binding ScriptEditorViewModel, Source={StaticResource ViewModelLocator}}"
     mc:Ignorable="d">
     <Grid>
         <avalonEdit:TextEditor
