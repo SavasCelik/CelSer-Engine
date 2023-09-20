@@ -73,7 +73,7 @@ public partial class MainViewModel : ObservableRecipient
     [RelayCommand]
     public async Task FirstScan(string userInput)
     {
-        var scriptEditorView = new ScriptEditorView();
+        var scriptEditorView = new ScriptEditorWindow();
         scriptEditorView.Show();
 
         if (string.IsNullOrWhiteSpace(userInput))

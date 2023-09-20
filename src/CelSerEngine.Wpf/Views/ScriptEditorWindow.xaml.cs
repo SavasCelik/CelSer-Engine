@@ -14,11 +14,11 @@ using System.Windows.Shapes;
 
 namespace CelSerEngine.Wpf.Views;
 /// <summary>
-/// Interaction logic for ScriptEditorView.xaml
+/// Interaction logic for ScriptEditorWindow.xaml
 /// </summary>
-public partial class ScriptEditorView : Window
+public partial class ScriptEditorWindow : Window
 {
-    public ScriptEditorView()
+    public ScriptEditorWindow()
     {
         InitializeComponent();
     }
