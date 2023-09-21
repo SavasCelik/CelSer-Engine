@@ -10,6 +10,14 @@
     Height="450"
     DataContext="{Binding ScriptOverviewViewModel, Source={StaticResource ViewModelLocator}}"
     mc:Ignorable="d">
+    <Window.Resources>
+        <ContextMenu x:Key="ContextMenuScript">
+            <MenuItem
+                Command="{Binding ScriptOverviewViewModel.OpenScriptEditorCommand, Source={StaticResource ViewModelLocator}}"
+                CommandParameter="{Binding Path=SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
+                Header="Edit" />
+        </ContextMenu>
+    </Window.Resources>
     <DataGrid
         AutoGenerateColumns="False"
         Background="White"
@@ -25,6 +33,11 @@
         SelectionMode="Extended"
         SelectionUnit="FullRow"
         VirtualizingPanel.VirtualizationMode="Recycling">
+        <DataGrid.RowStyle>
+            <Style TargetType="{x:Type DataGridRow}">
+                <Setter Property="ContextMenu" Value="{StaticResource ContextMenuScript}" />
+            </Style>
+        </DataGrid.RowStyle>
         <DataGrid.ColumnHeaderStyle>
             <Style TargetType="{x:Type DataGridColumnHeader}">
                 <Setter Property="BorderThickness" Value="12" />

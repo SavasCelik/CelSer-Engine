@@ -1,5 +1,7 @@
 ﻿using CelSerEngine.Wpf.Models;
+using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -29,5 +31,12 @@ public partial class ScriptOverviewViewModel : ObservableObject
             Logic = "Hello World",
             Name = "contains Hello World"
         });
+    }
+
+    [RelayCommand]
+    public void OpenScriptEditor(ObservableScript script)
+    {
+        var scriptEditor = new ScriptEditorWindow();
+        scriptEditor.Show();
     }
 }
