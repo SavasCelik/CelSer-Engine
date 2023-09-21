@@ -23,7 +23,9 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _scripts = new List<ObservableScript>();
         _scripts.Add(new ObservableScript
         {
-            Logic = "wow",
+            Logic = @"public void Test(string message) {
+    Console.WriteLine(message);
+}",
             Name = "contains wow"
         });
         _scripts.Add(new ObservableScript
@@ -37,6 +39,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
     public void OpenScriptEditor(ObservableScript script)
     {
         var scriptEditor = new ScriptEditorWindow();
+        scriptEditor.SetText(script.Logic);
         scriptEditor.Show();
     }
 }
