@@ -9,6 +9,7 @@
     Width="400"
     Height="450"
     DataContext="{Binding ScriptOverviewViewModel, Source={StaticResource ViewModelLocator}}"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.Resources>
         <ContextMenu x:Key="ContextMenuScript">
