@@ -73,9 +73,6 @@ public partial class MainViewModel : ObservableRecipient
     [RelayCommand]
     public async Task FirstScan(string userInput)
     {
-        var scriptEditorView = new ScriptEditorWindow();
-        scriptEditorView.Show();
-
         if (string.IsNullOrWhiteSpace(userInput))
             return;
 
@@ -129,5 +126,12 @@ public partial class MainViewModel : ObservableRecipient
             var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
             Debug.WriteLine($"Opening Process {processHandle:X} was successfull");
         }
+    }
+
+    [RelayCommand]
+    public void OpenScriptOverview()
+    {
+        var scriptOverviewWindow = new ScriptOverviewWindow();
+        scriptOverviewWindow.Show();
     }
 }
