@@ -1,4 +1,5 @@
-﻿using CelSerEngine.Wpf.Models;
+﻿using CelSerEngine.Core.Database;
+using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,23 +17,13 @@ public partial class ScriptOverviewViewModel : ObservableObject
     private IList<ObservableScript> _scripts;
 
     private readonly SelectProcessViewModel _selectProcessViewModel;
+    private readonly CelSerEngineDbContext _celSerEngineDbContext;
 
-    public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel)
+    public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel, CelSerEngineDbContext celSerEngineDbContext)
     {
         _selectProcessViewModel = selectProcessViewModel;
+        _celSerEngineDbContext = celSerEngineDbContext;
         _scripts = new List<ObservableScript>();
-        _scripts.Add(new ObservableScript
-        {
-            Logic = @"public void Test(string message) {
-    Console.WriteLine(message);
-}",
-            Name = "contains wow"
-        });
-        _scripts.Add(new ObservableScript
-        {
-            Logic = "Hello World",
-            Name = "contains Hello World"
-        });
     }
 
     [RelayCommand]
@@ -41,5 +32,17 @@ public partial class ScriptOverviewViewModel : ObservableObject
         var scriptEditor = new ScriptEditorWindow();
         scriptEditor.SetText(script.Logic);
         scriptEditor.Show();
+    }
+
+    public void OpenScriptOverview()
+    {
+        Scripts = _celSerEngineDbContext.Scripts.Select(x => new ObservableScript
+        {
+            Id = x.Id,
+            Name = x.Name,
+            Logic = x.Logic
+        }).ToList();
+        var scriptOverviewWindow = new ScriptOverviewWindow();
+        scriptOverviewWindow.Show();
     }
 }

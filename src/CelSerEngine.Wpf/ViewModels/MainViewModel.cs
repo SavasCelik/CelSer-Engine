@@ -36,17 +36,17 @@ public partial class MainViewModel : ObservableRecipient
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly ScanResultsViewModel _scanResultsViewModel;
     private readonly IMemoryScanService _memoryScanService;
-    private readonly CelSerEngineDbContext _celSerEngineDbContext;
+    private readonly ScriptOverviewViewModel _scriptOverviewViewModel;
     private readonly IProgress<float> _progressBarUpdater;
     public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
     public bool Scanning { get; set; }
 
-    public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService, CelSerEngineDbContext celSerEngineDbContext)
+    public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService, ScriptOverviewViewModel scriptOverviewViewModel)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _scanResultsViewModel = scanResultsViewModel;
         _memoryScanService = memoryScanService;
-        _celSerEngineDbContext = celSerEngineDbContext;
+        _scriptOverviewViewModel = scriptOverviewViewModel;
         _windowTitle = WindowTitleBase;
         _firstScanVisibility = Visibility.Visible;
         _newScanVisibility = Visibility.Hidden;
@@ -134,7 +134,6 @@ public partial class MainViewModel : ObservableRecipient
     [RelayCommand]
     public void OpenScriptOverview()
     {
-        var scriptOverviewWindow = new ScriptOverviewWindow();
-        scriptOverviewWindow.Show();
+        _scriptOverviewViewModel.OpenScriptOverview();
     }
 }
