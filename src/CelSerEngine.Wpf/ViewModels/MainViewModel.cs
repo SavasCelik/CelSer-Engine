@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CelSerEngine.Core.Database;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -35,15 +36,17 @@ public partial class MainViewModel : ObservableRecipient
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly ScanResultsViewModel _scanResultsViewModel;
     private readonly IMemoryScanService _memoryScanService;
+    private readonly CelSerEngineDbContext _celSerEngineDbContext;
     private readonly IProgress<float> _progressBarUpdater;
     public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
     public bool Scanning { get; set; }
 
-    public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService)
+    public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService, CelSerEngineDbContext celSerEngineDbContext)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _scanResultsViewModel = scanResultsViewModel;
         _memoryScanService = memoryScanService;
+        _celSerEngineDbContext = celSerEngineDbContext;
         _windowTitle = WindowTitleBase;
         _firstScanVisibility = Visibility.Visible;
         _newScanVisibility = Visibility.Hidden;

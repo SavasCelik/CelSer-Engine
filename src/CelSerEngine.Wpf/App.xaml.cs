@@ -1,6 +1,8 @@
-﻿using CelSerEngine.Core.Native;
+﻿using CelSerEngine.Core.Database;
+using CelSerEngine.Core.Native;
 using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Windows;
@@ -35,6 +37,7 @@ public sealed partial class App : Application
     {
         var services = new ServiceCollection();
 
+        services.AddDbContext<CelSerEngineDbContext>(options => options.UseSqlite("Data Source=celserengine.db"));
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SelectProcessViewModel>();
         services.AddSingleton<TrackedScanItemsViewModel>();
