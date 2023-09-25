@@ -40,8 +40,7 @@ public partial class ScriptEditorViewModel : ObservableObject
     [RelayCommand]
     private void PasteBasicTemplate()
     {
-
-        _scriptEditor.SetText(ScriptTemplates.BasicTemplate);
+        ScriptLogic = ScriptTemplates.BasicTemplate;
     }
 
     public void OpenScriptEditor(BaseScript selectedScript)
