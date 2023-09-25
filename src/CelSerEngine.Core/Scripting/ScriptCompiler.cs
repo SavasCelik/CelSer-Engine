@@ -40,7 +40,7 @@ public class ScriptCompiler
         }
 
         Assembly assembly = Assembly.Load(memoryStream.ToArray());
-        var instance = assembly.CreateInstance("CustomScript");
+        var instance = assembly.CreateInstance("LoopingScript");
 
         if (instance is not ILoopingScript loopingScript)
             throw new ScriptValidationException($"Code must implement from {nameof(ILoopingScript)}");
