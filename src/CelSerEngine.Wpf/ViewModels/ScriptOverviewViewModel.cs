@@ -29,9 +29,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
     [RelayCommand]
     public void OpenScriptEditor(ObservableScript script)
     {
-        var scriptEditor = new ScriptEditorWindow();
-        scriptEditor.SetText(script.Logic);
-        scriptEditor.Show();
+        _scriptEditorViewModel.OpenScriptEditor(script);
     }
 
     public void OpenScriptOverview()
