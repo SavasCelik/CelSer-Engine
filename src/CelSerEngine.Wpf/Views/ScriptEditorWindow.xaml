@@ -12,8 +12,26 @@
     DataContext="{Binding ScriptEditorViewModel, Source={StaticResource ViewModelLocator}}"
     mc:Ignorable="d">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0">
+            <Menu Background="White">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Save" />
+                    <MenuItem Header="_Validate" />
+                </MenuItem>
+                <MenuItem Header="_Templates">
+                    <MenuItem Header="_Load Basic Template" />
+                </MenuItem>
+            </Menu>
+            <Separator />
+        </StackPanel>
+
         <avalonEdit:TextEditor
             Name="textEditor"
+            Grid.Row="1"
             FontSize="10pt"
             SyntaxHighlighting="C#" />
 
