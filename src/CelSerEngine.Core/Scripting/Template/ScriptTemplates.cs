@@ -1,7 +1,7 @@
 ﻿namespace CelSerEngine.Core.Scripting.Template;
 public static class ScriptTemplates
 {
-    public static string BasicTemplate = @"using System;
+    public const string BasicTemplate = @"using System;
 using CelSerEngine.Core.Scripting.Template;
 
 public class LoopingScript : ILoopingScript {
