@@ -22,7 +22,7 @@ public class ScriptCompiler
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(script.Logic);
         var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
             optimizationLevel: OptimizationLevel.Release);
-        CSharpCompilation compilation = CSharpCompilation.Create($"DynamicAssembly.${script.Name}")
+        CSharpCompilation compilation = CSharpCompilation.Create($"DynamicAssembly.ID{script.Id}")
             .AddSyntaxTrees(syntaxTree)
             .AddReferences(_references)
             .WithOptions(options);
