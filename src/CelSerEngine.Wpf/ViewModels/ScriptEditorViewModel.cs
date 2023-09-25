@@ -5,6 +5,8 @@ using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ICSharpCode.AvalonEdit.Document;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CelSerEngine.Wpf.ViewModels;
@@ -30,7 +32,17 @@ public partial class ScriptEditorViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveScript()
     {
+        if (SelectedScript!.Id == 0)
+        {
+            await _celSerEngineDbContext.AddAsync(SelectedScript);
+        }
+        else
+        {
+            var dbScript = await _celSerEngineDbContext.Scripts.Where(x => x.Id == SelectedScript.Id).FirstAsync();
+            dbScript.Logic = ScriptLogic;
+        }
 
+        await _celSerEngineDbContext.SaveChangesAsync();
     }
 
     [RelayCommand]
