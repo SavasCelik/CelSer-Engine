@@ -47,11 +47,10 @@ public partial class ScriptEditorViewModel : ObservableObject
     public void OpenScriptEditor(BaseScript selectedScript)
     {
         SelectedScript = selectedScript;
+        ScriptLogic = SelectedScript.Logic;
 
         if (_scriptEditor == null || !_scriptEditor.IsVisible)
             _scriptEditor = new ScriptEditorWindow();
-
-        _scriptEditor.SetText(SelectedScript.Logic);
         _scriptEditor.Show();
     }
 }
