@@ -1,11 +1,5 @@
 ﻿using CelSerEngine.Core.Native;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CelSerEngine.Core.Scripting;
 public class MemoryManager
@@ -30,5 +24,11 @@ public class MemoryManager
         Marshal.FreeHGlobal(ptr);
 
         return result;
+    }
+
+    public void WriteMemoryAt<T>(IntPtr memoryAddress, T newValue)
+        where T : struct
+    {
+        _nativeApi.WriteMemory(_processHandle, memoryAddress, newValue);
     }
 }
