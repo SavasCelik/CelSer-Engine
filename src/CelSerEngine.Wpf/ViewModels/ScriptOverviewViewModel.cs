@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Database;
 using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scripting;
 using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
@@ -22,14 +23,19 @@ public partial class ScriptOverviewViewModel : ObservableObject
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly CelSerEngineDbContext _celSerEngineDbContext;
     private readonly ScriptEditorViewModel _scriptEditorViewModel;
+    private readonly INativeApi _nativeApi;
     private readonly DispatcherTimer _timer;
     private readonly ScriptCompiler _scriptCompiler;
 
-    public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel, CelSerEngineDbContext celSerEngineDbContext, ScriptEditorViewModel scriptEditorViewModel)
+    public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel,
+        CelSerEngineDbContext celSerEngineDbContext,
+        ScriptEditorViewModel scriptEditorViewModel,
+        INativeApi nativeApi)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _celSerEngineDbContext = celSerEngineDbContext;
         _scriptEditorViewModel = scriptEditorViewModel;
+        _nativeApi = nativeApi;
         _scripts = new List<ObservableScript>();
         _scriptCompiler = new ScriptCompiler();
         _timer = new DispatcherTimer(DispatcherPriority.Background)
@@ -63,11 +69,12 @@ public partial class ScriptOverviewViewModel : ObservableObject
     private void RunActiveScripts(object? sender, EventArgs args)
     {
         var activeScripts = Scripts.Where(x => x.IsActivated).ToArray();
+        var memoryManager = new MemoryManager(_selectProcessViewModel.GetSelectedProcessHandle(), _nativeApi);
 
         foreach (var script in activeScripts)
         {
             var loopingScript = _scriptCompiler.CompileScript(script);
-            loopingScript.OnLoop();
+            loopingScript.OnLoop(memoryManager);
         }
     }
 }

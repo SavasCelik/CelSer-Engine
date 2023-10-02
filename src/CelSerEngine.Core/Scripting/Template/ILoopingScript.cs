@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CelSerEngine.Core.Scripting.Template;
+﻿namespace CelSerEngine.Core.Scripting.Template;
 public interface ILoopingScript
 {
-    public void OnStart();
-    public void OnLoop();
-    public void OnStop();
+    public void OnStart(MemoryManager memoryManager);
+    public void OnLoop(MemoryManager memoryManager);
+    public void OnStop(MemoryManager memoryManager);
 }
