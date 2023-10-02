@@ -73,8 +73,8 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
         foreach (var script in activeScripts)
         {
-            var loopingScript = _scriptCompiler.CompileScript(script);
-            loopingScript.OnLoop(memoryManager);
+            script.LoopingScript ??= _scriptCompiler.CompileScript(script);
+            script.LoopingScript.OnLoop(memoryManager);
         }
     }
 }

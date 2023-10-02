@@ -1,10 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Scripting.Template;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CelSerEngine.Wpf.Models;
 
@@ -13,5 +9,5 @@ public partial class ObservableScript : BaseScript
 {
     [ObservableProperty]
     private bool _isActivated;
-
+    public ILoopingScript? LoopingScript { get; set; }
 }
