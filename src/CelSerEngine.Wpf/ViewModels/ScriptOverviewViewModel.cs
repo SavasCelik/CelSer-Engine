@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Threading;
 
@@ -16,7 +17,7 @@ namespace CelSerEngine.Wpf.ViewModels;
 public partial class ScriptOverviewViewModel : ObservableObject
 {
     [ObservableProperty]
-    private IList<ObservableScript> _scripts;
+    private ObservableCollection<ObservableScript> _scripts;
 
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly CelSerEngineDbContext _celSerEngineDbContext;
@@ -35,7 +36,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _celSerEngineDbContext = celSerEngineDbContext;
         _scriptEditorViewModel = scriptEditorViewModel;
         _nativeApi = nativeApi;
-        _scripts = new List<ObservableScript>();
+        _scripts = new ObservableCollection<ObservableScript>();
         _scriptCompiler = new ScriptCompiler();
         _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -67,12 +68,27 @@ public partial class ScriptOverviewViewModel : ObservableObject
             script.Name = valueEditor.Value;
             Script dbScript = _celSerEngineDbContext.Scripts.Single(x => x.Id == script.Id);
             dbScript.Name = script.Name;
+            _celSerEngineDbContext.SaveChanges();
         }
+    }
+
+    [RelayCommand]
+    private void DuplicateScript(IScript script)
+    {
+        Script dbScript = _celSerEngineDbContext.Scripts.Single(x => x.Id == script.Id);
+        var duplicatedScript = new Script
+        {
+            Id = 0, Name = dbScript.Name, Logic = dbScript.Logic, TargetProcessId = dbScript.TargetProcessId
+        };
+        _celSerEngineDbContext.Scripts.Add(duplicatedScript);
+        _celSerEngineDbContext.SaveChanges();
+        Scripts.Add(new ObservableScript(duplicatedScript.Id, duplicatedScript.Name, duplicatedScript.Logic));
     }
 
     public void OpenScriptOverview()
     {
-        Scripts = _celSerEngineDbContext.Scripts.AsNoTracking().Select(x => new ObservableScript(x.Id, x.Name, x.Logic)).ToList();
+        IList<ObservableScript> dbScripts = _celSerEngineDbContext.Scripts.AsNoTracking().Select(x => new ObservableScript(x.Id, x.Name, x.Logic)).ToList();
+        Scripts = new ObservableCollection<ObservableScript>(dbScripts);
         _scriptOverviewWindow?.Close();
         _scriptOverviewWindow = new ScriptOverviewWindow();
         _scriptOverviewWindow.Show();

@@ -21,6 +21,10 @@
                 Command="{Binding ScriptOverviewViewModel.ShowRenamingDialogCommand, Source={StaticResource ViewModelLocator}}"
                 CommandParameter="{Binding Path=SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
                 Header="Rename" />
+            <MenuItem
+                Command="{Binding ScriptOverviewViewModel.DuplicateScriptCommand, Source={StaticResource ViewModelLocator}}"
+                CommandParameter="{Binding Path=SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
+                Header="Duplicate" />
         </ContextMenu>
     </Window.Resources>
     <DataGrid
