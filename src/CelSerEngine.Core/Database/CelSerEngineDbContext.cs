@@ -6,6 +6,7 @@ namespace CelSerEngine.Core.Database;
 public class CelSerEngineDbContext : DbContext
 {
     public DbSet<Script> Scripts { get; set; }
+    public DbSet<TargetProcess> TargetProcesses { get; set; }
 
     public CelSerEngineDbContext(DbContextOptions<CelSerEngineDbContext> options) : base(options)
     {
