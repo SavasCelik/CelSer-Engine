@@ -38,7 +38,9 @@ public static class AvalonEditBehavior
 
             var caretOffset = textEditor.CaretOffset;
             textEditor.Document.Text = GetText(dependencyObject);
-            textEditor.CaretOffset = caretOffset;
+
+            if (textEditor.Document.Text.Length >= caretOffset)
+                textEditor.CaretOffset = caretOffset;
         }
     }
 
