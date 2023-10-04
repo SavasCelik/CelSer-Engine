@@ -14,7 +14,7 @@ namespace CelSerEngine.Wpf.ViewModels;
 public partial class ScriptEditorViewModel : ObservableObject
 {
     private readonly CelSerEngineDbContext _celSerEngineDbContext;
-    public BaseScript? SelectedScript { get; set; }
+    public IScript? SelectedScript { get; set; }
     private ScriptEditorWindow? _scriptEditor;
 
     [ObservableProperty]
@@ -51,7 +51,7 @@ public partial class ScriptEditorViewModel : ObservableObject
         ScriptLogic = ScriptTemplates.BasicTemplate;
     }
 
-    public void OpenScriptEditor(BaseScript selectedScript)
+    public void OpenScriptEditor(IScript selectedScript)
     {
         SelectedScript = selectedScript;
         ScriptLogic = SelectedScript.Logic;

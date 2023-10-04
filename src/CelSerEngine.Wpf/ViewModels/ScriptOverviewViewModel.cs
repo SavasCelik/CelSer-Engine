@@ -6,12 +6,10 @@ using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace CelSerEngine.Wpf.ViewModels;
@@ -26,6 +24,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
     private readonly INativeApi _nativeApi;
     private readonly DispatcherTimer _timer;
     private readonly ScriptCompiler _scriptCompiler;
+    private ScriptOverviewWindow? _scriptOverviewWindow;
 
     public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel,
         CelSerEngineDbContext celSerEngineDbContext,
@@ -46,29 +45,42 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _timer.Start();
     }
 
-
-
     [RelayCommand]
-    public void OpenScriptEditor(ObservableScript script)
+    private void OpenScriptEditor(IScript script)
     {
         _scriptEditorViewModel.OpenScriptEditor(script);
     }
 
+    [RelayCommand]
+    private void ShowRenamingDialog(IScript script)
+    {
+        var valueEditor = new ValueEditor("Name")
+        {
+            Owner = _scriptOverviewWindow
+        };
+        valueEditor.SetValueTextBox(script.Name);
+        valueEditor.SetFocusTextBox();
+        var dialogResult = valueEditor.ShowDialog();
+
+        if (dialogResult ?? false)
+        {
+            script.Name = valueEditor.Value;
+            Script dbScript = _celSerEngineDbContext.Scripts.Single(x => x.Id == script.Id);
+            dbScript.Name = script.Name;
+        }
+    }
+
     public void OpenScriptOverview()
     {
-        Scripts = _celSerEngineDbContext.Scripts.Select(x => new ObservableScript
-        {
-            Id = x.Id,
-            Name = x.Name,
-            Logic = x.Logic
-        }).ToList();
-        var scriptOverviewWindow = new ScriptOverviewWindow();
-        scriptOverviewWindow.Show();
+        Scripts = _celSerEngineDbContext.Scripts.AsNoTracking().Select(x => new ObservableScript(x.Id, x.Name, x.Logic)).ToList();
+        _scriptOverviewWindow?.Close();
+        _scriptOverviewWindow = new ScriptOverviewWindow();
+        _scriptOverviewWindow.Show();
     }
 
     private void RunActiveScripts(object? sender, EventArgs args)
     {
-        var activeScripts = Scripts.Where(x => x.IsActivated).ToArray();
+        ObservableScript[] activeScripts = Scripts.Where(x => x.IsActivated).ToArray();
         var memoryManager = new MemoryManager(_selectProcessViewModel.GetSelectedProcessHandle(), _nativeApi);
 
         foreach (var script in activeScripts)

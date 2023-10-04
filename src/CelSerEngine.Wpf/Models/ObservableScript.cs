@@ -4,10 +4,21 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace CelSerEngine.Wpf.Models;
 
-[ObservableObject]
-public partial class ObservableScript : BaseScript
+public partial class ObservableScript : ObservableObject, IScript
 {
+    public int Id { get; set; }
+    public string Logic { get; set; }
     [ObservableProperty]
     private bool _isActivated;
+    [ObservableProperty]
+    private string _name;
     public ILoopingScript? LoopingScript { get; set; }
+
+    public ObservableScript(int id, string name, string logic)
+    {
+        Id = id;
+        _name = name;
+        Logic = logic;
+    }
+
 }

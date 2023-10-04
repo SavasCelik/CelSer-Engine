@@ -17,7 +17,7 @@ public class ScriptCompiler
         AddAssembly(typeof(ILoopingScript));
     }
 
-    public ILoopingScript CompileScript(BaseScript script)
+    public ILoopingScript CompileScript(IScript script)
     {
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(script.Logic);
         var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
