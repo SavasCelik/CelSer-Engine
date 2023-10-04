@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace CelSerEngine.Wpf.ViewModels;
@@ -53,7 +54,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ShowRenamingDialog(IScript script)
+    private async Task ShowRenamingDialogAsync(IScript script)
     {
         var valueEditor = new ValueEditor("Name")
         {
@@ -66,28 +67,28 @@ public partial class ScriptOverviewViewModel : ObservableObject
         if (dialogResult ?? false)
         {
             script.Name = valueEditor.Value;
-            Script dbScript = _celSerEngineDbContext.Scripts.Single(x => x.Id == script.Id);
+            Script dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id);
             dbScript.Name = script.Name;
-            _celSerEngineDbContext.SaveChanges();
+            await _celSerEngineDbContext.SaveChangesAsync();
         }
     }
 
     [RelayCommand]
-    private void DuplicateScript(IScript script)
+    private async Task DuplicateScriptAsync(IScript script)
     {
-        Script dbScript = _celSerEngineDbContext.Scripts.Single(x => x.Id == script.Id);
+        Script dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id);
         var duplicatedScript = new Script
         {
             Id = 0, Name = dbScript.Name, Logic = dbScript.Logic, TargetProcessId = dbScript.TargetProcessId
         };
-        _celSerEngineDbContext.Scripts.Add(duplicatedScript);
-        _celSerEngineDbContext.SaveChanges();
+        await _celSerEngineDbContext.Scripts.AddAsync(duplicatedScript);
+        await _celSerEngineDbContext.SaveChangesAsync();
         Scripts.Add(new ObservableScript(duplicatedScript.Id, duplicatedScript.Name, duplicatedScript.Logic));
     }
 
-    public void OpenScriptOverview()
+    public async Task OpenScriptOverviewAsync()
     {
-        IList<ObservableScript> dbScripts = _celSerEngineDbContext.Scripts.AsNoTracking().Select(x => new ObservableScript(x.Id, x.Name, x.Logic)).ToList();
+        IList<ObservableScript> dbScripts = await _celSerEngineDbContext.Scripts.AsNoTracking().Select(x => new ObservableScript(x.Id, x.Name, x.Logic)).ToListAsync();
         Scripts = new ObservableCollection<ObservableScript>(dbScripts);
         _scriptOverviewWindow?.Close();
         _scriptOverviewWindow = new ScriptOverviewWindow();
