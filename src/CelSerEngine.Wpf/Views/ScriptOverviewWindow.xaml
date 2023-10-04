@@ -27,46 +27,62 @@
                 Header="Duplicate" />
         </ContextMenu>
     </Window.Resources>
-    <DataGrid
-        AutoGenerateColumns="False"
-        Background="White"
-        CanUserAddRows="False"
-        CanUserDeleteRows="False"
-        CanUserReorderColumns="False"
-        CanUserResizeRows="False"
-        CanUserSortColumns="False"
-        GridLinesVisibility="None"
-        HeadersVisibility="Column"
-        ItemsSource="{Binding Scripts}"
-        RowDetailsVisibilityMode="Visible"
-        SelectionMode="Extended"
-        SelectionUnit="FullRow"
-        VirtualizingPanel.VirtualizationMode="Recycling">
-        <DataGrid.RowStyle>
-            <Style TargetType="{x:Type DataGridRow}">
-                <Setter Property="ContextMenu" Value="{StaticResource ContextMenuScript}" />
-            </Style>
-        </DataGrid.RowStyle>
-        <DataGrid.ColumnHeaderStyle>
-            <Style TargetType="{x:Type DataGridColumnHeader}">
-                <Setter Property="BorderThickness" Value="12" />
-            </Style>
-        </DataGrid.ColumnHeaderStyle>
-        <DataGrid.CellStyle>
-            <Style TargetType="DataGridCell">
-                <Setter Property="BorderThickness" Value="0" />
-            </Style>
-        </DataGrid.CellStyle>
-        <DataGrid.Columns>
-            <DataGridCheckBoxColumn
-                Width="55"
-                Binding="{Binding IsActivated, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                Header="Activate" />
-            <DataGridTextColumn
-                Width="*"
-                Binding="{Binding Name}"
-                Header="Name"
-                IsReadOnly="True" />
-        </DataGrid.Columns>
-    </DataGrid>
+
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Margin="0,0,0,5">
+            <Button
+                Width="120"
+                Height="26"
+                HorizontalAlignment="Left"
+                Command="{Binding CreateNewScriptCommand}"
+                Content="Create new Script" />
+        </StackPanel>
+        <DataGrid
+            Grid.Row="1"
+            AutoGenerateColumns="False"
+            Background="White"
+            CanUserAddRows="False"
+            CanUserDeleteRows="False"
+            CanUserReorderColumns="False"
+            CanUserResizeRows="False"
+            CanUserSortColumns="False"
+            GridLinesVisibility="None"
+            HeadersVisibility="Column"
+            ItemsSource="{Binding Scripts}"
+            RowDetailsVisibilityMode="Visible"
+            SelectionMode="Extended"
+            SelectionUnit="FullRow"
+            VirtualizingPanel.VirtualizationMode="Recycling">
+            <DataGrid.RowStyle>
+                <Style TargetType="{x:Type DataGridRow}">
+                    <Setter Property="ContextMenu" Value="{StaticResource ContextMenuScript}" />
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="{x:Type DataGridColumnHeader}">
+                    <Setter Property="BorderThickness" Value="12" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0" />
+                </Style>
+            </DataGrid.CellStyle>
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn
+                    Width="55"
+                    Binding="{Binding IsActivated, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Header="Activate" />
+                <DataGridTextColumn
+                    Width="*"
+                    Binding="{Binding Name}"
+                    Header="Name"
+                    IsReadOnly="True" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
 </Window>

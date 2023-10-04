@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 
 namespace CelSerEngine.Wpf.ViewModels;
@@ -84,6 +85,38 @@ public partial class ScriptOverviewViewModel : ObservableObject
         await _celSerEngineDbContext.Scripts.AddAsync(duplicatedScript);
         await _celSerEngineDbContext.SaveChangesAsync();
         Scripts.Add(new ObservableScript(duplicatedScript.Id, duplicatedScript.Name, duplicatedScript.Logic));
+    }
+
+    [RelayCommand]
+    private async Task CreateNewScriptAsync()
+    {
+        ProcessAdapter? selectedProcess = _selectProcessViewModel.SelectedProcess;
+
+        if (selectedProcess == null)
+        {
+            MessageBox.Show("Please select a process before create a script.", "No Process selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        TargetProcess? targetProcess = await _celSerEngineDbContext.TargetProcesses.SingleOrDefaultAsync(x => x.Name == selectedProcess.Process.ProcessName);
+        var newScript = new Script();
+
+        if (targetProcess == null)
+        {
+            targetProcess = new TargetProcess
+            {
+                Name = selectedProcess.Process.ProcessName
+            };
+            newScript.TargetProcess = targetProcess;
+        }
+        else
+        {
+            newScript.TargetProcessId = targetProcess.Id;
+        }
+
+        await _celSerEngineDbContext.Scripts.AddAsync(newScript);
+        await _celSerEngineDbContext.SaveChangesAsync();
+        Scripts.Add(new ObservableScript(newScript.Id, newScript.Name, newScript.Logic));
     }
 
     public async Task OpenScriptOverviewAsync()
