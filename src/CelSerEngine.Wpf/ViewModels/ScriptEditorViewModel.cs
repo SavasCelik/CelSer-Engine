@@ -39,7 +39,7 @@ public partial class ScriptEditorViewModel : ObservableObject
         else
         {
             var dbScript = await _celSerEngineDbContext.Scripts.Where(x => x.Id == SelectedScript.Id).FirstAsync();
-            dbScript.Logic = ScriptLogic;
+            dbScript.Logic = _scriptEditor!.GetText();
         }
 
         await _celSerEngineDbContext.SaveChangesAsync();
@@ -48,16 +48,17 @@ public partial class ScriptEditorViewModel : ObservableObject
     [RelayCommand]
     private void PasteBasicTemplate()
     {
-        ScriptLogic = ScriptTemplates.BasicTemplate;
+        _scriptEditor!.SetText(ScriptTemplates.BasicTemplate);
     }
 
     public void OpenScriptEditor(IScript selectedScript)
     {
         SelectedScript = selectedScript;
-        ScriptLogic = SelectedScript.Logic;
 
         if (_scriptEditor == null || !_scriptEditor.IsVisible)
             _scriptEditor = new ScriptEditorWindow();
+
+        _scriptEditor.SetText(SelectedScript.Logic);
         _scriptEditor.Show();
     }
 }

@@ -33,7 +33,6 @@
         <avalonEdit:TextEditor
             Name="textEditor"
             Grid.Row="1"
-            csebeh:AvalonEditBehavior.Text="{Binding ScriptLogic, Mode=TwoWay}"
             FontSize="10pt"
             SyntaxHighlighting="C#" />
 

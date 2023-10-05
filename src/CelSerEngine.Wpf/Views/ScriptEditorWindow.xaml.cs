@@ -22,4 +22,15 @@ public partial class ScriptEditorWindow : Window
     {
         InitializeComponent();
     }
+
+    public string GetText()
+    {
+        return textEditor.Text;
+    }
+
+    public void SetText(string text)
+    {
+        textEditor.Text = text;
+    }
+    }
 }
