@@ -11,23 +11,18 @@ namespace CelSerEngine.Wpf.Models;
 public class EditorCompletionData : ICompletionData
 {
     public ImageSource? Image => null;
-
     public string Text { get; }
-
     // Use this property if you want to show a fancy UIElement in the list.
     public object Content => Text;
-
-    public object Description { get; }
-
+    public object? Description { get; }
     public double Priority => 1;
 
-    public EditorCompletionData(string text, string description = "")
+    public EditorCompletionData(string text, string? description = null)
     {
         Text = text;
         Description = description;
     }
-
-
+    
     public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
     {
         textArea.Document.Replace(completionSegment, Text);

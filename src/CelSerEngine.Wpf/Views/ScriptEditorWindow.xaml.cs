@@ -4,18 +4,9 @@ using ICSharpCode.AvalonEdit.CodeCompletion;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace CelSerEngine.Wpf.Views;
 /// <summary>
@@ -49,13 +40,13 @@ public partial class ScriptEditorWindow : Window
 
     private void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
     {
-        IEnumerable<string> definedVariables = GetInTextDefinedVariables();
-        IEnumerable<string> definedMethods = GetInTextDefinedMethods();
-        IEnumerable<string> preDefinedVariables = GetPreDefinedVariables();
+        IEnumerable<EditorCompletionData> definedVariables = GetInTextDefinedVariables();
+        IEnumerable<EditorCompletionData> definedMethods = GetInTextDefinedMethods();
+        IEnumerable<EditorCompletionData> preDefinedVariables = GetPreDefinedVariables();
         var foundDefinitions = preDefinedVariables
             .Concat(definedVariables)
             .Concat(definedMethods)
-            .Where(x => x.Contains(e.Text, StringComparison.InvariantCultureIgnoreCase))
+            .Where(x => x.Text.Contains(e.Text, StringComparison.InvariantCultureIgnoreCase))
             .ToArray();
 
         if (_completionWindow != null && _completionWindow.CompletionList.ListBox.Items.Count <= 0)
@@ -73,20 +64,27 @@ public partial class ScriptEditorWindow : Window
         }
         else if (e.Text == ".")
         {
+            var instanceNameLength = Math.Min(nameof(MemoryManager).Length, textEditor.Text.Length);
+            var instanceNameStartIndex = Math.Max(textEditor.CaretOffset - 1 - instanceNameLength, 0);
+            var instanceName = textEditor.Text.Substring(instanceNameStartIndex, instanceNameLength);
+
+            if (!nameof(MemoryManager).Equals(instanceName, StringComparison.InvariantCultureIgnoreCase))
+                return;
+
             var preDefinedMethods = GetPreDefinedMethods().ToArray();
             CreateCompletionWindow(preDefinedMethods);
         }
         
     }
 
-    private void CreateCompletionWindow(ICollection<string> completionStrings)
+    private void CreateCompletionWindow(IEnumerable<EditorCompletionData> editorCompletions)
     {
         _completionWindow = new CompletionWindow(textEditor.TextArea);
         IList<ICompletionData> data = _completionWindow.CompletionList.CompletionData;
 
-        foreach (var definition in completionStrings)
+        foreach (var completionData in editorCompletions)
         {
-            data.Add(new EditorCompletionData(definition));
+            data.Add(completionData);
         }
 
         _completionWindow.Show();
@@ -96,42 +94,41 @@ public partial class ScriptEditorWindow : Window
         };
     }
 
-    private IEnumerable<string> GetInTextDefinedVariables()
+    private IEnumerable<EditorCompletionData> GetInTextDefinedVariables()
     {
         // Extract variables from textEditor's text:
         var regex = VariableNameRegex();
 
         foreach (Match match in regex.Matches(textEditor.Text))
         {
-            yield return match.Groups[1].Value;
+            yield return new EditorCompletionData(match.Groups[1].Value, "Variable specified in this document.");
         }
     }
 
-    private IEnumerable<string> GetInTextDefinedMethods()
+    private IEnumerable<EditorCompletionData> GetInTextDefinedMethods()
     {
         // Extract methods from textEditor's text:
         var regex = MethodNameRegex();
 
         foreach (Match match in regex.Matches(textEditor.Text))
         {
-            yield return match.Groups[1].Value;
+            yield return new EditorCompletionData(match.Groups[1].Value, "Method specified in this document.");
         }
     }
 
-    private static IEnumerable<string> GetPreDefinedVariables()
+    private static IEnumerable<EditorCompletionData> GetPreDefinedVariables()
     {
         const string memoryManagerName = nameof(MemoryManager);
-        yield return char.ToLowerInvariant(memoryManagerName[0]) + memoryManagerName[1..];
+        yield return new EditorCompletionData(char.ToLowerInvariant(memoryManagerName[0]) + memoryManagerName[1..],
+            "This class provides functionality for reading and writing to a process's memory.");
     }
 
-    private static IEnumerable<string> GetPreDefinedMethods()
+    private static IEnumerable<EditorCompletionData> GetPreDefinedMethods()
     {
-        var memoryManagerMethods = typeof(MemoryManager).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-        foreach (MethodInfo methodInfo in memoryManagerMethods)
-        {
-            yield return methodInfo.Name;
-        }
+        yield return new EditorCompletionData(nameof(MemoryManager.ReadMemoryAt),
+            "Reads the memory at the given address and returns it.");
+        yield return new EditorCompletionData(nameof(MemoryManager.WriteMemoryAt),
+            "Writes the specified value to the memory at the given address.");
     }
 
     private void textEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
