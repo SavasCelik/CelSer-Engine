@@ -164,6 +164,12 @@ public partial class ScriptEditorWindow : Window
     {
         if (e.Text.Length > 0 && _completionWindow != null)
         {
+            if (e.Text == " ")
+            {
+                _completionWindow.Close();
+                return;
+            }
+            
             if (!char.IsLetterOrDigit(e.Text[0]))
             {
                 // Whenever a non-letter is typed while the completion window is open,
