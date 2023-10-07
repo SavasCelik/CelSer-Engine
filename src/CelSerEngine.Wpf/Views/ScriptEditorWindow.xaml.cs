@@ -1,15 +1,13 @@
 ﻿using CelSerEngine.Core.Scripting;
+using CelSerEngine.Wpf.AvalonEdit;
 using CelSerEngine.Wpf.Models;
 using ICSharpCode.AvalonEdit.CodeCompletion;
+using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -28,6 +26,8 @@ public partial class ScriptEditorWindow : Window
     private static partial Regex MethodNameRegex();
     private CompletionWindow? _completionWindow;
     private readonly char[] _allowedCharsBeforeCompletion = { ' ', '\n', '\t', '(' };
+    private readonly FoldingManager _foldingManager;
+    private readonly BraceFoldingStrategy _braceFoldingStrategy;
 
     public ScriptEditorWindow()
     {
@@ -35,6 +35,9 @@ public partial class ScriptEditorWindow : Window
         textEditor.TextArea.TextEntering += textEditor_TextArea_TextEntering;
         textEditor.TextArea.TextEntered += textEditor_TextArea_TextEntered;
         LoadHightLightRules();
+        textEditor.ShowLineNumbers = true;
+        _foldingManager = FoldingManager.Install(textEditor.TextArea);
+        _braceFoldingStrategy = new BraceFoldingStrategy();
     }
 
     private void LoadHightLightRules()
@@ -59,10 +62,14 @@ public partial class ScriptEditorWindow : Window
     public void SetText(string text)
     {
         textEditor.Text = text;
+        _braceFoldingStrategy.UpdateFoldings(_foldingManager, textEditor.Document);
     }
 
     private void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
     {
+        if (e.Text == "}")
+            _braceFoldingStrategy.UpdateFoldings(_foldingManager, textEditor.Document);
+
         IEnumerable<EditorCompletionData> definedVariables = GetInTextDefinedVariables();
         IEnumerable<EditorCompletionData> definedMethods = GetInTextDefinedMethods();
         IEnumerable<EditorCompletionData> preDefinedVariables = GetPreDefinedVariables();
