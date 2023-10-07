@@ -22,7 +22,7 @@ public partial class ScriptEditorWindow : Window
 {
     [GeneratedRegex("\\bvar\\s+(\\w+)\\s*=")]
     private static partial Regex VariableNameRegex();
-    [GeneratedRegex("\\b\\w+\\s+(\\w+)\\s*\\(")]
+    [GeneratedRegex("\\b(?!new)\\w+\\s+(\\w+)\\s*\\(")]
     private static partial Regex MethodNameRegex();
     private CompletionWindow? _completionWindow;
     private readonly char[] _allowedCharsBeforeCompletion = { ' ', '\n', '\t', '(' };
