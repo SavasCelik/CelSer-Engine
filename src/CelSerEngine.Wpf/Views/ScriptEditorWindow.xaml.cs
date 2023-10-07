@@ -32,15 +32,15 @@ public partial class ScriptEditorWindow : Window
     public ScriptEditorWindow()
     {
         InitializeComponent();
+        LoadHighlightingRules();
         textEditor.TextArea.TextEntering += textEditor_TextArea_TextEntering;
         textEditor.TextArea.TextEntered += textEditor_TextArea_TextEntered;
-        LoadHightLightRules();
         textEditor.ShowLineNumbers = true;
         _foldingManager = FoldingManager.Install(textEditor.TextArea);
         _braceFoldingStrategy = new BraceFoldingStrategy();
     }
 
-    private void LoadHightLightRules()
+    private void LoadHighlightingRules()
     {
         StreamResourceInfo? highlightingResourceStream = Application.GetResourceStream(new Uri("/Resources/CsharpSyntaxStyle.xshd", UriKind.Relative));
 
