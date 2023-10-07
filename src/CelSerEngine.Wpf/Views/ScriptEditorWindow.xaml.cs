@@ -70,6 +70,12 @@ public partial class ScriptEditorWindow : Window
         if (e.Text == "}")
             _braceFoldingStrategy.UpdateFoldings(_foldingManager, textEditor.Document);
 
+        if (_completionWindow != null && _completionWindow.CompletionList.ListBox.Items.Count <= 0)
+            _completionWindow.Close();
+
+        if (_completionWindow != null)
+            return;
+
         IEnumerable<EditorCompletionData> definedVariables = GetInTextDefinedVariables();
         IEnumerable<EditorCompletionData> definedMethods = GetInTextDefinedMethods();
         IEnumerable<EditorCompletionData> preDefinedVariables = GetPreDefinedVariables();
@@ -78,12 +84,6 @@ public partial class ScriptEditorWindow : Window
             .Concat(definedMethods)
             .Where(x => x.Text.Contains(e.Text, StringComparison.InvariantCultureIgnoreCase))
             .ToArray();
-
-        if (_completionWindow != null && _completionWindow.CompletionList.ListBox.Items.Count <= 0)
-            _completionWindow.Close();
-
-        if (_completionWindow != null)
-            return;
 
         var lastWordIndex = Math.Max(textEditor.CaretOffset - 2, 0);
 
