@@ -67,8 +67,7 @@ public partial class ScriptEditorWindow : Window
 
     private void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
     {
-        if (e.Text == "}")
-            _braceFoldingStrategy.UpdateFoldings(_foldingManager, textEditor.Document);
+        _braceFoldingStrategy.UpdateFoldings(_foldingManager, textEditor.Document);
 
         if (_completionWindow != null && _completionWindow.CompletionList.ListBox.Items.Count <= 0)
             _completionWindow.Close();
@@ -103,7 +102,6 @@ public partial class ScriptEditorWindow : Window
             var preDefinedMethods = GetPreDefinedMethods().ToArray();
             CreateCompletionWindow(preDefinedMethods);
         }
-        
     }
 
     private void CreateCompletionWindow(IEnumerable<EditorCompletionData> editorCompletions)
