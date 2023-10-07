@@ -84,7 +84,6 @@ public partial class ScriptEditorWindow : Window
             .Concat(definedMethods)
             .Where(x => x.Text.Contains(e.Text, StringComparison.InvariantCultureIgnoreCase))
             .ToArray();
-
         var lastWordIndex = Math.Max(textEditor.CaretOffset - 2, 0);
 
         if (_allowedCharsBeforeCompletion.Contains(textEditor.Text[lastWordIndex]) && foundDefinitions.Any())
