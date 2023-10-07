@@ -10,6 +10,7 @@
     Title="ScriptEditorWindow"
     Width="800"
     Height="450"
+    Background="#1F1F1F"
     DataContext="{Binding ScriptEditorViewModel, Source={StaticResource ViewModelLocator}}"
     mc:Ignorable="d">
     <Grid>
@@ -17,8 +18,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0">
-            <Menu Background="White">
+        <StackPanel Grid.Row="0" Background="#1F1F1F">
+            <Menu Background="#1F1F1F" Foreground="White">
                 <MenuItem Header="_File">
                     <MenuItem Command="{Binding SaveScriptCommand}" Header="_Save" />
                     <MenuItem Header="_Validate" />
@@ -33,7 +34,10 @@
         <avalonEdit:TextEditor
             Name="textEditor"
             Grid.Row="1"
+            Background="#1F1F1F"
+            FontFamily="Cascadia Mono"
             FontSize="10pt"
+            Foreground="#FFF0F0F0"
             SyntaxHighlighting="C#" />
 
     </Grid>
