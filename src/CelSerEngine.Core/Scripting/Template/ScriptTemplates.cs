@@ -5,8 +5,10 @@ public static class ScriptTemplates
 using CelSerEngine.Core.Scripting.Template;
 using CelSerEngine.Core.Scripting;
 
-public class LoopingScript : {nameof(ILoopingScript)} {{
-	public void {nameof(ILoopingScript.OnLoop)}({nameof(MemoryManager)} memoryManager) {{
+public class LoopingScript : {nameof(ILoopingScript)}
+{{
+	public void {nameof(ILoopingScript.OnLoop)}({nameof(MemoryManager)} memoryManager)
+    {{
 		ScriptLogger.Print(""Hello World"");
 	}}
 	public void {nameof(ILoopingScript.OnStart)}({nameof(MemoryManager)} memoryManager){{}}
