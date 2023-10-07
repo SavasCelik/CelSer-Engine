@@ -1,12 +1,20 @@
 ﻿using CelSerEngine.Core.Scripting;
 using CelSerEngine.Wpf.Models;
 using ICSharpCode.AvalonEdit.CodeCompletion;
+using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Resources;
+using System.Xml;
 
 namespace CelSerEngine.Wpf.Views;
 /// <summary>
@@ -26,6 +34,21 @@ public partial class ScriptEditorWindow : Window
         InitializeComponent();
         textEditor.TextArea.TextEntering += textEditor_TextArea_TextEntering;
         textEditor.TextArea.TextEntered += textEditor_TextArea_TextEntered;
+        LoadHightLightRules();
+    }
+
+    private void LoadHightLightRules()
+    {
+        StreamResourceInfo? highlightingResourceStream = Application.GetResourceStream(new Uri("/Resources/CsharpSyntaxStyle.xshd", UriKind.Relative));
+
+        if (highlightingResourceStream == null)
+        {
+            Console.WriteLine("Unable to load code highlighting rules. Scripts will be affected");
+            return;
+        }
+
+        using var reader = new XmlTextReader(highlightingResourceStream.Stream);
+        textEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
 
     public string GetText()

@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\CsharpSyntaxStyle.xshd" />
     <None Remove="Resources\Images\SearchProcessWatermark.png" />
     <None Remove="Resources\Images\SelectProcess.png" />
   </ItemGroup>
@@ -27,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+	<Resource Include="Resources\CsharpSyntaxStyle.xshd" />
     <Resource Include="Resources\Images\SearchProcessWatermark.png" />
     <Resource Include="Resources\Images\SelectProcess.png" />
   </ItemGroup>
