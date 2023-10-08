@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Resources;
 using System.Xml;
 
@@ -106,7 +107,11 @@ public partial class ScriptEditorWindow : Window
 
     private void CreateCompletionWindow(IEnumerable<EditorCompletionData> editorCompletions)
     {
-        _completionWindow = new CompletionWindow(textEditor.TextArea);
+        _completionWindow = new CompletionWindow(textEditor.TextArea)
+        {
+            Background = (SolidColorBrush)new BrushConverter().ConvertFromString("#1F1F1F")!,
+            Foreground = Brushes.White
+        };
         IList<ICompletionData> data = _completionWindow.CompletionList.CompletionData;
 
         foreach (var completionData in editorCompletions)
@@ -167,7 +172,7 @@ public partial class ScriptEditorWindow : Window
                 _completionWindow.Close();
                 return;
             }
-            
+
             if (!char.IsLetterOrDigit(e.Text[0]))
             {
                 // Whenever a non-letter is typed while the completion window is open,
