@@ -152,9 +152,17 @@ public partial class ScriptOverviewViewModel : ObservableObject
             Scripts = new ObservableCollection<IScript>(dbScripts);
         }
 
-        _scriptOverviewWindow?.Close();
-        _scriptOverviewWindow = new ScriptOverviewWindow();
-        _scriptOverviewWindow.Show();
+        if (_scriptOverviewWindow == null)
+        {
+            _scriptOverviewWindow = new ScriptOverviewWindow();
+            _scriptOverviewWindow.Show();
+            _scriptOverviewWindow.Closed += delegate
+            {
+                _scriptOverviewWindow = null;
+            };
+        }
+
+        _scriptOverviewWindow.Focus();
     }
 
     private void RunActiveScripts(object? sender, EventArgs args)
