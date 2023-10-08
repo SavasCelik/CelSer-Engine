@@ -8,6 +8,7 @@ using ICSharpCode.AvalonEdit.Document;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
@@ -32,14 +33,21 @@ public partial class ScriptEditorViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveScript()
     {
-        if (SelectedScript!.Id == 0)
+        if (SelectedScript == null)
+        {
+            MessageBox.Show("There is no script selected", "Fatal error!");
+            return;
+        }
+
+        SelectedScript.Logic = _scriptEditor!.GetText();
+        if (SelectedScript.Id == 0)
         {
             await _celSerEngineDbContext.AddAsync(SelectedScript);
         }
         else
         {
             var dbScript = await _celSerEngineDbContext.Scripts.Where(x => x.Id == SelectedScript.Id).FirstAsync();
-            dbScript.Logic = _scriptEditor!.GetText();
+            dbScript.Logic = SelectedScript.Logic;
         }
 
         await _celSerEngineDbContext.SaveChangesAsync();
