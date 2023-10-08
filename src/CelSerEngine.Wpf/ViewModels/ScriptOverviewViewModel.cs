@@ -80,7 +80,10 @@ public partial class ScriptOverviewViewModel : ObservableObject
         Script dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id);
         var duplicatedScript = new Script
         {
-            Id = 0, Name = dbScript.Name, Logic = dbScript.Logic, TargetProcessId = dbScript.TargetProcessId
+            Id = 0,
+            Name = dbScript.Name,
+            Logic = dbScript.Logic,
+            TargetProcessId = dbScript.TargetProcessId
         };
         await _celSerEngineDbContext.Scripts.AddAsync(duplicatedScript);
         await _celSerEngineDbContext.SaveChangesAsync();
@@ -121,8 +124,20 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
     public async Task OpenScriptOverviewAsync()
     {
-        IList<ObservableScript> dbScripts = await _celSerEngineDbContext.Scripts.AsNoTracking().Select(x => new ObservableScript(x.Id, x.Name, x.Logic)).ToListAsync();
-        Scripts = new ObservableCollection<ObservableScript>(dbScripts);
+        var targetProcessName = _selectProcessViewModel.SelectedProcess?.Process.ProcessName;
+        Scripts.Clear();
+
+        if (targetProcessName != null)
+        {
+            IList<ObservableScript> dbScripts = await _celSerEngineDbContext.Scripts
+                .AsNoTracking()
+                .Include(x => x.TargetProcess)
+                .Where(x => x.TargetProcess != null && x.TargetProcess.Name == targetProcessName)
+                .Select(x => new ObservableScript(x.Id, x.Name, x.Logic))
+                .ToListAsync();
+            Scripts = new ObservableCollection<ObservableScript>(dbScripts);
+        }
+
         _scriptOverviewWindow?.Close();
         _scriptOverviewWindow = new ScriptOverviewWindow();
         _scriptOverviewWindow.Show();
