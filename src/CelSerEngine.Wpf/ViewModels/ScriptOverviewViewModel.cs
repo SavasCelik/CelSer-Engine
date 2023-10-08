@@ -91,6 +91,20 @@ public partial class ScriptOverviewViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task DeleteScriptAsync(IScript script)
+    {
+        var confirmDeletion = MessageBox.Show($"\"{script.Name}\" will be deleted permanently.", "Deleting Script",
+            MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+        if (confirmDeletion == MessageBoxResult.OK)
+        {
+            Scripts.Remove(script);
+            var dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id);
+            _celSerEngineDbContext.Scripts.Remove(dbScript);
+            await _celSerEngineDbContext.SaveChangesAsync();
+        }
+    }
+
+    [RelayCommand]
     private async Task CreateNewScriptAsync()
     {
         ProcessAdapter? selectedProcess = _selectProcessViewModel.SelectedProcess;
