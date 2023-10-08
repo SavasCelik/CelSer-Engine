@@ -19,7 +19,7 @@ namespace CelSerEngine.Wpf.ViewModels;
 public partial class ScriptOverviewViewModel : ObservableObject
 {
     [ObservableProperty]
-    private ObservableCollection<ObservableScript> _scripts;
+    private ObservableCollection<IScript> _scripts;
 
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly CelSerEngineDbContext _celSerEngineDbContext;
@@ -38,7 +38,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _celSerEngineDbContext = celSerEngineDbContext;
         _scriptEditorViewModel = scriptEditorViewModel;
         _nativeApi = nativeApi;
-        _scripts = new ObservableCollection<ObservableScript>();
+        _scripts = new ObservableCollection<IScript>();
         _scriptCompiler = new ScriptCompiler();
         _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -135,7 +135,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
                 .Where(x => x.TargetProcess != null && x.TargetProcess.Name == targetProcessName)
                 .Select(x => new ObservableScript(x.Id, x.Name, x.Logic))
                 .ToListAsync();
-            Scripts = new ObservableCollection<ObservableScript>(dbScripts);
+            Scripts = new ObservableCollection<IScript>(dbScripts);
         }
 
         _scriptOverviewWindow?.Close();
@@ -145,7 +145,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
     private void RunActiveScripts(object? sender, EventArgs args)
     {
-        ObservableScript[] activeScripts = Scripts.Where(x => x.IsActivated).ToArray();
+        var activeScripts = Scripts.OfType<ObservableScript>().Where(x => x.IsActivated).ToArray();
         var memoryManager = new MemoryManager(_selectProcessViewModel.GetSelectedProcessHandle(), _nativeApi);
 
         foreach (var script in activeScripts)
