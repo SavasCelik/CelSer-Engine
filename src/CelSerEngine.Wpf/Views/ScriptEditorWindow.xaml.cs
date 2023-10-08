@@ -152,10 +152,10 @@ public partial class ScriptEditorWindow : Window
 
     private static IEnumerable<EditorCompletionData> GetPreDefinedMethods()
     {
-        yield return new EditorCompletionData(nameof(MemoryManager.ReadMemoryAt),
-            "Reads the memory at the given address and returns it.");
+        yield return new EditorCompletionData(nameof(MemoryManager.ReadMemoryAt) + "<T>",
+            "(int memoryAddress)\nReads the memory at the given address and returns it as defined type T.");
         yield return new EditorCompletionData(nameof(MemoryManager.WriteMemoryAt),
-            "Writes the specified value to the memory at the given address.");
+            "(int memoryAddress, T newValue)\nWrites the specified value to the memory at the given address.");
     }
 
     private void textEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
