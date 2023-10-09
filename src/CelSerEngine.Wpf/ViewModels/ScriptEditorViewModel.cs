@@ -20,11 +20,11 @@ public partial class ScriptEditorViewModel : ObservableObject
     private string _scriptLogic;
 
     private readonly CelSerEngineDbContext _celSerEngineDbContext;
-    private readonly ScriptService _scriptService;
+    private readonly IScriptService _scriptService;
     public IScript? SelectedScript { get; set; }
     private ScriptEditorWindow? _scriptEditor;
 
-    public ScriptEditorViewModel(CelSerEngineDbContext celSerEngineDbContext, ScriptService scriptService)
+    public ScriptEditorViewModel(CelSerEngineDbContext celSerEngineDbContext, IScriptService scriptService)
     {
         _celSerEngineDbContext = celSerEngineDbContext;
         _scriptService = scriptService;

@@ -15,13 +15,11 @@ public class ScriptService : IScriptService
 {
     private readonly CelSerEngineDbContext _celSerEngineDbContext;
     private readonly ScriptCompiler _scriptCompiler;
-    private readonly MemoryManager _memoryManager;
 
-    public ScriptService(CelSerEngineDbContext celSerEngineDbContext, ScriptCompiler scriptCompiler, MemoryManager memoryManager)
+    public ScriptService(CelSerEngineDbContext celSerEngineDbContext, ScriptCompiler scriptCompiler)
     {
         _celSerEngineDbContext = celSerEngineDbContext;
         _scriptCompiler = scriptCompiler;
-        _memoryManager = memoryManager;
     }
 
     public async Task InsertScriptAsync(Script script, string targetProcessName)
@@ -98,14 +96,14 @@ public class ScriptService : IScriptService
     }
 
     //throws exception
-    public void RunScript(ObservableScript script)
+    public void RunScript(ObservableScript script, MemoryManager memoryManager)
     {
         script.LoopingScript ??= ValidateScript(script);
-        script.LoopingScript.OnLoop(_memoryManager);
+        script.LoopingScript.OnLoop(memoryManager);
     }
 
-    public void StopScript(ObservableScript script)
+    public void StopScript(ObservableScript script, MemoryManager memoryManager)
     {
-        script.LoopingScript!.OnStop(_memoryManager);
+        script.LoopingScript!.OnStop(memoryManager);
     }
 }

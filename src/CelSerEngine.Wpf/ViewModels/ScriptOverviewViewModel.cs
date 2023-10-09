@@ -1,4 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
+using CelSerEngine.Core.Scripting;
 using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.Views;
@@ -20,16 +22,19 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly ScriptEditorViewModel _scriptEditorViewModel;
-    private readonly ScriptService _scriptService;
+    private readonly IScriptService _scriptService;
+    private readonly INativeApi _nativeApi;
     private ScriptOverviewWindow? _scriptOverviewWindow;
 
     public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel,
         ScriptEditorViewModel scriptEditorViewModel,
-        ScriptService scriptService)
+        IScriptService scriptService,
+        INativeApi nativeApi)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _scriptEditorViewModel = scriptEditorViewModel;
         _scriptService = scriptService;
+        _nativeApi = nativeApi;
         _scripts = new ObservableCollection<ObservableScript>();
         var timer = new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -168,11 +173,17 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
     private void RunActiveScripts(object? sender, EventArgs args)
     {
+        var targetProcessName = GetTargetProcessName();
+
+        if (targetProcessName == null)
+            return;
+
+        var memoryManager = new MemoryManager(_nativeApi.OpenProcess(targetProcessName), _nativeApi);
         var activeScripts = Scripts.Where(x => x.IsActivated).ToArray();
 
         foreach (var script in activeScripts)
         {
-            _scriptService.RunScript(script);
+            _scriptService.RunScript(script, memoryManager);
         }
     }
 

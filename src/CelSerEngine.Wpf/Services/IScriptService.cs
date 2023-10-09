@@ -1,4 +1,5 @@
 ﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Scripting;
 using CelSerEngine.Core.Scripting.Template;
 using CelSerEngine.Wpf.Models;
 using System.Collections.Generic;
@@ -14,6 +15,6 @@ public interface IScriptService
     public Task<IScript> ImportScriptAsync(string pathToFile, string targetProcessName);
     public Task ExportScriptAsync(IScript script, string exportPath);
     public ILoopingScript ValidateScript(IScript script);
-    public void RunScript(ObservableScript script);
-    public void StopScript(ObservableScript script);
+    public void RunScript(ObservableScript script, MemoryManager memoryManager);
+    public void StopScript(ObservableScript script, MemoryManager memoryManager);
 }
