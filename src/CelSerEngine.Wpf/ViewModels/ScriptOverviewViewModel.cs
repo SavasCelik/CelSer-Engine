@@ -25,6 +25,8 @@ public partial class ScriptOverviewViewModel : ObservableObject
     private readonly IScriptService _scriptService;
     private readonly INativeApi _nativeApi;
     private ScriptOverviewWindow? _scriptOverviewWindow;
+    private MemoryManager? _memoryManager;
+    private readonly DispatcherTimer _timer;
 
     public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel,
         ScriptEditorViewModel scriptEditorViewModel,
@@ -36,12 +38,12 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _scriptService = scriptService;
         _nativeApi = nativeApi;
         _scripts = new ObservableCollection<ObservableScript>();
-        var timer = new DispatcherTimer(DispatcherPriority.Background)
+        _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(0.5)
         };
-        timer.Tick += RunActiveScripts;
-        timer.Start();
+        _timer.Tick += RunActivatedScripts;
+        _timer.Tick += StopDeactivatedScripts;
     }
 
     [RelayCommand]
@@ -161,29 +163,51 @@ public partial class ScriptOverviewViewModel : ObservableObject
         if (_scriptOverviewWindow == null)
         {
             _scriptOverviewWindow = new ScriptOverviewWindow();
+            _memoryManager = new MemoryManager(_nativeApi.OpenProcess(targetProcessName), _nativeApi);
             _scriptOverviewWindow.Show();
+            _timer.Start();
             _scriptOverviewWindow.Closed += delegate
             {
                 _scriptOverviewWindow = null;
+                _timer.Stop();
+                _memoryManager = null;
             };
         }
 
         _scriptOverviewWindow.Focus();
     }
 
-    private void RunActiveScripts(object? sender, EventArgs args)
+    private void RunActivatedScripts(object? sender, EventArgs args)
     {
-        var targetProcessName = GetTargetProcessName();
-
-        if (targetProcessName == null)
+        if (_memoryManager == null)
             return;
 
-        var memoryManager = new MemoryManager(_nativeApi.OpenProcess(targetProcessName), _nativeApi);
-        var activeScripts = Scripts.Where(x => x.IsActivated).ToArray();
+        var activatedScripts = Scripts.Where(x => x.IsActivated).ToArray();
 
-        foreach (var script in activeScripts)
+        foreach (var script in activatedScripts)
         {
-            _scriptService.RunScript(script, memoryManager);
+            try
+            {
+                _scriptService.RunScript(script, _memoryManager!);
+            }
+            catch (ScriptValidationException ex)
+            {
+                MessageBox.Show(ex.Message, "Script Overview");
+                script.IsActivated = false;
+            }
+        }
+    }
+
+    private void StopDeactivatedScripts(object? sender, EventArgs args)
+    {
+        if (_memoryManager == null)
+            return;
+
+        var deactivatedScripts = Scripts.Where(x => !x.IsActivated && x.ScriptState != ScriptState.Stopped).ToArray();
+
+        foreach (var script in deactivatedScripts)
+        {
+            _scriptService.StopScript(script, _memoryManager!);
         }
     }
 
