@@ -29,6 +29,10 @@
                 Command="{Binding ScriptOverviewViewModel.DeleteScriptCommand, Source={StaticResource ViewModelLocator}}"
                 CommandParameter="{Binding Path=SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
                 Header="Delete" />
+            <MenuItem
+                Command="{Binding ScriptOverviewViewModel.ExportScriptCommand, Source={StaticResource ViewModelLocator}}"
+                CommandParameter="{Binding Path=SelectedItem, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}}"
+                Header="Export" />
         </ContextMenu>
     </Window.Resources>
 

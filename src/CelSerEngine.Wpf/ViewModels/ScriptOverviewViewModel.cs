@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -101,6 +103,22 @@ public partial class ScriptOverviewViewModel : ObservableObject
             var dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id);
             _celSerEngineDbContext.Scripts.Remove(dbScript);
             await _celSerEngineDbContext.SaveChangesAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportScriptAsync(IScript script)
+    {
+        var saveDialog = new Microsoft.Win32.SaveFileDialog {
+            DefaultExt = ".json", // Default file extension
+            Filter = "JSON|*.json" // Filter files by extension
+        };
+        var result = saveDialog.ShowDialog();
+
+        if (result == true)
+        {
+            var scriptAsJson = JsonSerializer.Serialize(script);
+            await File.WriteAllTextAsync(saveDialog.FileName, scriptAsJson);
         }
     }
 
