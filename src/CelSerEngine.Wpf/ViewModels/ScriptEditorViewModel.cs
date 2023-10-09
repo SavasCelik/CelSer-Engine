@@ -7,7 +7,6 @@ using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ICSharpCode.AvalonEdit.Document;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MessageBox = System.Windows.MessageBox;
@@ -16,16 +15,14 @@ namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class ScriptEditorViewModel : ObservableObject
 {
-    private readonly CelSerEngineDbContext _celSerEngineDbContext;
-    private readonly ScriptService _scriptService;
-    public IScript? SelectedScript { get; set; }
-    private ScriptEditorWindow? _scriptEditor;
 
     [ObservableProperty]
     private string _scriptLogic;
 
-    [ObservableProperty]
-    public TextDocument _myDocument;
+    private readonly CelSerEngineDbContext _celSerEngineDbContext;
+    private readonly ScriptService _scriptService;
+    public IScript? SelectedScript { get; set; }
+    private ScriptEditorWindow? _scriptEditor;
 
     public ScriptEditorViewModel(CelSerEngineDbContext celSerEngineDbContext, ScriptService scriptService)
     {
