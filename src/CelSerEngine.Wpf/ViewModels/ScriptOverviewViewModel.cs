@@ -1,18 +1,13 @@
-﻿using CelSerEngine.Core.Database;
-using CelSerEngine.Core.Models;
-using CelSerEngine.Core.Native;
-using CelSerEngine.Core.Scripting;
+﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Wpf.Models;
+using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -21,27 +16,22 @@ namespace CelSerEngine.Wpf.ViewModels;
 public partial class ScriptOverviewViewModel : ObservableObject
 {
     [ObservableProperty]
-    private ObservableCollection<IScript> _scripts;
+    private ObservableCollection<ObservableScript> _scripts;
 
     private readonly SelectProcessViewModel _selectProcessViewModel;
-    private readonly CelSerEngineDbContext _celSerEngineDbContext;
     private readonly ScriptEditorViewModel _scriptEditorViewModel;
-    private readonly INativeApi _nativeApi;
+    private readonly ScriptService _scriptService;
     private readonly DispatcherTimer _timer;
-    private readonly ScriptCompiler _scriptCompiler;
     private ScriptOverviewWindow? _scriptOverviewWindow;
 
     public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel,
-        CelSerEngineDbContext celSerEngineDbContext,
         ScriptEditorViewModel scriptEditorViewModel,
-        INativeApi nativeApi)
+        ScriptService scriptService)
     {
         _selectProcessViewModel = selectProcessViewModel;
-        _celSerEngineDbContext = celSerEngineDbContext;
         _scriptEditorViewModel = scriptEditorViewModel;
-        _nativeApi = nativeApi;
-        _scripts = new ObservableCollection<IScript>();
-        _scriptCompiler = new ScriptCompiler();
+        _scriptService = scriptService;
+        _scripts = new ObservableCollection<ObservableScript>();
         _timer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(0.5)
@@ -67,42 +57,40 @@ public partial class ScriptOverviewViewModel : ObservableObject
         valueEditor.SetFocusTextBox();
         var dialogResult = valueEditor.ShowDialog();
 
-        if (dialogResult ?? false)
+        if (dialogResult == true)
         {
             script.Name = valueEditor.Value;
-            Script dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id);
-            dbScript.Name = script.Name;
-            await _celSerEngineDbContext.SaveChangesAsync();
+            await _scriptService.UpdateScriptAsync(script);
         }
     }
 
     [RelayCommand]
-    private async Task DuplicateScriptAsync(IScript script)
+    private async Task DuplicateScriptAsync(IScript selectedScript)
     {
-        Script dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id);
+        var targetProcessName = GetTargetProcessName();
+
+        if (targetProcessName == null)
+            return;
+
         var duplicatedScript = new Script
         {
             Id = 0,
-            Name = dbScript.Name,
-            Logic = dbScript.Logic,
-            TargetProcessId = dbScript.TargetProcessId
+            Name = selectedScript.Name,
+            Logic = selectedScript.Logic
         };
-        await _celSerEngineDbContext.Scripts.AddAsync(duplicatedScript);
-        await _celSerEngineDbContext.SaveChangesAsync();
+        await _scriptService.InsertScriptAsync(duplicatedScript, targetProcessName);
         Scripts.Add(new ObservableScript(duplicatedScript.Id, duplicatedScript.Name, duplicatedScript.Logic));
     }
 
     [RelayCommand]
-    private async Task DeleteScriptAsync(IScript script)
+    private async Task DeleteScriptAsync(ObservableScript selectedScript)
     {
-        var confirmDeletion = MessageBox.Show($"\"{script.Name}\" will be deleted permanently.", "Deleting Script",
+        var confirmDeletion = MessageBox.Show($"\"{selectedScript.Name}\" will be deleted permanently.", "Deleting Script",
             MessageBoxButton.OKCancel, MessageBoxImage.Warning);
         if (confirmDeletion == MessageBoxResult.OK)
         {
-            Scripts.Remove(script);
-            var dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id);
-            _celSerEngineDbContext.Scripts.Remove(dbScript);
-            await _celSerEngineDbContext.SaveChangesAsync();
+            Scripts.Remove(selectedScript);
+            await _scriptService.DeleteScriptAsync(selectedScript);
         }
     }
 
@@ -116,15 +104,17 @@ public partial class ScriptOverviewViewModel : ObservableObject
         var result = saveDialog.ShowDialog();
 
         if (result == true)
-        {
-            var scriptAsJson = JsonSerializer.Serialize(script);
-            await File.WriteAllTextAsync(saveDialog.FileName, scriptAsJson);
-        }
+            await _scriptService.ExportScriptAsync(script, saveDialog.FileName);
     }
 
     [RelayCommand]
     private async Task ImportScriptAsync()
     {
+        var targetProcessName = GetTargetProcessName();
+
+        if (targetProcessName == null)
+            return;
+
         var openDialog = new Microsoft.Win32.OpenFileDialog {
             DefaultExt = ".json", // Default file extension
             Filter = "JSON|*.json" // Filter files by extension
@@ -133,35 +123,36 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
         if (result == true)
         {
-            var scriptAsJson = await File.ReadAllTextAsync(openDialog.FileName);
-            var importedScript = JsonSerializer.Deserialize<Script>(scriptAsJson)!;
-            importedScript.Id = 0;
-            await InsertScript(importedScript);
+            IScript importedScript = await _scriptService.ImportScriptAsync(openDialog.FileName, targetProcessName);
+            Scripts.Add(new ObservableScript(importedScript.Id, importedScript.Name, importedScript.Logic));
         }
     }
 
     [RelayCommand]
     private async Task CreateNewScriptAsync()
     {
+        var targetProcessName = GetTargetProcessName();
+
+        if (targetProcessName == null)
+            return;
+
         var newScript = new Script();
-        await InsertScript(newScript);
+        await _scriptService.InsertScriptAsync(newScript, targetProcessName);
+        Scripts.Add(new ObservableScript(newScript.Id, newScript.Name, newScript.Logic));
     }
 
     public async Task OpenScriptOverviewAsync()
     {
-        var targetProcessName = _selectProcessViewModel.SelectedProcess?.Process.ProcessName;
+        var targetProcessName = GetTargetProcessName();
+
+        if (targetProcessName == null)
+            return;
+
         Scripts.Clear();
 
-        if (targetProcessName != null)
-        {
-            IList<ObservableScript> dbScripts = await _celSerEngineDbContext.Scripts
-                .AsNoTracking()
-                .Include(x => x.TargetProcess)
-                .Where(x => x.TargetProcess != null && x.TargetProcess.Name == targetProcessName)
-                .Select(x => new ObservableScript(x.Id, x.Name, x.Logic))
-                .ToListAsync();
-            Scripts = new ObservableCollection<IScript>(dbScripts);
-        }
+        IList<Script> dbScripts = await _scriptService.GetScriptsByTargetProcessNameAsync(targetProcessName);
+        var observableScripts = dbScripts.Select(x => new ObservableScript(x.Id, x.Name, x.Logic));
+        Scripts = new ObservableCollection<ObservableScript>(observableScripts);
 
         if (_scriptOverviewWindow == null)
         {
@@ -176,45 +167,23 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _scriptOverviewWindow.Focus();
     }
 
-    private async Task InsertScript(Script newScript)
+    private void RunActiveScripts(object? sender, EventArgs args)
+    {
+        var activeScripts = Scripts.Where(x => x.IsActivated).ToArray();
+
+        foreach (var script in activeScripts)
+        {
+            _scriptService.RunScript(script);
+        }
+    }
+
+    private string? GetTargetProcessName()
     {
         ProcessAdapter? selectedProcess = _selectProcessViewModel.SelectedProcess;
 
         if (selectedProcess == null)
-        {
             MessageBox.Show("Please select a process before create a script.", "No Process selected", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
 
-        TargetProcess? targetProcess = await _celSerEngineDbContext.TargetProcesses.SingleOrDefaultAsync(x => x.Name == selectedProcess.Process.ProcessName);
-
-        if (targetProcess == null)
-        {
-            targetProcess = new TargetProcess
-            {
-                Name = selectedProcess.Process.ProcessName
-            };
-            newScript.TargetProcess = targetProcess;
-        }
-        else
-        {
-            newScript.TargetProcessId = targetProcess.Id;
-        }
-
-        await _celSerEngineDbContext.Scripts.AddAsync(newScript);
-        await _celSerEngineDbContext.SaveChangesAsync();
-        Scripts.Add(new ObservableScript(newScript.Id, newScript.Name, newScript.Logic));
-    }
-
-    private void RunActiveScripts(object? sender, EventArgs args)
-    {
-        var activeScripts = Scripts.OfType<ObservableScript>().Where(x => x.IsActivated).ToArray();
-        var memoryManager = new MemoryManager(_selectProcessViewModel.GetSelectedProcessHandle(), _nativeApi);
-
-        foreach (var script in activeScripts)
-        {
-            script.LoopingScript ??= _scriptCompiler.CompileScript(script);
-            script.LoopingScript.OnLoop(memoryManager);
-        }
+        return _selectProcessViewModel.SelectedProcess?.Process.ProcessName;
     }
 }

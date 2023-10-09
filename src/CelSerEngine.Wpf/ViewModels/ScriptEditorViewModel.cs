@@ -3,14 +3,12 @@ using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Scripting;
 using CelSerEngine.Core.Scripting.Template;
 using CelSerEngine.Wpf.Models;
+using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ICSharpCode.AvalonEdit.Document;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Forms;
 using MessageBox = System.Windows.MessageBox;
 
@@ -19,6 +17,7 @@ namespace CelSerEngine.Wpf.ViewModels;
 public partial class ScriptEditorViewModel : ObservableObject
 {
     private readonly CelSerEngineDbContext _celSerEngineDbContext;
+    private readonly ScriptService _scriptService;
     public IScript? SelectedScript { get; set; }
     private ScriptEditorWindow? _scriptEditor;
 
@@ -28,9 +27,10 @@ public partial class ScriptEditorViewModel : ObservableObject
     [ObservableProperty]
     public TextDocument _myDocument;
 
-    public ScriptEditorViewModel(CelSerEngineDbContext celSerEngineDbContext)
+    public ScriptEditorViewModel(CelSerEngineDbContext celSerEngineDbContext, ScriptService scriptService)
     {
         _celSerEngineDbContext = celSerEngineDbContext;
+        _scriptService = scriptService;
         _scriptLogic = "";
     }
 
@@ -45,21 +45,13 @@ public partial class ScriptEditorViewModel : ObservableObject
 
         SelectedScript.Logic = _scriptEditor!.GetText();
         ((ObservableScript)SelectedScript).LoopingScript = null;
-        if (SelectedScript.Id == 0)
-        {
-            await _celSerEngineDbContext.AddAsync(SelectedScript);
-        }
-        else
-        {
-            var dbScript = await _celSerEngineDbContext.Scripts.Where(x => x.Id == SelectedScript.Id).FirstAsync();
-            dbScript.Logic = SelectedScript.Logic;
-        }
+        await _scriptService.UpdateScriptAsync(SelectedScript);
 
         await _celSerEngineDbContext.SaveChangesAsync();
     }
 
     [RelayCommand]
-    private async Task ValidateScriptAsync()
+    private void ValidateScript()
     {
         if (SelectedScript == null)
         {
@@ -69,11 +61,10 @@ public partial class ScriptEditorViewModel : ObservableObject
 
         var logicBefore = SelectedScript.Logic;
         SelectedScript.Logic = _scriptEditor!.GetText();
-        var scriptCompiler = new ScriptCompiler();
         try
         {
             Cursor.Current = Cursors.WaitCursor;
-            scriptCompiler.CompileScript(SelectedScript);
+            _scriptService.ValidateScript(SelectedScript);
             MessageBox.Show("Validation successful!", "Script Editor");
             Cursor.Current = Cursors.Default;
         }
