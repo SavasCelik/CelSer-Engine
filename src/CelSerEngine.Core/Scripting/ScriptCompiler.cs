@@ -34,7 +34,7 @@ public class ScriptCompiler
             IEnumerable<Diagnostic> errors = result.Diagnostics.Where(diagnostic =>
                 diagnostic.IsWarningAsError ||
                 diagnostic.Severity == DiagnosticSeverity.Error);
-            var errorMessages = errors.Select(x => x.GetMessage()).ToArray();
+            var errorMessages = errors.Select(x => x.GetMessage() + $" (Line: {x.Location.GetLineSpan().StartLinePosition.Line + 1})").ToArray();
 
             throw new ScriptValidationException(string.Join("\n", errorMessages));
         }
