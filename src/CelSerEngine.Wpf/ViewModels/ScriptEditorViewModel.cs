@@ -2,7 +2,6 @@
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Scripting;
 using CelSerEngine.Core.Scripting.Template;
-using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -41,9 +40,7 @@ public partial class ScriptEditorViewModel : ObservableObject
         }
 
         SelectedScript.Logic = _scriptEditor!.GetText();
-        ((ObservableScript)SelectedScript).LoopingScript = null;
         await _scriptService.UpdateScriptAsync(SelectedScript);
-
         await _celSerEngineDbContext.SaveChangesAsync();
     }
 

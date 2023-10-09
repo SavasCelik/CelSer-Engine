@@ -98,12 +98,28 @@ public class ScriptService : IScriptService
     //throws exception
     public void RunScript(ObservableScript script, MemoryManager memoryManager)
     {
-        script.LoopingScript ??= ValidateScript(script);
-        script.LoopingScript.OnLoop(memoryManager);
+        if (script.ScriptState == ScriptState.NotValidated || script.LoopingScript == null)
+        {
+            script.LoopingScript = ValidateScript(script);
+            script.ScriptState = ScriptState.Validated;
+        }
+
+        if (script.ScriptState is ScriptState.Validated or ScriptState.Stopped)
+            StartScript(script, memoryManager);
+
+        if (script.ScriptState == ScriptState.Started)
+            script.LoopingScript.OnLoop(memoryManager);
     }
 
     public void StopScript(ObservableScript script, MemoryManager memoryManager)
     {
         script.LoopingScript!.OnStop(memoryManager);
+        script.ScriptState = ScriptState.Stopped;
+    }
+
+    private static void StartScript(ObservableScript script, MemoryManager memoryManager)
+    {
+        script.LoopingScript!.OnStart(memoryManager);
+        script.ScriptState = ScriptState.Started;
     }
 }

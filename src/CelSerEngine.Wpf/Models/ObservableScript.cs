@@ -7,18 +7,33 @@ namespace CelSerEngine.Wpf.Models;
 public partial class ObservableScript : ObservableObject, IScript
 {
     public int Id { get; set; }
-    public string Logic { get; set; }
+
+    private string _logic;
+
+    public string Logic
+    {
+        get => _logic;
+        set
+        {
+            _logic = value;
+            ScriptState = ScriptState.NotValidated;
+            LoopingScript = null;
+        }
+    }
+
     [ObservableProperty]
     private bool _isActivated;
     [ObservableProperty]
     private string _name;
     public ILoopingScript? LoopingScript { get; set; }
+    public ScriptState ScriptState { get; set; }
 
     public ObservableScript(int id, string name, string logic)
     {
         Id = id;
         _name = name;
-        Logic = logic;
+        _logic = logic;
+        ScriptState = ScriptState.NotValidated;
     }
 
 }
