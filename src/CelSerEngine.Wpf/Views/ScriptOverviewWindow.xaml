@@ -41,14 +41,22 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Margin="0,0,0,5">
+        <Grid Grid.Row="0" Margin="0,0,0,5">
             <Button
                 Width="120"
                 Height="26"
                 HorizontalAlignment="Left"
+                VerticalAlignment="Top"
                 Command="{Binding CreateNewScriptCommand}"
                 Content="Create new Script" />
-        </StackPanel>
+            <Button
+                Width="120"
+                Height="26"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Command="{Binding ImportScriptCommand}"
+                Content="Import Script" />
+        </Grid>
         <DataGrid
             Grid.Row="1"
             AutoGenerateColumns="False"

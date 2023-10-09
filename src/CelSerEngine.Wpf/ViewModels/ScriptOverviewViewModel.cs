@@ -123,35 +123,28 @@ public partial class ScriptOverviewViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task ImportScriptAsync()
+    {
+        var openDialog = new Microsoft.Win32.OpenFileDialog {
+            DefaultExt = ".json", // Default file extension
+            Filter = "JSON|*.json" // Filter files by extension
+        };
+        var result = openDialog.ShowDialog();
+
+        if (result == true)
+        {
+            var scriptAsJson = await File.ReadAllTextAsync(openDialog.FileName);
+            var importedScript = JsonSerializer.Deserialize<Script>(scriptAsJson)!;
+            importedScript.Id = 0;
+            await InsertScript(importedScript);
+        }
+    }
+
+    [RelayCommand]
     private async Task CreateNewScriptAsync()
     {
-        ProcessAdapter? selectedProcess = _selectProcessViewModel.SelectedProcess;
-
-        if (selectedProcess == null)
-        {
-            MessageBox.Show("Please select a process before create a script.", "No Process selected", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        TargetProcess? targetProcess = await _celSerEngineDbContext.TargetProcesses.SingleOrDefaultAsync(x => x.Name == selectedProcess.Process.ProcessName);
         var newScript = new Script();
-
-        if (targetProcess == null)
-        {
-            targetProcess = new TargetProcess
-            {
-                Name = selectedProcess.Process.ProcessName
-            };
-            newScript.TargetProcess = targetProcess;
-        }
-        else
-        {
-            newScript.TargetProcessId = targetProcess.Id;
-        }
-
-        await _celSerEngineDbContext.Scripts.AddAsync(newScript);
-        await _celSerEngineDbContext.SaveChangesAsync();
-        Scripts.Add(new ObservableScript(newScript.Id, newScript.Name, newScript.Logic));
+        await InsertScript(newScript);
     }
 
     public async Task OpenScriptOverviewAsync()
@@ -181,6 +174,36 @@ public partial class ScriptOverviewViewModel : ObservableObject
         }
 
         _scriptOverviewWindow.Focus();
+    }
+
+    private async Task InsertScript(Script newScript)
+    {
+        ProcessAdapter? selectedProcess = _selectProcessViewModel.SelectedProcess;
+
+        if (selectedProcess == null)
+        {
+            MessageBox.Show("Please select a process before create a script.", "No Process selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        TargetProcess? targetProcess = await _celSerEngineDbContext.TargetProcesses.SingleOrDefaultAsync(x => x.Name == selectedProcess.Process.ProcessName);
+
+        if (targetProcess == null)
+        {
+            targetProcess = new TargetProcess
+            {
+                Name = selectedProcess.Process.ProcessName
+            };
+            newScript.TargetProcess = targetProcess;
+        }
+        else
+        {
+            newScript.TargetProcessId = targetProcess.Id;
+        }
+
+        await _celSerEngineDbContext.Scripts.AddAsync(newScript);
+        await _celSerEngineDbContext.SaveChangesAsync();
+        Scripts.Add(new ObservableScript(newScript.Id, newScript.Name, newScript.Logic));
     }
 
     private void RunActiveScripts(object? sender, EventArgs args)
