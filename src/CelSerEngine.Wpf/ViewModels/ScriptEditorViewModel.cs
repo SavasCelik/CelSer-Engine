@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
+using MessageBox = System.Windows.MessageBox;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
@@ -37,7 +39,7 @@ public partial class ScriptEditorViewModel : ObservableObject
     {
         if (SelectedScript == null)
         {
-            MessageBox.Show("There is no script selected", "Fatal error!");
+            MessageBox.Show("There is no script selected", "Script Editor");
             return;
         }
 
@@ -61,12 +63,28 @@ public partial class ScriptEditorViewModel : ObservableObject
     {
         if (SelectedScript == null)
         {
-            MessageBox.Show("There is no script selected", "Fatal error!");
+            MessageBox.Show("There is no script selected", "Script Editor");
             return;
         }
 
+        var logicBefore = SelectedScript.Logic;
+        SelectedScript.Logic = _scriptEditor!.GetText();
         var scriptCompiler = new ScriptCompiler();
-        ((ObservableScript)SelectedScript).LoopingScript ??= scriptCompiler.CompileScript(SelectedScript);
+        try
+        {
+            Cursor.Current = Cursors.WaitCursor;
+            scriptCompiler.CompileScript(SelectedScript);
+            MessageBox.Show("Validation successful!", "Script Editor");
+            Cursor.Current = Cursors.Default;
+        }
+        catch (ScriptValidationException ex)
+        {
+            MessageBox.Show(ex.Message, "Script Editor");
+        }
+        finally
+        {
+            SelectedScript.Logic = logicBefore;
+        }
     }
 
     [RelayCommand]
