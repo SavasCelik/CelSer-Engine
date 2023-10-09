@@ -21,7 +21,7 @@
             <Menu Background="White">
                 <MenuItem Header="_File">
                     <MenuItem Command="{Binding SaveScriptCommand}" Header="_Save" />
-                    <MenuItem Header="_Validate" />
+                    <MenuItem Command="{Binding ValidateScriptCommand}" Header="_Validate" />
                 </MenuItem>
                 <MenuItem Header="_Templates">
                     <MenuItem Command="{Binding PasteBasicTemplateCommand}" Header="_Load Basic Template" />

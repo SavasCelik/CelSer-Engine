@@ -1,6 +1,8 @@
 ﻿using CelSerEngine.Core.Database;
 using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Scripting;
 using CelSerEngine.Core.Scripting.Template;
+using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -31,7 +33,7 @@ public partial class ScriptEditorViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SaveScript()
+    private async Task SaveScriptAsync()
     {
         if (SelectedScript == null)
         {
@@ -40,6 +42,7 @@ public partial class ScriptEditorViewModel : ObservableObject
         }
 
         SelectedScript.Logic = _scriptEditor!.GetText();
+        ((ObservableScript)SelectedScript).LoopingScript = null;
         if (SelectedScript.Id == 0)
         {
             await _celSerEngineDbContext.AddAsync(SelectedScript);
@@ -51,6 +54,19 @@ public partial class ScriptEditorViewModel : ObservableObject
         }
 
         await _celSerEngineDbContext.SaveChangesAsync();
+    }
+
+    [RelayCommand]
+    private async Task ValidateScriptAsync()
+    {
+        if (SelectedScript == null)
+        {
+            MessageBox.Show("There is no script selected", "Fatal error!");
+            return;
+        }
+
+        var scriptCompiler = new ScriptCompiler();
+        ((ObservableScript)SelectedScript).LoopingScript ??= scriptCompiler.CompileScript(SelectedScript);
     }
 
     [RelayCommand]
