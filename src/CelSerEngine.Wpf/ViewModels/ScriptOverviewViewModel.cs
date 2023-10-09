@@ -21,7 +21,6 @@ public partial class ScriptOverviewViewModel : ObservableObject
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly ScriptEditorViewModel _scriptEditorViewModel;
     private readonly ScriptService _scriptService;
-    private readonly DispatcherTimer _timer;
     private ScriptOverviewWindow? _scriptOverviewWindow;
 
     public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel,
@@ -32,12 +31,12 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _scriptEditorViewModel = scriptEditorViewModel;
         _scriptService = scriptService;
         _scripts = new ObservableCollection<ObservableScript>();
-        _timer = new DispatcherTimer(DispatcherPriority.Background)
+        var timer = new DispatcherTimer(DispatcherPriority.Background)
         {
             Interval = TimeSpan.FromSeconds(0.5)
         };
-        _timer.Tick += RunActiveScripts;
-        _timer.Start();
+        timer.Tick += RunActiveScripts;
+        timer.Start();
     }
 
     [RelayCommand]
