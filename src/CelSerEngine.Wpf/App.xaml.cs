@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Database;
 using CelSerEngine.Core.Native;
+using CelSerEngine.Core.Scripting;
 using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,8 @@ public sealed partial class App : Application
         services.AddSingleton<ScriptOverviewViewModel>();
         services.AddSingleton<IMemoryScanService, MemoryScanService>();
         services.AddSingleton<INativeApi, NativeApi>();
+        services.AddSingleton<IScriptService, ScriptService>();
+        services.AddSingleton<ScriptCompiler>();
 
         return services.BuildServiceProvider();
     }
