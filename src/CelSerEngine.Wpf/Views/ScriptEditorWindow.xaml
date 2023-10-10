@@ -8,8 +8,8 @@
     xmlns:local="clr-namespace:CelSerEngine.Wpf.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="ScriptEditorWindow"
-    Width="800"
-    Height="450"
+    Width="900"
+    Height="650"
     DataContext="{Binding ScriptEditorViewModel, Source={StaticResource ViewModelLocator}}"
     mc:Ignorable="d">
     <Grid>
