@@ -190,9 +190,9 @@ public partial class ScriptOverviewViewModel : ObservableObject
             {
                 _scriptService.RunScript(script, _memoryManager!);
             }
-            catch (ScriptValidationException ex)
+            catch (Exception ex)
             {
-                MessageBox.Show($"Validation for script \"{script.Name}\" failed!\n\n" + ex.Message, "Script Overview");
+                ShowMessageBoxForException(ex, script);
                 script.IsActivated = false;
             }
         }
@@ -207,7 +207,15 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
         foreach (var script in deactivatedScripts)
         {
-            _scriptService.StopScript(script, _memoryManager!);
+            try
+            {
+                _scriptService.StopScript(script, _memoryManager!);
+            }
+            catch (Exception ex)
+            {
+                ShowMessageBoxForException(ex, script);
+                script.IsActivated = true;
+            }
         }
     }
 
@@ -219,5 +227,14 @@ public partial class ScriptOverviewViewModel : ObservableObject
             MessageBox.Show("Please select a process before create a script.", "No Process selected", MessageBoxButton.OK, MessageBoxImage.Warning);
 
         return _selectProcessViewModel.SelectedProcess?.Process.ProcessName;
+    }
+
+    private static void ShowMessageBoxForException(Exception ex, IScript script)
+    {
+        var message = ex is ScriptValidationException
+            ? $"Validation for script \"{script.Name}\" failed!\n\n{ex.Message}"
+            : $"RunTimeException occurred for script \"{script.Name}\" failed!\n\n{ex.Message}\n{ex.StackTrace}";
+
+        MessageBox.Show(message, "Script Overview");
     }
 }
