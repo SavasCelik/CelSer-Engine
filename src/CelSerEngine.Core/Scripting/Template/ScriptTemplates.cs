@@ -8,7 +8,7 @@ using CelSerEngine.Core.Scripting;
 public class LoopingScript : {nameof(ILoopingScript)} 
 {{
     /// <summary>
-    /// Will be called once during when starting.
+    /// Will be called once when activated.
     /// </summary>
     /// <param name=""memoryManager"">for reading and writing to the memory</param>
 	public void {nameof(ILoopingScript.OnStart)}({nameof(MemoryManager)} memoryManager)
