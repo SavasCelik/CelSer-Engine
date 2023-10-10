@@ -5,13 +5,34 @@ public static class ScriptTemplates
 using CelSerEngine.Core.Scripting.Template;
 using CelSerEngine.Core.Scripting;
 
-public class LoopingScript : {nameof(ILoopingScript)}
+public class LoopingScript : {nameof(ILoopingScript)} 
 {{
+    /// <summary>
+    /// Will be called once during when starting.
+    /// </summary>
+    /// <param name=""memoryManager"">for reading and writing to the memory</param>
+	public void {nameof(ILoopingScript.OnStart)}({nameof(MemoryManager)} memoryManager)
+    {{
+        // Add your setup code here.
+    }}
+
+    /// <summary>
+    /// Will be called in a loop.
+    /// </summary>
+    /// <param name=""memoryManager"">for reading and writing to the memory</param>
 	public void {nameof(ILoopingScript.OnLoop)}({nameof(MemoryManager)} memoryManager)
     {{
+        // Add your main logic here.
 		ScriptLogger.Print(""Hello World"");
 	}}
-	public void {nameof(ILoopingScript.OnStart)}({nameof(MemoryManager)} memoryManager){{}}
-	public void {nameof(ILoopingScript.OnStop)}({nameof(MemoryManager)} memoryManager){{}}
+
+    /// <summary>
+    /// Will be called once when deactivated.
+    /// </summary>
+    /// <param name=""memoryManager"">for reading and writing to the memory</param>
+	public void {nameof(ILoopingScript.OnStop)}({nameof(MemoryManager)} memoryManager)
+    {{
+        // Add your cleaning up here.
+    }}
 }}";
 }
