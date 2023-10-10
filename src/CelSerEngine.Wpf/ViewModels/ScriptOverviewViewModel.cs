@@ -192,7 +192,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
             }
             catch (ScriptValidationException ex)
             {
-                MessageBox.Show(ex.Message, "Script Overview");
+                MessageBox.Show($"Validation for script \"{script.Name}\" failed!\n\n" + ex.Message, "Script Overview");
                 script.IsActivated = false;
             }
         }
