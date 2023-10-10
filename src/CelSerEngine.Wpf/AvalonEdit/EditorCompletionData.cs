@@ -4,7 +4,7 @@ using ICSharpCode.AvalonEdit.Editing;
 using System;
 using System.Windows.Media;
 
-namespace CelSerEngine.Wpf.Models;
+namespace CelSerEngine.Wpf.AvalonEdit;
 
 /// Implements AvalonEdit ICompletionData interface to provide the entries in the
 /// completion drop down.

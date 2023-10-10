@@ -1,6 +1,5 @@
 ﻿using CelSerEngine.Core.Scripting;
 using CelSerEngine.Wpf.AvalonEdit;
-using CelSerEngine.Wpf.Models;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
