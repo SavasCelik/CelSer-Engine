@@ -168,6 +168,8 @@ public partial class ScriptOverviewViewModel : ObservableObject
             _timer.Start();
             _scriptOverviewWindow.Closed += delegate
             {
+                DeactivateScripts();
+                StopDeactivatedScripts();
                 _scriptOverviewWindow = null;
                 _timer.Stop();
                 _memoryManager = null;
@@ -175,6 +177,12 @@ public partial class ScriptOverviewViewModel : ObservableObject
         }
 
         _scriptOverviewWindow.Focus();
+    }
+
+    private void DeactivateScripts()
+    {
+        foreach (ObservableScript observableScript in Scripts)
+            observableScript.IsActivated = false;
     }
 
     private void RunActivatedScripts(object? sender, EventArgs args)
@@ -198,7 +206,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
         }
     }
 
-    private void StopDeactivatedScripts(object? sender, EventArgs args)
+    private void StopDeactivatedScripts(object? sender = null, EventArgs? args = null)
     {
         if (_memoryManager == null)
             return;
