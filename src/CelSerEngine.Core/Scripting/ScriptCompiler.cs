@@ -60,19 +60,12 @@ public class ScriptCompiler
 
     public void AddAssembly(Type type)
     {
-        try
-        {
             if (_references.Any(r => r.FilePath == type.Assembly.Location))
                 return;
 
             var systemReference = MetadataReference.CreateFromFile(type.Assembly.Location);
             _references.Add(systemReference);
         }
-        catch (Exception ex)
-        {
-            throw new ScriptValidationException(ex.Message);
-        }
-    }
 
     public void AddAssembly(string assemblyDll)
     {
