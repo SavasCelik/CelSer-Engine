@@ -86,14 +86,7 @@ public class ScriptCompiler
         if (_references.Any(r => r.FilePath == file))
             return;
 
-        try
-        {
             var reference = MetadataReference.CreateFromFile(file);
             _references.Add(reference);
         }
-        catch (Exception ex)
-        {
-            throw new ScriptValidationException(ex.Message);
-        }
-    }
 }
