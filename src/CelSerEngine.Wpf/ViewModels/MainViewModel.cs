@@ -1,5 +1,4 @@
-﻿using CelSerEngine.Core.Database;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Wpf.Services;
-using CelSerEngine.Wpf.Views;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
@@ -131,9 +129,12 @@ public partial class MainViewModel : ObservableRecipient
         }
     }
 
+    /// <summary>
+    /// Opens the Script overview.
+    /// </summary>
     [RelayCommand]
-    public void OpenScriptOverview()
+    public async Task OpenScriptOverview()
     {
-        _scriptOverviewViewModel.OpenScriptOverview();
+        await _scriptOverviewViewModel.OpenScriptOverviewAsync();
     }
 }
