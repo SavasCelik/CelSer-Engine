@@ -6,8 +6,9 @@ using System.Windows.Media;
 
 namespace CelSerEngine.Wpf.AvalonEdit;
 
-/// Implements AvalonEdit ICompletionData interface to provide the entries in the
-/// completion drop down.
+/// <summary>
+/// Implements AvalonEdit ICompletionData interface to provide the entries in the completion drop down.
+/// </summary>
 public class EditorCompletionData : ICompletionData
 {
     public ImageSource? Image => null;
