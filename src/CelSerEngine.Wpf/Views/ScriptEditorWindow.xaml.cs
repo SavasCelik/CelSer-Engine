@@ -17,6 +17,7 @@ using System.Xml;
 namespace CelSerEngine.Wpf.Views;
 /// <summary>
 /// Interaction logic for ScriptEditorWindow.xaml
+/// Represents a window for editing scripts with auto-completion and syntax highlighting features.
 /// </summary>
 public partial class ScriptEditorWindow : Window
 {
@@ -29,6 +30,9 @@ public partial class ScriptEditorWindow : Window
     private readonly FoldingManager _foldingManager;
     private readonly BraceFoldingStrategy _braceFoldingStrategy;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ScriptEditorWindow"/> class.
+    /// </summary>
     public ScriptEditorWindow()
     {
         InitializeComponent();
@@ -40,6 +44,9 @@ public partial class ScriptEditorWindow : Window
         _braceFoldingStrategy = new BraceFoldingStrategy();
     }
 
+    /// <summary>
+    /// Loads syntax highlighting rules for the text editor.
+    /// </summary>
     private void LoadHighlightingRules()
     {
         StreamResourceInfo? highlightingResourceStream = Application.GetResourceStream(new Uri("/Resources/CsharpSyntaxStyle.xshd", UriKind.Relative));
@@ -54,17 +61,30 @@ public partial class ScriptEditorWindow : Window
         textEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
     }
 
+    /// <summary>
+    /// Gets the text currently present in the text editor.
+    /// </summary>
+    /// <returns>The script text.</returns>
     public string GetText()
     {
         return textEditor.Text;
     }
 
+    /// <summary>
+    /// Sets the text in the text editor and updates code foldings.
+    /// </summary>
+    /// <param name="text">The script text.</param>
     public void SetText(string text)
     {
         textEditor.Text = text;
         _braceFoldingStrategy.UpdateFoldings(_foldingManager, textEditor.Document);
     }
 
+    /// <summary>
+    /// Handles the TextEntered event of the text editor to provide auto-completion suggestions.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event arguments.</param>
     private void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
     {
         _braceFoldingStrategy.UpdateFoldings(_foldingManager, textEditor.Document);
@@ -104,6 +124,10 @@ public partial class ScriptEditorWindow : Window
         }
     }
 
+    /// <summary>
+    /// Creates and displays the auto-completion window with the provided completion data.
+    /// </summary>
+    /// <param name="editorCompletions">The collection of auto-completion suggestions.</param>
     private void CreateCompletionWindow(IEnumerable<EditorCompletionData> editorCompletions)
     {
         _completionWindow = new CompletionWindow(textEditor.TextArea)
@@ -125,6 +149,10 @@ public partial class ScriptEditorWindow : Window
         };
     }
 
+    /// <summary>
+    /// Extracts and returns variable names defined within the text editor's content.
+    /// </summary>
+    /// <returns>An enumerable collection of completion data for in-text defined variables.</returns>
     private IEnumerable<EditorCompletionData> GetInTextDefinedVariables()
     {
         // Extract variables from textEditor's text:
@@ -136,6 +164,10 @@ public partial class ScriptEditorWindow : Window
         }
     }
 
+    /// <summary>
+    /// Extracts and returns method names defined within the text editor's content.
+    /// </summary>
+    /// <returns>An enumerable collection of completion data for in-text defined methods.</returns>
     private IEnumerable<EditorCompletionData> GetInTextDefinedMethods()
     {
         // Extract methods from textEditor's text:
@@ -147,6 +179,10 @@ public partial class ScriptEditorWindow : Window
         }
     }
 
+    /// <summary>
+    /// Provides a collection of pre-defined variables available for auto-completion.
+    /// </summary>
+    /// <returns>An enumerable collection of completion data for pre-defined variables.</returns>
     private static IEnumerable<EditorCompletionData> GetPreDefinedVariables()
     {
         const string memoryManagerName = nameof(MemoryManager);
@@ -154,6 +190,10 @@ public partial class ScriptEditorWindow : Window
             "This class provides functionality for reading and writing to a process's memory.");
     }
 
+    /// <summary>
+    /// Provides a collection of pre-defined methods available for auto-completion.
+    /// </summary>
+    /// <returns>An enumerable collection of completion data for pre-defined methods.</returns>
     private static IEnumerable<EditorCompletionData> GetPreDefinedMethods()
     {
         yield return new EditorCompletionData(nameof(MemoryManager.ReadMemoryAt) + "<T>",
@@ -162,6 +202,11 @@ public partial class ScriptEditorWindow : Window
             "(int memoryAddress, T newValue)\nWrites the specified value to the memory at the given address.");
     }
 
+    /// <summary>
+    /// Handles the TextEntering event of the text editor. This is responsible for inserting the selected auto-completion suggestion.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event arguments.</param>
     private void textEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)
     {
         if (e.Text.Length > 0 && _completionWindow != null)

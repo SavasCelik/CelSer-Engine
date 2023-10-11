@@ -17,12 +17,18 @@ public class EditorCompletionData : ICompletionData
     public object? Description { get; }
     public double Priority => 1;
 
+    /// <summary>
+    /// Create an instance of <see cref="EditorCompletionData"/> used for Auto-Completion
+    /// </summary>
+    /// <param name="text">The text shown as completion</param>
+    /// <param name="description">The text shown in the tooltip.</param>
     public EditorCompletionData(string text, string? description = null)
     {
         Text = text;
         Description = description;
     }
-    
+
+    /// <inheritdoc />
     public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
     {
         textArea.Document.Replace(completionSegment, Text);

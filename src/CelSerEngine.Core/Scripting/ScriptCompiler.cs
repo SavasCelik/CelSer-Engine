@@ -6,10 +6,17 @@ using Microsoft.CodeAnalysis.Emit;
 using System.Reflection;
 
 namespace CelSerEngine.Core.Scripting;
+
+/// <summary>
+/// Provides a mechanism to compile C# scripts dynamically at runtime. It uses Roslyn, the .NET Compiler, to achieve this.
+/// </summary>
 public class ScriptCompiler
 {
     private readonly List<PortableExecutableReference> _references;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ScriptCompiler"/> class
+    /// </summary>
     public ScriptCompiler()
     {
         _references = new List<PortableExecutableReference>();
@@ -17,6 +24,13 @@ public class ScriptCompiler
         AddAssembly(typeof(ILoopingScript));
     }
 
+    /// <summary>
+    /// Compiles a script, provided as an IScript interface, into a dynamically linked library (DLL).
+    /// It then loads the DLL into memory and creates an instance of a type named "LoopingScript" expected to implement <see cref="ILoopingScript"/>.
+    /// </summary>
+    /// <param name="script">An instance that implements the IScript interface.</param>
+    /// <returns>An instance of the compiled script implementing the <see cref="ILoopingScript"/> interface.</returns>
+    /// <exception cref="ScriptValidationException">Thrown if the script validation fails.</exception>
     public ILoopingScript CompileScript(IScript script)
     {
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(script.Logic);
@@ -48,6 +62,9 @@ public class ScriptCompiler
         return loopingScript;
     }
 
+    /// <summary>
+    /// Adds default .NET Core assemblies as references for the script compilation.
+    /// </summary>
     private void AddNetCoreDefaultReferences()
     {
         var runtimePath = Path.GetDirectoryName(typeof(object).Assembly.Location) +
@@ -58,16 +75,24 @@ public class ScriptCompiler
         AddAssembly(runtimePath + "System.Console.dll");
     }
 
-    public void AddAssembly(Type type)
+    /// <summary>
+    /// Adds the assembly of a given type to the list of references used for script compilation.
+    /// </summary>
+    /// <param name="type">The type whose assembly will be added as a reference.</param>
+    private void AddAssembly(Type type)
     {
-            if (_references.Any(r => r.FilePath == type.Assembly.Location))
-                return;
+        if (_references.Any(r => r.FilePath == type.Assembly.Location))
+            return;
 
-            var systemReference = MetadataReference.CreateFromFile(type.Assembly.Location);
-            _references.Add(systemReference);
-        }
+        var systemReference = MetadataReference.CreateFromFile(type.Assembly.Location);
+        _references.Add(systemReference);
+    }
 
-    public void AddAssembly(string assemblyDll)
+    /// <summary>
+    /// Adds the assembly specified by the path to the list of references used for script compilation.
+    /// </summary>
+    /// <param name="assemblyDll">The path to the DLL of the assembly to be added.</param>
+    private void AddAssembly(string assemblyDll)
     {
         if (string.IsNullOrEmpty(assemblyDll))
             return;
@@ -85,8 +110,8 @@ public class ScriptCompiler
 
         if (_references.Any(r => r.FilePath == file))
             return;
-
-            var reference = MetadataReference.CreateFromFile(file);
-            _references.Add(reference);
-        }
+        
+        var reference = MetadataReference.CreateFromFile(file);
+        _references.Add(reference);
+    }
 }

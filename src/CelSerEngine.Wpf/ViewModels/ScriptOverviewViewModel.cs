@@ -15,6 +15,11 @@ using System.Windows;
 using System.Windows.Threading;
 
 namespace CelSerEngine.Wpf.ViewModels;
+
+/// <summary>
+/// ViewModel for the script overview, responsible for managing the collection of scripts,
+/// handling user interactions, and coordinating updates to the underlying model.
+/// </summary>
 public partial class ScriptOverviewViewModel : ObservableObject
 {
     [ObservableProperty]
@@ -28,6 +33,13 @@ public partial class ScriptOverviewViewModel : ObservableObject
     private MemoryManager? _memoryManager;
     private readonly DispatcherTimer _timer;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ScriptOverviewViewModel"/> class.
+    /// </summary>
+    /// <param name="selectProcessViewModel">ViewModel for process selection.</param>
+    /// <param name="scriptEditorViewModel">ViewModel for the script editor.</param>
+    /// <param name="scriptService">Service for script-related operations.</param>
+    /// <param name="nativeApi">API for native operations.</param>
     public ScriptOverviewViewModel(SelectProcessViewModel selectProcessViewModel,
         ScriptEditorViewModel scriptEditorViewModel,
         IScriptService scriptService,
@@ -46,12 +58,20 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _timer.Tick += StopDeactivatedScripts;
     }
 
+    /// <summary>
+    /// Opens the script editor for the provided script.
+    /// </summary>
+    /// <param name="script">The script to be edited.</param>
     [RelayCommand]
     private void OpenScriptEditor(IScript script)
     {
         _scriptEditorViewModel.OpenScriptEditor(script);
     }
 
+    /// <summary>
+    /// Opens a renaming dialog for the provided script and updates the script name if changed.
+    /// </summary>
+    /// <param name="script">The script to be renamed.</param>
     [RelayCommand]
     private async Task ShowRenamingDialogAsync(IScript script)
     {
@@ -70,6 +90,10 @@ public partial class ScriptOverviewViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Duplicates the provided script.
+    /// </summary>
+    /// <param name="selectedScript">The script to be duplicated.</param>
     [RelayCommand]
     private async Task DuplicateScriptAsync(IScript selectedScript)
     {
@@ -88,6 +112,10 @@ public partial class ScriptOverviewViewModel : ObservableObject
         Scripts.Add(new ObservableScript(duplicatedScript.Id, duplicatedScript.Name, duplicatedScript.Logic));
     }
 
+    /// <summary>
+    /// Deletes the selected script after confirmation.
+    /// </summary>
+    /// <param name="selectedScript">The script to be deleted.</param>
     [RelayCommand]
     private async Task DeleteScriptAsync(ObservableScript selectedScript)
     {
@@ -100,6 +128,10 @@ public partial class ScriptOverviewViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Exports the provided script to a selected file.
+    /// </summary>
+    /// <param name="script">The script to be exported.</param>
     [RelayCommand]
     private async Task ExportScriptAsync(IScript script)
     {
@@ -113,6 +145,9 @@ public partial class ScriptOverviewViewModel : ObservableObject
             await _scriptService.ExportScriptAsync(script, saveDialog.FileName);
     }
 
+    /// <summary>
+    /// Imports a script from a selected file.
+    /// </summary>
     [RelayCommand]
     private async Task ImportScriptAsync()
     {
@@ -134,6 +169,9 @@ public partial class ScriptOverviewViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Creates a new script for a selected process.
+    /// </summary>
     [RelayCommand]
     private async Task CreateNewScriptAsync()
     {
@@ -146,7 +184,9 @@ public partial class ScriptOverviewViewModel : ObservableObject
         await _scriptService.InsertScriptAsync(newScript, targetProcessName);
         Scripts.Add(new ObservableScript(newScript.Id, newScript.Name, newScript.Logic));
     }
-
+    /// <summary>
+    /// Opens the script overview for a selected process.
+    /// </summary> 
     public async Task OpenScriptOverviewAsync()
     {
         var targetProcessName = GetTargetProcessName();
@@ -179,12 +219,18 @@ public partial class ScriptOverviewViewModel : ObservableObject
         _scriptOverviewWindow.Focus();
     }
 
+    /// <summary>
+    /// Deactivates all scripts in the overview.
+    /// </summary>
     private void DeactivateScripts()
     {
         foreach (ObservableScript observableScript in Scripts)
             observableScript.IsActivated = false;
     }
 
+    /// <summary>
+    /// Runs all activated scripts.
+    /// </summary>
     private void RunActivatedScripts(object? sender, EventArgs args)
     {
         if (_memoryManager == null)
@@ -206,6 +252,9 @@ public partial class ScriptOverviewViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Stops all deactivated scripts.
+    /// </summary>
     private void StopDeactivatedScripts(object? sender = null, EventArgs? args = null)
     {
         if (_memoryManager == null)
@@ -227,6 +276,10 @@ public partial class ScriptOverviewViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Retrieves the name of the target process.
+    /// </summary>
+    /// <returns>Name of the selected process or null if no process is selected.</returns>
     private string? GetTargetProcessName()
     {
         ProcessAdapter? selectedProcess = _selectProcessViewModel.SelectedProcess;
@@ -237,6 +290,11 @@ public partial class ScriptOverviewViewModel : ObservableObject
         return _selectProcessViewModel.SelectedProcess?.Process.ProcessName;
     }
 
+    /// <summary>
+    /// Displays a message box with relevant information about an exception that occurred during script execution.
+    /// </summary>
+    /// <param name="ex">The exception that occurred.</param>
+    /// <param name="script">The script associated with the exception.</param>
     private static void ShowMessageBoxForException(Exception ex, IScript script)
     {
         var message = ex is ScriptValidationException

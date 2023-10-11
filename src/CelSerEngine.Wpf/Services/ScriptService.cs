@@ -11,6 +11,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace CelSerEngine.Wpf.Services;
+
+/// <inheritdoc cref="IScriptService"/>
 public class ScriptService : IScriptService
 {
     private readonly CelSerEngineDbContext _celSerEngineDbContext;
@@ -22,6 +24,7 @@ public class ScriptService : IScriptService
         _scriptCompiler = scriptCompiler;
     }
 
+    /// <inheritdoc />
     public async Task InsertScriptAsync(Script script, string targetProcessName)
     {
         TargetProcess? targetProcess = await _celSerEngineDbContext
@@ -46,6 +49,7 @@ public class ScriptService : IScriptService
         await _celSerEngineDbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task UpdateScriptAsync(IScript script)
     {
         var dbScript = await _celSerEngineDbContext.Scripts.Where(x => x.Id == script.Id).FirstAsync().ConfigureAwait(false);
@@ -54,6 +58,7 @@ public class ScriptService : IScriptService
         await _celSerEngineDbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task DeleteScriptAsync(IScript script)
     {
         var dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id).ConfigureAwait(false);
@@ -61,6 +66,7 @@ public class ScriptService : IScriptService
         await _celSerEngineDbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public async Task<IList<Script>> GetScriptsByTargetProcessNameAsync(string targetProcessName)
     {
         IList<Script> dbScripts = await _celSerEngineDbContext.Scripts
@@ -73,6 +79,7 @@ public class ScriptService : IScriptService
         return dbScripts;
     }
 
+    /// <inheritdoc />
     public async Task<IScript> ImportScriptAsync(string pathToFile, string targetProcessName)
     {
         var scriptAsJson = await File.ReadAllTextAsync(pathToFile).ConfigureAwait(false);
@@ -83,19 +90,22 @@ public class ScriptService : IScriptService
         return importedScript;
     }
 
+    /// <inheritdoc />
     public async Task ExportScriptAsync(IScript script, string exportPath)
     {
         var scriptAsJson = JsonSerializer.Serialize(script);
         await File.WriteAllTextAsync(exportPath, scriptAsJson).ConfigureAwait(false);
     }
 
-    //throws exception
+    /// <inheritdoc />
+    /// <exception cref="ScriptValidationException">Thrown if the script validation fails.</exception>
     public ILoopingScript ValidateScript(IScript script)
     {
         return _scriptCompiler.CompileScript(script);
     }
 
-    //throws exception
+    /// <inheritdoc />
+    /// /// <exception cref="ScriptValidationException">Thrown if the script validation fails.</exception>
     public void RunScript(ObservableScript script, MemoryManager memoryManager)
     {
         if (script.ScriptState == ScriptState.NotValidated || script.LoopingScript == null)
@@ -111,12 +121,19 @@ public class ScriptService : IScriptService
             script.LoopingScript.OnLoop(memoryManager);
     }
 
+    /// <inheritdoc />
     public void StopScript(ObservableScript script, MemoryManager memoryManager)
     {
         script.LoopingScript!.OnStop(memoryManager);
         script.ScriptState = ScriptState.Stopped;
     }
 
+    /// <summary>
+    /// Starts the execution of a specified observable script using a given memory manager.
+    /// The <paramref name="memoryManager"/> is used for <see cref="ILoopingScript"/>'s methods
+    /// </summary>
+    /// <param name="script">The observable script to be stopped.</param>
+    /// <param name="memoryManager">The memory manager used at execution.</param>
     private static void StartScript(ObservableScript script, MemoryManager memoryManager)
     {
         script.LoopingScript!.OnStart(memoryManager);

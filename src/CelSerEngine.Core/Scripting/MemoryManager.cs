@@ -2,17 +2,33 @@
 using System.Runtime.InteropServices;
 
 namespace CelSerEngine.Core.Scripting;
+
+/// <summary>
+/// The MemoryManager class provides functionality to read and write to a process's memory. 
+/// </summary>
 public class MemoryManager
 {
     private readonly IntPtr _processHandle;
     private readonly INativeApi _nativeApi;
 
+    /// <summary>
+    /// Creates an instance of the MemoryManager class.
+    /// </summary>
+    /// <param name="processHandle">A pointer (<see cref="IntPtr"/>) to the target process handle</param>
+    /// <param name="nativeApi">An instance of an object that implements the <see cref="INativeApi"/> interface.
+    /// This provides the underlying mechanism to interact with system-level operations for reading and writing memory.</param>
     public MemoryManager(IntPtr processHandle, INativeApi nativeApi)
     {
         _processHandle = processHandle;
         _nativeApi = nativeApi;
     }
 
+    /// <summary>
+    /// Reads the memory content at the specified memory address and returns the result in the type specified by T
+    /// </summary>
+    /// <typeparam name="T">The return type <see cref="T"/> must be a value type struct</typeparam>
+    /// <param name="memoryAddress">An integer representing the memory address from where the data needs to be read.</param>
+    /// <returns></returns>
     public T ReadMemoryAt<T>(int memoryAddress)
         where T : struct
     {
@@ -27,6 +43,12 @@ public class MemoryManager
         return result;
     }
 
+    /// <summary>
+    /// Writes a value to the memory at the specified memory address.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="memoryAddress">An integer representing the memory address where the data needs to be written to.</param>
+    /// <param name="newValue">The value of type T that needs to be written to the specified memory address.</param>
     public void WriteMemoryAt<T>(int memoryAddress, T newValue)
         where T : struct
     {
