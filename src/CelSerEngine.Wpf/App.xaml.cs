@@ -1,4 +1,5 @@
 ﻿using CelSerEngine.Core.Database;
+using CelSerEngine.Core.Database.Repositories;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scripting;
 using CelSerEngine.Wpf.Services;
@@ -51,6 +52,7 @@ public sealed partial class App : Application
         services.AddSingleton<INativeApi, NativeApi>();
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<ScriptCompiler>();
+        services.AddScoped<IScriptRepository, ScriptRepository>();
 
         return services.BuildServiceProvider();
     }

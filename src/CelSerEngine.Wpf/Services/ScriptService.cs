@@ -1,12 +1,10 @@
-﻿using CelSerEngine.Core.Database;
+﻿using CelSerEngine.Core.Database.Repositories;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Scripting;
 using CelSerEngine.Core.Scripting.Template;
 using CelSerEngine.Wpf.Models;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -15,21 +13,20 @@ namespace CelSerEngine.Wpf.Services;
 /// <inheritdoc cref="IScriptService"/>
 public class ScriptService : IScriptService
 {
-    private readonly CelSerEngineDbContext _celSerEngineDbContext;
+    private readonly IScriptRepository _scriptRepository;
     private readonly ScriptCompiler _scriptCompiler;
 
-    public ScriptService(CelSerEngineDbContext celSerEngineDbContext, ScriptCompiler scriptCompiler)
+    public ScriptService(IScriptRepository scriptRepository, ScriptCompiler scriptCompiler)
     {
-        _celSerEngineDbContext = celSerEngineDbContext;
+        _scriptRepository = scriptRepository;
         _scriptCompiler = scriptCompiler;
     }
 
     /// <inheritdoc />
     public async Task InsertScriptAsync(Script script, string targetProcessName)
     {
-        TargetProcess? targetProcess = await _celSerEngineDbContext
-            .TargetProcesses
-            .SingleOrDefaultAsync(x => x.Name == targetProcessName)
+        TargetProcess? targetProcess = await _scriptRepository
+            .GetTargetProcessByNameAsync(targetProcessName)
             .ConfigureAwait(false);
 
         if (targetProcess == null)
@@ -45,35 +42,29 @@ public class ScriptService : IScriptService
             script.TargetProcessId = targetProcess.Id;
         }
 
-        await _celSerEngineDbContext.Scripts.AddAsync(script).ConfigureAwait(false);
-        await _celSerEngineDbContext.SaveChangesAsync().ConfigureAwait(false);
+        await _scriptRepository.AddScriptAsync(script).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task UpdateScriptAsync(IScript script)
     {
-        var dbScript = await _celSerEngineDbContext.Scripts.Where(x => x.Id == script.Id).FirstAsync().ConfigureAwait(false);
+        var dbScript = await _scriptRepository.GetScriptById(script.Id).ConfigureAwait(false);
         dbScript.Logic = script.Logic;
         dbScript.Name = script.Name;
-        await _celSerEngineDbContext.SaveChangesAsync().ConfigureAwait(false);
+        await _scriptRepository.UpdateScriptAsync(dbScript).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task DeleteScriptAsync(IScript script)
     {
-        var dbScript = await _celSerEngineDbContext.Scripts.SingleAsync(x => x.Id == script.Id).ConfigureAwait(false);
-        _celSerEngineDbContext.Scripts.Remove(dbScript);
-        await _celSerEngineDbContext.SaveChangesAsync().ConfigureAwait(false);
+        await _scriptRepository.DeleteScriptByIdAsync(script.Id).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<IList<Script>> GetScriptsByTargetProcessNameAsync(string targetProcessName)
     {
-        IList<Script> dbScripts = await _celSerEngineDbContext.Scripts
-            .AsNoTracking()
-            .Include(x => x.TargetProcess)
-            .Where(x => x.TargetProcess != null && x.TargetProcess.Name == targetProcessName)
-            .ToListAsync()
+        IList<Script> dbScripts = await _scriptRepository
+            .GetScriptsByTargetProcessNameAsync(targetProcessName)
             .ConfigureAwait(false);
 
         return dbScripts;
