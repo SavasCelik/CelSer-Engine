@@ -1,5 +1,4 @@
-﻿using CelSerEngine.Core.Database;
-using CelSerEngine.Core.Models;
+﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Scripting;
 using CelSerEngine.Core.Scripting.Template;
 using CelSerEngine.Wpf.Services;
@@ -21,8 +20,7 @@ public partial class ScriptEditorViewModel : ObservableObject
 
     [ObservableProperty]
     private string _scriptLogic;
-
-    private readonly CelSerEngineDbContext _celSerEngineDbContext;
+    
     private readonly IScriptService _scriptService;
     private ScriptEditorWindow? _scriptEditor;
 
@@ -34,11 +32,9 @@ public partial class ScriptEditorViewModel : ObservableObject
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptEditorViewModel"/> class.
     /// </summary>
-    /// <param name="celSerEngineDbContext">The database context.</param>
     /// <param name="scriptService">The script service.</param>
-    public ScriptEditorViewModel(CelSerEngineDbContext celSerEngineDbContext, IScriptService scriptService)
+    public ScriptEditorViewModel(IScriptService scriptService)
     {
-        _celSerEngineDbContext = celSerEngineDbContext;
         _scriptService = scriptService;
         _scriptLogic = "";
     }
@@ -57,7 +53,6 @@ public partial class ScriptEditorViewModel : ObservableObject
 
         SelectedScript.Logic = _scriptEditor!.GetText();
         await _scriptService.UpdateScriptAsync(SelectedScript);
-        await _celSerEngineDbContext.SaveChangesAsync();
     }
 
     /// <summary>
