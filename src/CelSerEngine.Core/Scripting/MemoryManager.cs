@@ -24,11 +24,11 @@ public class MemoryManager
     }
 
     /// <summary>
-    /// Reads the memory content at the specified memory address and returns the result in the type specified by T
+    /// Reads the memory content at the specified memory address
     /// </summary>
     /// <typeparam name="T">The return type <see cref="T"/> must be a value type struct</typeparam>
     /// <param name="memoryAddress">An integer representing the memory address from where the data needs to be read.</param>
-    /// <returns></returns>
+    /// <returns>The result in the type specified by T</returns>
     public T ReadMemoryAt<T>(int memoryAddress)
         where T : struct
     {
@@ -46,7 +46,7 @@ public class MemoryManager
     /// <summary>
     /// Writes a value to the memory at the specified memory address.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The new value's type</typeparam>
     /// <param name="memoryAddress">An integer representing the memory address where the data needs to be written to.</param>
     /// <param name="newValue">The value of type T that needs to be written to the specified memory address.</param>
     public void WriteMemoryAt<T>(int memoryAddress, T newValue)
