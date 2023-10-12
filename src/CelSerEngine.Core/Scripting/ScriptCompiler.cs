@@ -31,7 +31,7 @@ public class ScriptCompiler
     /// <param name="script">An instance that implements the IScript interface.</param>
     /// <returns>An instance of the compiled script implementing the <see cref="ILoopingScript"/> interface.</returns>
     /// <exception cref="ScriptValidationException">Thrown if the script validation fails.</exception>
-    public ILoopingScript CompileScript(IScript script)
+    public virtual ILoopingScript CompileScript(IScript script)
     {
         SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(script.Logic);
         var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
