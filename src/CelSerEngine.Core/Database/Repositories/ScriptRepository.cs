@@ -14,6 +14,18 @@ public class ScriptRepository : IScriptRepository
     }
 
     /// <inheritdoc />
+    public async Task<Script> GetScriptById(int id)
+    {
+        var dbScript = await _celSerEngineDbContext.Scripts
+            .Where(x => x.Id == id)
+            .AsNoTracking()
+            .FirstAsync()
+            .ConfigureAwait(false);
+
+        return dbScript;
+    }
+
+    /// <inheritdoc />
     public async Task AddScriptAsync(Script script)
     {
         await _celSerEngineDbContext.Scripts.AddAsync(script).ConfigureAwait(false);
@@ -46,5 +58,16 @@ public class ScriptRepository : IScriptRepository
             .ConfigureAwait(false);
 
         return dbScripts;
+    }
+
+    /// <inheritdoc />
+    public async Task<TargetProcess?> GetTargetProcessByNameAsync(string targetProcessName)
+    {
+        TargetProcess? targetProcess = await _celSerEngineDbContext.TargetProcesses
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Name == targetProcessName)
+            .ConfigureAwait(false);
+
+        return targetProcess;
     }
 }

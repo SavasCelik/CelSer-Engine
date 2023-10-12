@@ -8,6 +8,12 @@ namespace CelSerEngine.Core.Database.Repositories;
 public interface IScriptRepository
 {
     /// <summary>
+    /// Retrieves a script from the repository by its identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the script.</param>
+    /// <returns>The script with the specified ID.</returns>
+    public Task<Script> GetScriptById(int id);
+    /// <summary>
     /// Adds a new script to the repository.
     /// </summary>
     /// <param name="script">The script to be added.</param>
@@ -37,4 +43,11 @@ public interface IScriptRepository
     /// the list of scripts associated with the specified target process name.
     /// </returns>
     public Task<IList<Script>> GetScriptsByTargetProcessNameAsync(string targetProcessName);
+
+    /// <summary>
+    /// Retrieves a target process from the repository by its name.
+    /// </summary>
+    /// <param name="targetProcessName">The name of the target process.</param>
+    /// <returns>The target process with the specified name, or null if not found.</returns>
+    public Task<TargetProcess?> GetTargetProcessByNameAsync(string targetProcessName);
 }
