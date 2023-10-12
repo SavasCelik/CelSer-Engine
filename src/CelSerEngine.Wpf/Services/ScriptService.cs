@@ -4,7 +4,7 @@ using CelSerEngine.Core.Scripting;
 using CelSerEngine.Core.Scripting.Template;
 using CelSerEngine.Wpf.Models;
 using System.Collections.Generic;
-using System.IO;
+using System.IO.Abstractions;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -15,11 +15,13 @@ public class ScriptService : IScriptService
 {
     private readonly IScriptRepository _scriptRepository;
     private readonly ScriptCompiler _scriptCompiler;
+    private readonly IFileSystem _fileSystem;
 
-    public ScriptService(IScriptRepository scriptRepository, ScriptCompiler scriptCompiler)
+    public ScriptService(IScriptRepository scriptRepository, ScriptCompiler scriptCompiler, IFileSystem fileSystem)
     {
         _scriptRepository = scriptRepository;
         _scriptCompiler = scriptCompiler;
+        _fileSystem = fileSystem;
     }
 
     /// <inheritdoc />
@@ -73,7 +75,7 @@ public class ScriptService : IScriptService
     /// <inheritdoc />
     public async Task<IScript> ImportScriptAsync(string pathToFile, string targetProcessName)
     {
-        var scriptAsJson = await File.ReadAllTextAsync(pathToFile).ConfigureAwait(false);
+        var scriptAsJson = await _fileSystem.File.ReadAllTextAsync(pathToFile).ConfigureAwait(false);
         var importedScript = JsonSerializer.Deserialize<Script>(scriptAsJson)!;
         importedScript.Id = 0;
         await InsertScriptAsync(importedScript, targetProcessName).ConfigureAwait(false);
@@ -85,7 +87,7 @@ public class ScriptService : IScriptService
     public async Task ExportScriptAsync(IScript script, string exportPath)
     {
         var scriptAsJson = JsonSerializer.Serialize(script);
-        await File.WriteAllTextAsync(exportPath, scriptAsJson).ConfigureAwait(false);
+        await _fileSystem.File.WriteAllTextAsync(exportPath, scriptAsJson).ConfigureAwait(false);
     }
 
     /// <inheritdoc />

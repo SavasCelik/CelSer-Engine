@@ -7,6 +7,7 @@ using CelSerEngine.Wpf.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.IO.Abstractions;
 using System.Windows;
 
 namespace CelSerEngine.Wpf;
@@ -52,7 +53,8 @@ public sealed partial class App : Application
         services.AddSingleton<INativeApi, NativeApi>();
         services.AddSingleton<IScriptService, ScriptService>();
         services.AddSingleton<ScriptCompiler>();
-        services.AddScoped<IScriptRepository, ScriptRepository>();
+        services.AddSingleton<IScriptRepository, ScriptRepository>();
+        services.AddSingleton<IFileSystem, FileSystem>();
 
         return services.BuildServiceProvider();
     }

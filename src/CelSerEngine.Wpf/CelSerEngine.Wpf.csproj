@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+    <PackageReference Include="System.IO.Abstractions" Version="19.2.69" />
   </ItemGroup>
 
   <ItemGroup>
