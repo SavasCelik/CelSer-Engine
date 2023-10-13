@@ -7,6 +7,7 @@ using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Services;
 using Moq;
 using System.IO.Abstractions;
+using System.Text.Json;
 using Xunit;
 
 namespace CelSerEngine.Wpf.UnitTests.Services;
@@ -45,12 +46,14 @@ public class ScriptServiceTests
         Assert.Equal(targetProcessName, script.TargetProcess?.Name);
     }
 
-    [Fact]
-    public async Task UpdateScriptAsync_UpdatesDbScript()
+    [Theory]
+    [InlineData(@"Console.WriteLine(""Hello world"");")] // valid
+    [InlineData("string myString : ????")] // invalid
+    public async Task UpdateScriptAsync_ValidOrInvalidLogic_UpdatesDbScript(string newLogic)
     {
         // Arrange
-        var script = new Script { Id = 1, Name = "NewName", Logic = "NewLogic" };
-        var dbScript = new Script { Id = 1, Name = "OldName", Logic = "OldLogic" };
+        var script = new Script { Id = 1, Name = "NewName", Logic = newLogic };
+        var dbScript = new Script { Id = 1, Name = "OldName", Logic = "int myInteger = 42;" };
         _mockScriptRepository.Setup(r => r.GetScriptById(script.Id))
             .ReturnsAsync(dbScript);
 
@@ -58,8 +61,26 @@ public class ScriptServiceTests
         await _scriptService.UpdateScriptAsync(script);
 
         // Assert
-        Assert.Equal("NewName", dbScript.Name);
-        Assert.Equal("NewLogic", dbScript.Logic);
+        Assert.Equal(newLogic, dbScript.Logic);
+        _mockScriptRepository.Verify(x => x.UpdateScriptAsync(It.IsAny<Script>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateScriptAsync_ChangedName_UpdatesDbScript()
+    {
+        // Arrange
+        const string newName = "NewName";
+        var script = new Script { Id = 1, Name = newName, Logic = "int myInteger = 42;" };
+        var dbScript = new Script { Id = 1, Name = "OldName", Logic = "int myInteger = 42;" };
+        _mockScriptRepository.Setup(r => r.GetScriptById(script.Id))
+            .ReturnsAsync(dbScript);
+
+        // Act
+        await _scriptService.UpdateScriptAsync(script);
+
+        // Assert
+        Assert.Equal(newName, dbScript.Name);
+        _mockScriptRepository.Verify(x => x.UpdateScriptAsync(It.IsAny<Script>()), Times.Once);
     }
 
     [Fact]
@@ -213,7 +234,7 @@ public class ScriptServiceTests
     }
 
     [Fact]
-    public async Task ImportScriptAsync_ImportsFromFilePath()
+    public async Task ImportScriptAsync_ValidJsonFormat_ImportsFromFilePath()
     {
         // Arrange
         const string filePath = "D:/path/to/script.json";
@@ -229,6 +250,21 @@ public class ScriptServiceTests
         Assert.Equal("Logic", importedScript.Logic);
         Assert.Equal(0, importedScript.Id);
         _mockScriptRepository.Verify(x => x.AddScriptAsync(It.IsAny<Script>()), Times.Once);
+        _mockFileSystem.Verify(x => x.File.ReadAllTextAsync(filePath, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ImportScriptAsync_InvalidJsonFormat_ThrowsJsonException()
+    {
+        // Arrange
+        const string filePath = "D:/path/to/script.json";
+        const string scriptContent = @"{ <Id>2</id>, ""Name"": ""Test"", ""Logic"": ""Logic"" }";
+        _mockFileSystem.Setup(fs => fs.File.ReadAllTextAsync(filePath, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(scriptContent);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<JsonException>(() => _scriptService.ImportScriptAsync(filePath, "targetProcessName"));
+        _mockScriptRepository.Verify(x => x.AddScriptAsync(It.IsAny<Script>()), Times.Never);
         _mockFileSystem.Verify(x => x.File.ReadAllTextAsync(filePath, It.IsAny<CancellationToken>()), Times.Once);
     }
 
