@@ -50,7 +50,7 @@ public class ScriptService : IScriptService
     /// <inheritdoc />
     public async Task UpdateScriptAsync(IScript script)
     {
-        var dbScript = await _scriptRepository.GetScriptById(script.Id).ConfigureAwait(false);
+        var dbScript = await _scriptRepository.GetScriptByIdAsync(script.Id).ConfigureAwait(false);
         dbScript.Logic = script.Logic;
         dbScript.Name = script.Name;
         await _scriptRepository.UpdateScriptAsync(dbScript).ConfigureAwait(false);

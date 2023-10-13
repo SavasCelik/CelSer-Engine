@@ -14,7 +14,7 @@ public class ScriptRepository : IScriptRepository
     }
 
     /// <inheritdoc />
-    public async Task<Script> GetScriptById(int id)
+    public async Task<Script> GetScriptByIdAsync(int id)
     {
         var dbScript = await _celSerEngineDbContext.Scripts
             .Where(x => x.Id == id)
