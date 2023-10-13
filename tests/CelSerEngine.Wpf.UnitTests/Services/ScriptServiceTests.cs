@@ -54,7 +54,7 @@ public class ScriptServiceTests
         // Arrange
         var script = new Script { Id = 1, Name = "NewName", Logic = newLogic };
         var dbScript = new Script { Id = 1, Name = "OldName", Logic = "int myInteger = 42;" };
-        _mockScriptRepository.Setup(r => r.GetScriptById(script.Id))
+        _mockScriptRepository.Setup(r => r.GetScriptByIdAsync(script.Id))
             .ReturnsAsync(dbScript);
 
         // Act
@@ -72,7 +72,7 @@ public class ScriptServiceTests
         const string newName = "NewName";
         var script = new Script { Id = 1, Name = newName, Logic = "int myInteger = 42;" };
         var dbScript = new Script { Id = 1, Name = "OldName", Logic = "int myInteger = 42;" };
-        _mockScriptRepository.Setup(r => r.GetScriptById(script.Id))
+        _mockScriptRepository.Setup(r => r.GetScriptByIdAsync(script.Id))
             .ReturnsAsync(dbScript);
 
         // Act
