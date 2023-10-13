@@ -47,7 +47,7 @@ public class ScriptServiceTests
     }
 
     [Theory]
-    [InlineData(@"Console.WriteLine(""Hello world"");")] // valid
+    [InlineData(ScriptTemplates.BasicTemplate)] // valid
     [InlineData("string myString : ????")] // invalid
     public async Task UpdateScriptAsync_ValidOrInvalidLogic_UpdatesDbScript(string newLogic)
     {
