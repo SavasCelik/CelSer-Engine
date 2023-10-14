@@ -48,6 +48,21 @@ public class ScriptService : IScriptService
     }
 
     /// <inheritdoc />
+    public async Task<Script> DuplicateScriptAsync(IScript script)
+    {
+        var dbScript = await _scriptRepository.GetScriptByIdAsync(script.Id);
+        var duplicatedScript = new Script
+        {
+            Name = dbScript.Name,
+            Logic = dbScript.Logic,
+            TargetProcessId = dbScript.TargetProcessId
+        };
+        await _scriptRepository.AddScriptAsync(duplicatedScript).ConfigureAwait(false);
+
+        return duplicatedScript;
+    }
+
+    /// <inheritdoc />
     public async Task UpdateScriptAsync(IScript script)
     {
         var dbScript = await _scriptRepository.GetScriptByIdAsync(script.Id).ConfigureAwait(false);

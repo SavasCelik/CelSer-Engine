@@ -28,6 +28,13 @@ public interface IScriptService
     public Task UpdateScriptAsync(IScript script);
 
     /// <summary>
+    /// Duplicates an existing script.
+    /// </summary>
+    /// <param name="script">The script to be duplicated.</param>
+    /// <returns>The a new script instance</returns>
+    public Task<Script> DuplicateScriptAsync(IScript script);
+
+    /// <summary>
     /// Deletes a specified script.
     /// </summary>
     /// <param name="script">The script to be deleted.</param>

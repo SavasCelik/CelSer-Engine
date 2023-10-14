@@ -97,18 +97,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
     [RelayCommand]
     private async Task DuplicateScriptAsync(IScript selectedScript)
     {
-        var targetProcessName = GetTargetProcessName();
-
-        if (targetProcessName == null)
-            return;
-
-        var duplicatedScript = new Script
-        {
-            Id = 0,
-            Name = selectedScript.Name,
-            Logic = selectedScript.Logic
-        };
-        await _scriptService.InsertScriptAsync(duplicatedScript, targetProcessName);
+        IScript duplicatedScript = await _scriptService.DuplicateScriptAsync(selectedScript);
         Scripts.Add(new ObservableScript(duplicatedScript.Id, duplicatedScript.Name, duplicatedScript.Logic));
     }
 
