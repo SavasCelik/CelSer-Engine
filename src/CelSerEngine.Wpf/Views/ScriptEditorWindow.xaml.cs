@@ -196,9 +196,9 @@ public partial class ScriptEditorWindow : Window
     /// <returns>An enumerable collection of completion data for pre-defined methods.</returns>
     private static IEnumerable<EditorCompletionData> GetPreDefinedMethods()
     {
-        yield return new EditorCompletionData(nameof(MemoryManager.ReadMemoryAt) + "<T>",
+        yield return new EditorCompletionData(nameof(MemoryManager.ReadMemory) + "<T>",
             "(int memoryAddress)\nReads the memory at the given address and returns it as defined type T.");
-        yield return new EditorCompletionData(nameof(MemoryManager.WriteMemoryAt),
+        yield return new EditorCompletionData(nameof(MemoryManager.WriteMemory),
             "(int memoryAddress, T newValue)\nWrites the specified value to the memory at the given address.");
     }
 
