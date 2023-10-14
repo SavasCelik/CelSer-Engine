@@ -23,7 +23,6 @@ public class LoopingScript : {nameof(ILoopingScript)}
 	public void {nameof(ILoopingScript.OnLoop)}({nameof(MemoryManager)} memoryManager)
     {{
         // Add your main logic here.
-		ScriptLogger.Print(""Hello World"");
 	}}
 
     /// <summary>
