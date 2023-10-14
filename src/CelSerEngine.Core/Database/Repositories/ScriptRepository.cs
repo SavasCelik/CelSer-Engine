@@ -35,7 +35,9 @@ public class ScriptRepository : IScriptRepository
     /// <inheritdoc />
     public async Task UpdateScriptAsync(Script script)
     {
-        _celSerEngineDbContext.Entry(script).State = EntityState.Modified;
+        if (_celSerEngineDbContext.Scripts.Local.All(x => x.Id != script.Id))
+            _celSerEngineDbContext.Entry(script).State = EntityState.Modified;
+
         await _celSerEngineDbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
