@@ -23,11 +23,7 @@ public partial class ScriptEditorViewModel : ObservableObject
     
     private readonly IScriptService _scriptService;
     private ScriptEditorWindow? _scriptEditor;
-
-    /// <summary>
-    /// Gets or sets the currently selected script.
-    /// </summary>
-    public IScript? SelectedScript { get; set; }
+    private IScript? _selectedScript;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScriptEditorViewModel"/> class.
@@ -45,14 +41,14 @@ public partial class ScriptEditorViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveScriptAsync()
     {
-        if (SelectedScript == null)
+        if (_selectedScript == null)
         {
             MessageBox.Show("There is no script selected", "Script Editor");
             return;
         }
 
-        SelectedScript.Logic = _scriptEditor!.GetText();
-        await _scriptService.UpdateScriptAsync(SelectedScript);
+        _selectedScript.Logic = _scriptEditor!.GetText();
+        await _scriptService.UpdateScriptAsync(_selectedScript);
     }
 
     /// <summary>
@@ -61,18 +57,18 @@ public partial class ScriptEditorViewModel : ObservableObject
     [RelayCommand]
     private void ValidateScript()
     {
-        if (SelectedScript == null)
+        if (_selectedScript == null)
         {
             MessageBox.Show("There is no script selected", "Script Editor");
             return;
         }
 
-        var logicBefore = SelectedScript.Logic;
-        SelectedScript.Logic = _scriptEditor!.GetText();
+        var logicBefore = _selectedScript.Logic;
+        _selectedScript.Logic = _scriptEditor!.GetText();
         try
         {
             Cursor.Current = Cursors.WaitCursor;
-            _scriptService.ValidateScript(SelectedScript);
+            _scriptService.ValidateScript(_selectedScript);
             MessageBox.Show("Validation successful!", "Script Editor");
             Cursor.Current = Cursors.Default;
         }
@@ -82,7 +78,7 @@ public partial class ScriptEditorViewModel : ObservableObject
         }
         finally
         {
-            SelectedScript.Logic = logicBefore;
+            _selectedScript.Logic = logicBefore;
         }
     }
 
@@ -101,12 +97,12 @@ public partial class ScriptEditorViewModel : ObservableObject
     /// <param name="selectedScript">The script to edit.</param>
     public void OpenScriptEditor(IScript selectedScript)
     {
-        SelectedScript = selectedScript;
+        _selectedScript = selectedScript;
 
         if (_scriptEditor == null || !_scriptEditor.IsVisible)
             _scriptEditor = new ScriptEditorWindow();
 
-        _scriptEditor.SetText(SelectedScript.Logic);
+        _scriptEditor.SetText(_selectedScript.Logic);
         _scriptEditor.Show();
     }
 }
