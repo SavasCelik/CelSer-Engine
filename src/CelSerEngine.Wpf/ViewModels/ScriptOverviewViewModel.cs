@@ -93,27 +93,27 @@ public partial class ScriptOverviewViewModel : ObservableObject
     /// <summary>
     /// Duplicates the provided script.
     /// </summary>
-    /// <param name="selectedScript">The script to be duplicated.</param>
+    /// <param name="script">The script to be duplicated.</param>
     [RelayCommand]
-    private async Task DuplicateScriptAsync(IScript selectedScript)
+    private async Task DuplicateScriptAsync(IScript script)
     {
-        IScript duplicatedScript = await _scriptService.DuplicateScriptAsync(selectedScript);
+        IScript duplicatedScript = await _scriptService.DuplicateScriptAsync(script);
         Scripts.Add(new ObservableScript(duplicatedScript.Id, duplicatedScript.Name, duplicatedScript.Logic));
     }
 
     /// <summary>
     /// Deletes the selected script after confirmation.
     /// </summary>
-    /// <param name="selectedScript">The script to be deleted.</param>
+    /// <param name="script">The script to be deleted.</param>
     [RelayCommand]
-    private async Task DeleteScriptAsync(ObservableScript selectedScript)
+    private async Task DeleteScriptAsync(ObservableScript script)
     {
-        var confirmDeletion = MessageBox.Show($"\"{selectedScript.Name}\" will be deleted permanently.", "Deleting Script",
+        var confirmDeletion = MessageBox.Show($"\"{script.Name}\" will be deleted permanently.", "Deleting Script",
             MessageBoxButton.OKCancel, MessageBoxImage.Warning);
         if (confirmDeletion == MessageBoxResult.OK)
         {
-            Scripts.Remove(selectedScript);
-            await _scriptService.DeleteScriptAsync(selectedScript);
+            Scripts.Remove(script);
+            await _scriptService.DeleteScriptAsync(script);
         }
     }
 
@@ -222,7 +222,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
     /// <summary>
     /// Runs all activated scripts.
     /// </summary>
-    private void RunActivatedScripts(object? sender, EventArgs args)
+    private void RunActivatedScripts(object? sender = null, EventArgs? args = null)
     {
         if (_memoryManager == null)
             return;
