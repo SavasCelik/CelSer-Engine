@@ -171,7 +171,9 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
         var newScript = new Script();
         await _scriptService.InsertScriptAsync(newScript, targetProcessName);
-        Scripts.Add(new ObservableScript(newScript.Id, newScript.Name, newScript.Logic));
+        var observableScript = new ObservableScript(newScript.Id, newScript.Name, newScript.Logic);
+        Scripts.Add(observableScript);
+        OpenScriptEditor(observableScript);
     }
     /// <summary>
     /// Opens the script overview for a selected process.
@@ -274,7 +276,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
         ProcessAdapter? selectedProcess = _selectProcessViewModel.SelectedProcess;
 
         if (selectedProcess == null)
-            MessageBox.Show("Please select a process before create a script.", "No Process selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Please select a process.", "No Process selected", MessageBoxButton.OK, MessageBoxImage.Warning);
 
         return _selectProcessViewModel.SelectedProcess?.Process.ProcessName;
     }
