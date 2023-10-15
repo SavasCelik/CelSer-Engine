@@ -146,14 +146,14 @@ public class ScriptServiceTests
         // Arrange
         var mockLoopingScript = new Mock<ILoopingScript>();
         var observableScript = GetTestObservableScript();
-        observableScript.ScriptState = ScriptState.NotValidated;
+        observableScript.State = ScriptState.NotValidated;
         _mockScriptCompiler.Setup(c => c.CompileScript(observableScript)).Returns(mockLoopingScript.Object);
 
         // Act
         _scriptService.RunScript(observableScript, _stubMemoryManager);
 
         // Assert
-        Assert.Equal(ScriptState.Started, observableScript.ScriptState);
+        Assert.Equal(ScriptState.Started, observableScript.State);
         _mockScriptCompiler.Verify(x => x.CompileScript(observableScript), Times.Once);
         mockLoopingScript.Verify(x => x.OnStart(_stubMemoryManager), Times.Once);
     }
@@ -165,14 +165,14 @@ public class ScriptServiceTests
         var mockLoopingScript = new Mock<ILoopingScript>();
         var observableScript = GetTestObservableScript();
         observableScript.LoopingScript = mockLoopingScript.Object;
-        observableScript.ScriptState = ScriptState.Validated;
+        observableScript.State = ScriptState.Validated;
         _mockScriptCompiler.Setup(c => c.CompileScript(observableScript)).Returns(mockLoopingScript.Object);
 
         // Act
         _scriptService.RunScript(observableScript, _stubMemoryManager);
 
         // Assert
-        Assert.Equal(ScriptState.Started, observableScript.ScriptState);
+        Assert.Equal(ScriptState.Started, observableScript.State);
         _mockScriptCompiler.Verify(x => x.CompileScript(observableScript), Times.Never);
         mockLoopingScript.Verify(x => x.OnStart(_stubMemoryManager), Times.Once);
     }
@@ -184,14 +184,14 @@ public class ScriptServiceTests
         var mockLoopingScript = new Mock<ILoopingScript>();
         var observableScript = GetTestObservableScript();
         observableScript.LoopingScript = mockLoopingScript.Object;
-        observableScript.ScriptState = ScriptState.Stopped;
+        observableScript.State = ScriptState.Stopped;
         _mockScriptCompiler.Setup(c => c.CompileScript(observableScript)).Returns(mockLoopingScript.Object);
 
         // Act
         _scriptService.RunScript(observableScript, _stubMemoryManager);
 
         // Assert
-        Assert.Equal(ScriptState.Started, observableScript.ScriptState);
+        Assert.Equal(ScriptState.Started, observableScript.State);
         _mockScriptCompiler.Verify(x => x.CompileScript(observableScript), Times.Never);
         mockLoopingScript.Verify(x => x.OnStart(_stubMemoryManager), Times.Once);
     }
@@ -203,14 +203,14 @@ public class ScriptServiceTests
         var mockLoopingScript = new Mock<ILoopingScript>();
         var observableScript = GetTestObservableScript();
         observableScript.LoopingScript = mockLoopingScript.Object;
-        observableScript.ScriptState = ScriptState.Started;
+        observableScript.State = ScriptState.Started;
         _mockScriptCompiler.Setup(c => c.CompileScript(observableScript)).Returns(mockLoopingScript.Object);
 
         // Act
         _scriptService.RunScript(observableScript, _stubMemoryManager);
 
         // Assert
-        Assert.Equal(ScriptState.Started, observableScript.ScriptState);
+        Assert.Equal(ScriptState.Started, observableScript.State);
         _mockScriptCompiler.Verify(x => x.CompileScript(observableScript), Times.Never);
         mockLoopingScript.Verify(x => x.OnStart(_stubMemoryManager), Times.Never);
         mockLoopingScript.Verify(x => x.OnLoop(_stubMemoryManager), Times.Once);
@@ -227,14 +227,14 @@ public class ScriptServiceTests
         var mockLoopingScript = new Mock<ILoopingScript>();
         var observableScript = GetTestObservableScript();
         observableScript.LoopingScript = mockLoopingScript.Object;
-        observableScript.ScriptState = scriptState;
+        observableScript.State = scriptState;
 
         // Act
         _scriptService.StopScript(observableScript, _stubMemoryManager);
 
         // Assert
         mockLoopingScript.Verify(s => s.OnStop(_stubMemoryManager), Times.Once());
-        Assert.Equal(ScriptState.Stopped, observableScript.ScriptState);
+        Assert.Equal(ScriptState.Stopped, observableScript.State);
     }
 
     [Fact]

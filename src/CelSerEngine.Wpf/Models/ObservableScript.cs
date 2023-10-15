@@ -20,7 +20,7 @@ public partial class ObservableScript : ObservableObject, IScript
         set
         {
             _logic = value;
-            ScriptState = ScriptState.NotValidated;
+            State = ScriptState.NotValidated;
             LoopingScript = null;
         }
     }
@@ -38,7 +38,7 @@ public partial class ObservableScript : ObservableObject, IScript
     /// <summary>
     /// Represents the current state of the script logic
     /// </summary>
-    public ScriptState ScriptState { get; set; }
+    public ScriptState State { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ObservableScript"/> class with the provided identifier, name, and logic. 
@@ -51,6 +51,6 @@ public partial class ObservableScript : ObservableObject, IScript
         Id = id;
         _name = name;
         _logic = logic;
-        ScriptState = ScriptState.NotValidated;
+        State = ScriptState.NotValidated;
     }
 }

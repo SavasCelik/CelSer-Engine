@@ -251,7 +251,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
         if (_memoryManager == null)
             return;
 
-        var deactivatedScripts = Scripts.Where(x => !x.IsActivated && x.ScriptState == ScriptState.Started).ToArray();
+        var deactivatedScripts = Scripts.Where(x => !x.IsActivated && x.State == ScriptState.Started).ToArray();
 
         foreach (var script in deactivatedScripts)
         {

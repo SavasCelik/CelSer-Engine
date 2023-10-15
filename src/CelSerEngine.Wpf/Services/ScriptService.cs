@@ -116,16 +116,16 @@ public class ScriptService : IScriptService
     /// /// <exception cref="ScriptValidationException">Thrown if the script validation fails.</exception>
     public void RunScript(ObservableScript script, MemoryManager memoryManager)
     {
-        if (script.ScriptState == ScriptState.NotValidated || script.LoopingScript == null)
+        if (script.State == ScriptState.NotValidated || script.LoopingScript == null)
         {
             script.LoopingScript = ValidateScript(script);
-            script.ScriptState = ScriptState.Validated;
+            script.State = ScriptState.Validated;
         }
 
-        if (script.ScriptState is ScriptState.Validated or ScriptState.Stopped)
+        if (script.State is ScriptState.Validated or ScriptState.Stopped)
             StartScript(script, memoryManager);
 
-        if (script.ScriptState == ScriptState.Started)
+        if (script.State == ScriptState.Started)
             script.LoopingScript.OnLoop(memoryManager);
     }
 
@@ -133,7 +133,7 @@ public class ScriptService : IScriptService
     public void StopScript(ObservableScript script, MemoryManager memoryManager)
     {
         script.LoopingScript!.OnStop(memoryManager);
-        script.ScriptState = ScriptState.Stopped;
+        script.State = ScriptState.Stopped;
     }
 
     /// <summary>
@@ -145,6 +145,6 @@ public class ScriptService : IScriptService
     private static void StartScript(ObservableScript script, MemoryManager memoryManager)
     {
         script.LoopingScript!.OnStart(memoryManager);
-        script.ScriptState = ScriptState.Started;
+        script.State = ScriptState.Started;
     }
 }
