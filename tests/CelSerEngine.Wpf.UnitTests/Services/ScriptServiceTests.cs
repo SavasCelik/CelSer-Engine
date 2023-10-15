@@ -84,6 +84,26 @@ public class ScriptServiceTests
     }
 
     [Fact]
+    public async Task DuplicateScriptAsync_ReturnsDuplicatedScript()
+    {
+        // Arrange
+        var expectedId = 1111;
+        var dbScript = new Script { Id = 1, Name = "ScriptName", Logic = "int myInteger = 42;" };
+        _mockScriptRepository.Setup(r => r.GetScriptByIdAsync(dbScript.Id))
+            .ReturnsAsync(dbScript);
+        _mockScriptRepository.Setup(r => r.AddScriptAsync(It.IsAny<Script>()))
+            .Callback<Script>(x => x.Id = 1111);
+
+        // Act
+        var duplicatedScript = await _scriptService.DuplicateScriptAsync(dbScript);
+
+        // Assert
+        Assert.Equal(expectedId, duplicatedScript.Id);
+        Assert.Equal(duplicatedScript.Name, dbScript.Name);
+        Assert.Equal(duplicatedScript.Logic, dbScript.Logic);
+    }
+
+    [Fact]
     public async Task GetScriptsByTargetProcessNameAsync_ReturnsScripts()
     {
         // Arrange

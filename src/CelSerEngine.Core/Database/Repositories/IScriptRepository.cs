@@ -13,6 +13,7 @@ public interface IScriptRepository
     /// <param name="id">The unique identifier of the script.</param>
     /// <returns>The script with the specified ID.</returns>
     public Task<Script> GetScriptByIdAsync(int id);
+
     /// <summary>
     /// Adds a new script to the repository.
     /// </summary>
