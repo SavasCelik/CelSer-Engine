@@ -4,7 +4,7 @@ using CelSerEngine.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace CelSerEngine.Core.IntegrationTests.Repositories;
+namespace CelSerEngine.Core.UnitTests.Repositories;
 public class ScriptRepositoryTests
 {
     private readonly ScriptRepository _scriptRepository;
@@ -31,14 +31,14 @@ public class ScriptRepositoryTests
         var targetProcess = GetTestTargetProcess();
         yield return new Script { Id = 1, Name = "Script1", Logic = "Logic1", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
         yield return new Script { Id = 2, Name = "Script2", Logic = "Logic2", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
-        yield return new Script {Id = 3, Name = "Script3", Logic = "Logic3", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
-        yield return new Script {Id = 4, Name = "Script4", Logic = "Logic4", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
-        yield return new Script {Id = 5, Name = "Script5", Logic = "Logic5", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
-        yield return new Script {Id = 6, Name = "Script6", Logic = "Logic6", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
-        yield return new Script {Id = 7, Name = "Script7", Logic = "Logic7", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
-        yield return new Script {Id = 8, Name = "Script8", Logic = "Logic8", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
-        yield return new Script {Id = 9, Name = "Script9", Logic = "Logic9", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
-        yield return new Script {Id = 10, Name = "Script10", Logic = "Logic10", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
+        yield return new Script { Id = 3, Name = "Script3", Logic = "Logic3", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
+        yield return new Script { Id = 4, Name = "Script4", Logic = "Logic4", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
+        yield return new Script { Id = 5, Name = "Script5", Logic = "Logic5", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
+        yield return new Script { Id = 6, Name = "Script6", Logic = "Logic6", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
+        yield return new Script { Id = 7, Name = "Script7", Logic = "Logic7", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
+        yield return new Script { Id = 8, Name = "Script8", Logic = "Logic8", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
+        yield return new Script { Id = 9, Name = "Script9", Logic = "Logic9", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
+        yield return new Script { Id = 10, Name = "Script10", Logic = "Logic10", TargetProcessId = targetProcess.Id, TargetProcess = targetProcess };
     }
 
     private static TargetProcess GetTestTargetProcess() => new() { Id = 1, Name = "TargetProcess.exe" };
@@ -96,7 +96,7 @@ public class ScriptRepositoryTests
         // Arrange
         var script = GetFakeScripts().First();
         script.Name = "ChangedNameToNewName";
-        script.Name = "ChangedLogicToNewLogic";
+        script.Logic = "ChangedLogicToNewLogic";
 
         // Act
         await _scriptRepository.UpdateScriptAsync(script);
