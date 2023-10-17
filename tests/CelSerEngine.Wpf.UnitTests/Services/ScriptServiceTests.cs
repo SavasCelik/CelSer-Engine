@@ -65,11 +65,12 @@ public class ScriptServiceTests
         _mockScriptRepository.Verify(x => x.UpdateScriptAsync(It.IsAny<Script>()), Times.Once);
     }
 
-    [Fact]
-    public async Task UpdateScriptAsync_ChangedName_UpdatesDbScript()
+    [Theory]
+    [InlineData("NewScriptName")]
+    [InlineData("")]
+    public async Task UpdateScriptAsync_ChangedName_UpdatesDbScript(string newName)
     {
         // Arrange
-        const string newName = "NewName";
         var script = new Script { Id = 1, Name = newName, Logic = "int myInteger = 42;" };
         var dbScript = new Script { Id = 1, Name = "OldName", Logic = "int myInteger = 42;" };
         _mockScriptRepository.Setup(r => r.GetScriptByIdAsync(script.Id))
