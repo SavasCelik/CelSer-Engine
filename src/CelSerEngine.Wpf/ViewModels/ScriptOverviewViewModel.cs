@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -153,8 +154,13 @@ public partial class ScriptOverviewViewModel : ObservableObject
 
         if (result == true)
         {
-            IScript importedScript = await _scriptService.ImportScriptAsync(openDialog.FileName, targetProcessName);
-            Scripts.Add(new ObservableScript(importedScript.Id, importedScript.Name, importedScript.Logic));
+            try
+            {
+                IScript importedScript = await _scriptService.ImportScriptAsync(openDialog.FileName, targetProcessName);
+                Scripts.Add(new ObservableScript(importedScript.Id, importedScript.Name, importedScript.Logic));
+            } catch (JsonException ex) {
+                ShowMessageBoxForException(ex, openDialog.FileName);
+            }            
         }
     }
 
@@ -237,7 +243,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                ShowMessageBoxForException(ex, script);
+                ShowMessageBoxForException(ex, script.Name);
                 script.IsActivated = false;
             }
         }
@@ -261,7 +267,7 @@ public partial class ScriptOverviewViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                ShowMessageBoxForException(ex, script);
+                ShowMessageBoxForException(ex, script.Name);
                 script.IsActivated = true;
             }
         }
@@ -286,11 +292,11 @@ public partial class ScriptOverviewViewModel : ObservableObject
     /// </summary>
     /// <param name="ex">The exception that occurred.</param>
     /// <param name="script">The script associated with the exception.</param>
-    private static void ShowMessageBoxForException(Exception ex, IScript script)
+    private static void ShowMessageBoxForException(Exception ex, string scriptName)
     {
         var message = ex is ScriptValidationException
-            ? $"Validation for script \"{script.Name}\" failed!\n\n{ex.Message}"
-            : $"RunTimeException occurred for script \"{script.Name}\" failed!\n\n{ex.Message}\n{ex.StackTrace}";
+            ? $"Validation for script \"{scriptName}\" failed!\n\n{ex.Message}"
+            : $"RunTimeException occurred for script \"{scriptName}\" failed!\n\n{ex.Message}";
 
         MessageBox.Show(message, "Script Overview");
     }
