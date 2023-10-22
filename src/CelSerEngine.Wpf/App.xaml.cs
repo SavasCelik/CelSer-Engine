@@ -1,8 +1,13 @@
-﻿using CelSerEngine.Core.Native;
+﻿using CelSerEngine.Core.Database;
+using CelSerEngine.Core.Database.Repositories;
+using CelSerEngine.Core.Native;
+using CelSerEngine.Core.Scripting;
 using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.ViewModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.IO.Abstractions;
 using System.Windows;
 
 namespace CelSerEngine.Wpf;
@@ -35,14 +40,21 @@ public sealed partial class App : Application
     {
         var services = new ServiceCollection();
 
+        services.AddDbContext<CelSerEngineDbContext>(options => options.UseSqlite("Data Source=celserengine.db"));
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<SelectProcessViewModel>();
         services.AddSingleton<TrackedScanItemsViewModel>();
         services.AddSingleton<ScanResultsViewModel>();
         services.AddSingleton<PointerScanOptionsViewModel>();
         services.AddSingleton<PointerScanResultsViewModel>();
+        services.AddSingleton<ScriptEditorViewModel>();
+        services.AddSingleton<ScriptOverviewViewModel>();
         services.AddSingleton<IMemoryScanService, MemoryScanService>();
         services.AddSingleton<INativeApi, NativeApi>();
+        services.AddSingleton<IScriptService, ScriptService>();
+        services.AddSingleton<ScriptCompiler>();
+        services.AddSingleton<IScriptRepository, ScriptRepository>();
+        services.AddSingleton<IFileSystem, FileSystem>();
 
         return services.BuildServiceProvider();
     }

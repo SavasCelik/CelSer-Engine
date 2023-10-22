@@ -98,22 +98,29 @@ public sealed class NativeApi : INativeApi
 
     public void WriteMemory(IntPtr hProcess, IMemorySegment trackedScanItem, string newValue)
     {
+        var memoryAddress = trackedScanItem.Address;
+
+        if (trackedScanItem is IPointer pointer)
+        {
+            memoryAddress = pointer.PointingTo;
+        }
+
         switch (trackedScanItem.ScanDataType)
         {
             case ScanDataType.Short:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<short>());
+                WriteMemory(hProcess, memoryAddress, newValue.ParseNumber<short>());
                 break;
             case ScanDataType.Integer:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<int>());
+                WriteMemory(hProcess, memoryAddress, newValue.ParseNumber<int>());
                 break;
             case ScanDataType.Float:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<float>());
+                WriteMemory(hProcess, memoryAddress, newValue.ParseNumber<float>());
                 break;
             case ScanDataType.Double:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<double>());
+                WriteMemory(hProcess, memoryAddress, newValue.ParseNumber<double>());
                 break;
             case ScanDataType.Long:
-                WriteMemory(hProcess, trackedScanItem, newValue.ParseNumber<long>());
+                WriteMemory(hProcess, memoryAddress, newValue.ParseNumber<long>());
                 break;
             default:
                 throw new NotImplementedException($"{nameof(WriteMemory)} for Type: {trackedScanItem.ScanDataType} is not implemented");
@@ -122,21 +129,15 @@ public sealed class NativeApi : INativeApi
         
     }
 
-    private void WriteMemory<T>(IntPtr hProcess, IMemorySegment trackedScanItem, T newValue)
+    public void WriteMemory<T>(IntPtr hProcess, IntPtr memoryAddress, T newValue)
         where T : struct
     {
-        var typeSize = trackedScanItem.ScanDataType.GetPrimitiveSize();
+        var typeSize = Marshal.SizeOf(typeof(T));
         var bytesToWrite = _byteArrayPool.Rent(typeSize);
         var ptr = Marshal.AllocHGlobal(typeSize);
         Marshal.StructureToPtr(newValue, ptr, true);
         Marshal.Copy(ptr, bytesToWrite, 0, typeSize);
         Marshal.FreeHGlobal(ptr);
-        var memoryAddress = trackedScanItem.Address;
-
-        if (trackedScanItem is IPointer pointerItem)
-        {
-            memoryAddress = pointerItem.PointingTo;
-        }
 
         var result = NtWriteVirtualMemory(
             hProcess,

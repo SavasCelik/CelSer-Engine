@@ -13,7 +13,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{108185D4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngine.Core.UnitTests", "tests\CelSerEngine.Core.UnitTests\CelSerEngine.Core.UnitTests.csproj", "{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CelSerEngine.Core.IntegrationTests", "tests\CelSerEngine.Core.IntegrationTests\CelSerEngine.Core.IntegrationTests.csproj", "{63B36816-D717-4FB8-954E-86F19E34A070}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngine.Core.IntegrationTests", "tests\CelSerEngine.Core.IntegrationTests\CelSerEngine.Core.IntegrationTests.csproj", "{63B36816-D717-4FB8-954E-86F19E34A070}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngine.Wpf.UnitTests", "tests\CelSerEngine.Wpf.UnitTests\CelSerEngine.Wpf.UnitTests.csproj", "{392A7F40-213F-412E-A72C-57ADBEFF69F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CelSerEngine.Wpf.IntegrationTests", "tests\CelSerEngine.Wpf.IntegrationTests\CelSerEngine.Wpf.IntegrationTests.csproj", "{63162414-F17C-4274-827C-84DE363EC509}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +41,14 @@ Global
 		{63B36816-D717-4FB8-954E-86F19E34A070}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63B36816-D717-4FB8-954E-86F19E34A070}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63B36816-D717-4FB8-954E-86F19E34A070}.Release|Any CPU.Build.0 = Release|Any CPU
+		{392A7F40-213F-412E-A72C-57ADBEFF69F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{392A7F40-213F-412E-A72C-57ADBEFF69F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{392A7F40-213F-412E-A72C-57ADBEFF69F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{392A7F40-213F-412E-A72C-57ADBEFF69F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63162414-F17C-4274-827C-84DE363EC509}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63162414-F17C-4274-827C-84DE363EC509}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63162414-F17C-4274-827C-84DE363EC509}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63162414-F17C-4274-827C-84DE363EC509}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +58,8 @@ Global
 		{81617885-7392-4DF9-A6C9-5AE93C9928E4} = {515CE63A-73D7-4D39-BD22-0784F60BA1DF}
 		{DAD5E121-E2EF-4A78-ACAD-10187D6BCEE6} = {108185D4-63DE-42F8-A620-2936B87E9838}
 		{63B36816-D717-4FB8-954E-86F19E34A070} = {108185D4-63DE-42F8-A620-2936B87E9838}
+		{392A7F40-213F-412E-A72C-57ADBEFF69F1} = {108185D4-63DE-42F8-A620-2936B87E9838}
+		{63162414-F17C-4274-827C-84DE363EC509} = {108185D4-63DE-42F8-A620-2936B87E9838}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30031E47-D3BE-4D7C-AF3D-C6AAB0EF3CE1}
