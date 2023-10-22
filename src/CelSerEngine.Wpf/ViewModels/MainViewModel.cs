@@ -34,15 +34,17 @@ public partial class MainViewModel : ObservableRecipient
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly ScanResultsViewModel _scanResultsViewModel;
     private readonly IMemoryScanService _memoryScanService;
+    private readonly ScriptOverviewViewModel _scriptOverviewViewModel;
     private readonly IProgress<float> _progressBarUpdater;
     public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
     public bool Scanning { get; set; }
 
-    public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService)
+    public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService, ScriptOverviewViewModel scriptOverviewViewModel)
     {
         _selectProcessViewModel = selectProcessViewModel;
         _scanResultsViewModel = scanResultsViewModel;
         _memoryScanService = memoryScanService;
+        _scriptOverviewViewModel = scriptOverviewViewModel;
         _windowTitle = WindowTitleBase;
         _firstScanVisibility = Visibility.Visible;
         _newScanVisibility = Visibility.Hidden;
@@ -123,7 +125,16 @@ public partial class MainViewModel : ObservableRecipient
         if (_selectProcessViewModel.ShowSelectProcessDialog())
         {
             var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
-            Debug.WriteLine($"Opening Process {processHandle:X} was successfull");
+            Debug.WriteLine($"Opening Process {processHandle:X} was successful");
         }
+    }
+
+    /// <summary>
+    /// Opens the Script overview.
+    /// </summary>
+    [RelayCommand]
+    public async Task OpenScriptOverview()
+    {
+        await _scriptOverviewViewModel.OpenScriptOverviewAsync();
     }
 }

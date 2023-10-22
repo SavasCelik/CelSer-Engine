@@ -51,12 +51,12 @@ public partial class SelectProcessViewModel : ObservableRecipient
             .ToList();
         Processes = _allProcesses;
 
-        var selectProcessWidnwow = new SelectProcess
+        var selectProcessWindow = new SelectProcess
         {
             Owner = App.Current.MainWindow
         };
 
-        return selectProcessWidnwow.ShowDialog() ?? false;
+        return selectProcessWindow.ShowDialog() ?? false;
     }
 
     public IntPtr GetSelectedProcessHandle()
