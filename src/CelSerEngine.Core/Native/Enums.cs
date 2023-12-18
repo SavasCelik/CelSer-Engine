@@ -10,7 +10,8 @@ internal static class Enums
     internal enum NTSTATUS : uint
     {
         Success = 0x00000000,
-        Error = 0xc0000000
+        Error = 0xc0000000,
+        STATUS_PARTIAL_COPY = 0x8000000D
     }
 
     /// <summary>

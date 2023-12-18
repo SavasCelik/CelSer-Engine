@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using System.Buffers;
+using System.Collections;
 
 namespace CelSerEngine.Core.Scanners;
 
@@ -17,7 +18,7 @@ public class PointerScanner
         _pointerSize = sizeof(long);
     }
 
-    public async Task<IList<Pointer>> ScanForPointersAsync(PointerScanOptions pointerScanOptions)
+    public async Task<IList<Pointer2>> ScanForPointersAsync(PointerScanOptions pointerScanOptions)
     {
         var result = await Task.Run(() =>
         {
@@ -31,7 +32,7 @@ public class PointerScanner
             var pointsWhereIWant = heapPointers
                 .Where(x => x.Address.ToInt64() >= pointerScanOptions.SearchedAddress - pointerScanOptions.MaxOffset && x.Address.ToInt64() <= pointerScanOptions.SearchedAddress)
                 .ToArray();
-            var pointerScan1 = new List<Pointer>();
+            var pointerScan1 = new HashSet<Pointer2>();
 
             foreach (var pointer in pointsWhereIWant)
             {
@@ -43,17 +44,22 @@ public class PointerScanner
                 {
                     var clonedPointers = pointers.Select(x => x.Clone()).ToList();
                     clonedPointers.ForEach(p => p.Offsets.Add(firstOffset));
-                    pointerScan1.AddRange(clonedPointers);
+                    //pointerScan1.AddRange(clonedPointers);
+                    foreach (var cPointer in clonedPointers)
+                    {
+                        pointerScan1.Add(cPointer);
+                    }
                 }
             }
 
-            var pointingThere = new List<Pointer>();
+            var pointingThere = new HashSet<Pointer>();
             var counter = new Dictionary<IntPtr, int>();
             var alreadyTracking = new HashSet<IntPtr>();
 
             for (var currentLevel = 0; currentLevel < pointerScanOptions.MaxLevel; currentLevel++)
             {
                 var pointerList = pointerScan1.OrderBy(x => x.Offsets.Last()).ToArray();
+                //var pointerList = pointerScan1.ToArray();
                 pointerScan1.Clear();
                 foreach (var pointer in pointerList)
                 {
@@ -95,7 +101,11 @@ public class PointerScanner
                             i
                         };
                             clonedPointers.ForEach(x => x.Offsets = new List<IntPtr>(offsets));
-                            pointerScan1.AddRange(clonedPointers);
+                            //pointerScan1.AddRange(clonedPointers);
+                            foreach (var cPointer in clonedPointers)
+                            {
+                                pointerScan1.Add(cPointer);
+                            }
                             var countingFound = counter.TryGetValue(newAddy, out int count);
                             if (!staticPointersByAddress.ContainsKey(clonedPointers.First().Address) && countingFound && count >= 3)
                             {
@@ -216,4 +226,270 @@ public class PointerScanner
 
         return allAddresses;
     }
+
+
+    #region stackoverflow
+
+    ////readonly PointerScanController _controller;
+
+    ////public PointerScanController Controller => _controller;
+
+    //private PointerScanOptions _pointerScanOptions;
+    //private List<Pointer> _cachedValues;
+
+    //void SetOptions(PointerScanOptions pointerScanOptions)
+    //{
+    //    _pointerScanOptions = pointerScanOptions;
+    //    _cachedValues = GetHeapPointers(pointerScanOptions.ProcessHandle).OrderBy(x => x.PointingTo).ToList();
+    //}
+
+    //public async Task ScanAsync(nint targetAddress)
+    //{
+    //    var staticPointers = GetStaticPointers(_pointerScanOptions.ProcessId, _pointerScanOptions.ProcessHandle);
+    //    var staticPointersByAddress = staticPointers.ToDictionary(x => x.Address);
+    //    var pointerLists = new List<PointerList>();
+    //    // TODO: mayebe 3
+    //    for (var i = 0; i < _pointerScanOptions.MaxLevel + 1; i++)
+    //    {
+    //        var newList = new PointerList { Level = i };
+    //        pointerLists.Add(newList);
+    //        if (i > 0)
+    //        {
+    //            newList.Previous = pointerLists[i - 1];
+    //            pointerLists[i - 1].Next = newList;
+    //        }
+    //    }
+
+    //    for (var i = 0; i < pointerLists.Count; i++)
+    //    {
+    //        var currentList = pointerLists[i];
+    //        var previousList = i > 0 ? pointerLists[i - 1] : null;
+    //        if (previousList == null)
+    //        {
+    //            // 1) Start walking up the struct
+    //            for (var address = targetAddress; address >= targetAddress - _pointerScanOptions.MaxOffset; address -= 8)
+    //            {
+    //                // 2) Find all pointers that point to this address
+    //                var parents = BinarySearchFindAll(new Pointer { PointingTo = address });
+
+    //                // 3) Add all pointers to to the list;
+    //                foreach (var parent in parents)
+    //                {
+    //                    if (staticPointersByAddress.TryGetValue(parent.Address, out var startingPoint))
+    //                    {
+    //                        var newPointingThere = new Pointer
+    //                        {
+    //                            ModuleName = startingPoint.ModuleName,
+    //                            BaseAddress = startingPoint.BaseAddress,
+    //                            BaseOffset = startingPoint.BaseOffset,
+    //                            Offsets = parent.Offsets,
+    //                            PointingTo = targetAddress
+    //                        };
+    //                        currentList.Results.Add(newPointingThere);
+    //                    }
+    //                    else
+    //                    {
+    //                        currentList.Pointers.Add(parent);
+    //                    }
+    //                }
+    //            }
+    //        }
+    //        else
+    //        {
+    //            // 1) Run through all potential pointers in the previous level.
+    //            await Parallel
+    //                .ForEachAsync(previousList.Pointers,
+    //                              new ParallelOptions { MaxDegreeOfParallelism = 8 },
+    //                              (pointer, token) =>
+    //                              {
+    //                                  var nodeDepth = 0;
+    //                                  // 2) Start walking up the struct
+    //                                  for (var address = pointer.Address;
+    //                                       address >= pointer.Address - _pointerScanOptions.MaxOffset;
+    //                                       address -= 8)
+    //                                  {
+    //                                      // 3) Find all pointers that point to this address
+    //                                      var parents = BinarySearchFindAll(new Pointer { PointingTo = address });
+
+    //                                      nodeDepth++;
+
+    //                                      // 4) Add all pointers to to the list;
+    //                                      foreach (var parent in parents)
+    //                                      {
+    //                                          if (staticPointersByAddress.TryGetValue(parent.Address, out var startingPoint))
+    //                                          {
+    //                                              var newPointingThere = new Pointer
+    //                                              {
+    //                                                  ModuleName = startingPoint.ModuleName,
+    //                                                  BaseAddress = startingPoint.BaseAddress,
+    //                                                  BaseOffset = startingPoint.BaseOffset,
+    //                                                  Offsets = parent.Offsets,
+    //                                                  PointingTo = targetAddress
+    //                                              };
+    //                                              currentList.Results.Add(newPointingThere);
+    //                                          }
+
+    //                                          if (currentList.Next == null)
+    //                                              continue;
+
+    //                                          lock (currentList.Pointers)
+    //                                          {
+    //                                              if (!currentList.Pointers.Contains(parent))
+    //                                              {
+    //                                                  currentList.Pointers.Add(parent);
+    //                                              }
+    //                                          }
+    //                                      }
+
+    //                                      if (nodeDepth > 3)//settings.MaxOffsetNodes)
+    //                                          break;
+    //                                  }
+
+    //                                  return default;
+    //                              });
+    //        }
+
+    //        Console.WriteLine($"Pointers Level {i} -- {pointerLists[i].Pointers.Count:#,###} pointers.");
+    //    }
+
+    //    foreach (var list in pointerLists)
+    //        list.FinalizeToList();
+
+    //    foreach (var l in pointerLists)
+    //    {
+    //        foreach (var result in l.Results)
+    //        {
+    //            var regionIx = _controller.GetBlockIndexFromAddress(result.Key.Address, false);
+    //            var module = _controller.MemoryRegions[regionIx].Module;
+    //            FindResultPointer(targetAddress, 0, result.Key, result.Key, l.Previous, new List<int> { (int)(result.Key.Address - module!.BaseAddress) });
+    //        }
+    //    }
+
+    //    var r = _controller.Results;
+    //    var maxOffset = r.Max(x => x.Offsets.Length);
+
+    //    var sorted = r.OrderBy(x => true);
+    //    for (var i = maxOffset - 1; i >= 0; i--)
+    //    {
+    //        var offsetIndex = i;
+
+    //        //This is really hacky, but I want the main 1st set of offsets to be sorted and make sure 
+    //        //the main big offset is grouped together as much as possible.
+    //        if (offsetIndex == 1)
+    //        {
+    //            offsetIndex = 0;
+    //        }
+    //        else if (offsetIndex == 0)
+    //        {
+    //            offsetIndex = 1;
+    //        }
+    //        sorted = sorted.ThenBy(x => x.Offsets.Length > offsetIndex ? x.Offsets[offsetIndex] : -1);
+    //    }
+
+    //    _controller.Results = sorted.ToList();
+    //}
+
+    //bool FindResultPointer(nint targetAddress, int currentLevel, Pointer mainPointer, Pointer pointer, PointerList? nextLevel, List<int> currentOffsets)
+    //{
+    //    if (nextLevel == null)
+    //    {
+    //        //The first pointer list is special because any results in it are direct and there's no previous list to build from.
+    //        //Need to manually work it and add its results.
+    //        if (currentLevel == 0 && (targetAddress - pointer.Value) <= _controller.Settings.MaxOffset)
+    //        {
+    //            currentOffsets.Add((int)(targetAddress - pointer.Value));
+    //            var regionIx = _controller.GetBlockIndexFromAddress(mainPointer.Address, false);
+    //            _controller.Results.Add(new PointerScanResult
+    //            {
+    //                Origin = mainPointer,
+    //                Module = _controller.MemoryRegions[regionIx].Module!,
+    //                Offsets = currentOffsets.Select(x => x).ToArray()
+    //            });
+    //            return true;
+    //        }
+
+    //        return false;
+    //    }
+
+    //    //1) Find the child pointer
+    //    var baseChildIndex = nextLevel.PointersList.BinarySearch(new Pointer { Address = pointer.Value });
+    //    if (baseChildIndex < 0)
+    //        baseChildIndex = (~baseChildIndex);
+
+    //    bool hadResult = false;
+
+    //    //2) Loop through all potential children/offsets
+    //    var depth = 0;
+    //    for (var i = baseChildIndex; i < nextLevel.PointersList.Count; i++)
+    //    {
+    //        var child = nextLevel.PointersList[i];
+    //        if (child.Address > pointer.Value + _controller.Settings.MaxOffset)
+    //            break;
+
+    //        currentOffsets.Add((int)(child.Address - pointer.Value));
+
+    //        if (!FindResultPointer(targetAddress, currentLevel + 1, mainPointer, child, nextLevel.Previous, currentOffsets))
+    //        {
+    //            if (targetAddress - child.Value <= _controller.Settings.MaxOffset)
+    //            {
+    //                hadResult = true;
+
+    //                currentOffsets.Add((int)(targetAddress - child.Value));
+    //                var regionIx = _controller.GetBlockIndexFromAddress(mainPointer.Address, true);
+
+    //                _controller.Results.Add(new PointerScanResult
+    //                {
+    //                    Origin = mainPointer,
+    //                    Module = _controller.MemoryRegions[regionIx].Module!,
+    //                    Offsets = currentOffsets.Select(x => x).ToArray()
+    //                });
+    //                currentOffsets.RemoveAt(currentOffsets.Count - 1);
+    //            }
+    //        }
+    //        else
+    //        {
+    //            hadResult = true;
+    //        }
+
+    //        currentOffsets.RemoveAt(currentOffsets.Count - 1);
+    //    }
+
+    //    return hadResult;
+    //}
+
+    //public class PointerComparer : Comparer<Pointer>
+    //{
+    //    // Call CaseInsensitiveComparer.Compare with the parameters reversed.
+    //    public override int Compare(Pointer x, Pointer y)
+    //    {
+    //        return ((new CaseInsensitiveComparer()).Compare(x.PointingTo, y.PointingTo));
+    //    }
+    //}
+
+    //List<Pointer> BinarySearchFindAll(Pointer serachedPointer)
+    //{
+    //    List<Pointer> pointers = new List<Pointer>();
+    //    int index = _cachedValues.BinarySearch(serachedPointer, new PointerComparer());
+
+    //    if (index >= 0)
+    //    {
+    //        // Find the first occurrence in case of duplicates
+    //        while (index > 0 && _cachedValues[index - 1].PointingTo == serachedPointer.PointingTo)
+    //        {
+    //            index--;
+    //        }
+
+    //        // Collect all occurrences
+    //        while (index < _cachedValues.Count && _cachedValues[index].PointingTo == serachedPointer.PointingTo)
+    //        {
+    //            pointers.Add(_cachedValues[index]);
+    //            index++;
+    //        }
+    //    }
+
+    //    return pointers;
+    //}
+
+    #endregion
+
 }

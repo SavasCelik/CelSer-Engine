@@ -53,6 +53,8 @@ public class PointerScannerTests
 
         var foundPointers = await pointerScanner.ScanForPointersAsync(scanOptions);
         var expectedPointer = foundPointers.Where(x => x.OffsetsDisplayString == expectedOffsets).ToList();
+        //var expectedPointer = foundPointers.Where(x => x.Offsets.Count == 4 && x.Offsets[i]);
+        var ll = foundPointers.Where(x => x.Address == 0x0000000100325b00).ToList();
 
         Assert.Single(expectedPointer);
 

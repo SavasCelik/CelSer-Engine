@@ -24,4 +24,7 @@ public class Pointer : MemorySegment, IPointer
 
         return clone;
     }
+
+    public override bool Equals(object? obj) => obj is Pointer pointer && PointingTo == pointer.PointingTo && Address == pointer.PointingTo;
+    public override int GetHashCode() => HashCode.Combine(Address, PointingTo);
 }

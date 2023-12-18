@@ -92,7 +92,7 @@ public sealed class NativeApi : INativeApi
             numberOfBytesToRead,
             out _);
 
-        if (result != NTSTATUS.Success)
+        if (result != NTSTATUS.Success && result != NTSTATUS.STATUS_PARTIAL_COPY)
             throw new Exception("Failed reading memory");
     }
 
