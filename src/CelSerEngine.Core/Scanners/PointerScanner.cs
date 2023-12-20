@@ -18,7 +18,7 @@ public class PointerScanner
         _pointerSize = sizeof(long);
     }
 
-    public async Task<IList<Pointer2>> ScanForPointersAsync(PointerScanOptions pointerScanOptions)
+    public async Task<IList<Pointer>> ScanForPointersAsync(PointerScanOptions pointerScanOptions)
     {
         var result = await Task.Run(() =>
         {
@@ -47,7 +47,7 @@ public class PointerScanner
                     //pointerScan1.AddRange(clonedPointers);
                     foreach (var cPointer in clonedPointers)
                     {
-                        pointerScan1.Add(cPointer);
+                        pointerScan1.Add(new Pointer2(cPointer.Address, cPointer.PointingTo, cPointer.Offsets.ToArray()));
                     }
                 }
             }
@@ -96,16 +96,12 @@ public class PointerScanner
                         if (heapPointersByPointingTo.TryGetValue(newAddy, out var pointers))
                         {
                             var clonedPointers = pointers.Select(x => x.Clone()).ToList();
-                            var offsets = new List<IntPtr>(pointer.Offsets)
-                        {
-                            i
-                        };
-                            clonedPointers.ForEach(x => x.Offsets = new List<IntPtr>(offsets));
                             //pointerScan1.AddRange(clonedPointers);
                             foreach (var cPointer in clonedPointers)
                             {
-                                pointerScan1.Add(cPointer);
+                                pointerScan1.Add(new Pointer2(cPointer.Address, cPointer.PointingTo, cPointer.Offsets.ToArray()));
                             }
+
                             var countingFound = counter.TryGetValue(newAddy, out int count);
                             if (!staticPointersByAddress.ContainsKey(clonedPointers.First().Address) && countingFound && count >= 3)
                             {
