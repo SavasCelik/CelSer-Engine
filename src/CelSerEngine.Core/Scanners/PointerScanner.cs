@@ -96,6 +96,11 @@ public class PointerScanner
                         if (heapPointersByPointingTo.TryGetValue(newAddy, out var pointers))
                         {
                             var clonedPointers = pointers.Select(x => x.Clone()).ToList();
+                            var offsets = new List<IntPtr>(pointer.Offsets)
+                        {
+                            i
+                        };
+                            clonedPointers.ForEach(x => x.Offsets = new List<IntPtr>(offsets));
                             //pointerScan1.AddRange(clonedPointers);
                             foreach (var cPointer in clonedPointers)
                             {
