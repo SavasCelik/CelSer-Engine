@@ -80,8 +80,6 @@ public class PointerScanner
                         continue;
                     }
 
-                    //alreadyTracking.Add(pointer.Address);
-
                     var newAddy = IntPtr.Zero;
                     for (int i = 0; i < pointerScanOptions.MaxOffset; i += _pointerSize)
                     {
@@ -97,7 +95,7 @@ public class PointerScanner
                             clonedPointers.ForEach(x => x.Offsets = new List<IntPtr>(offsets));
                             pointerScan1.AddRange(clonedPointers);
                             var countingFound = counter.TryGetValue(newAddy, out int count);
-                            if (!staticPointersByAddress.ContainsKey(clonedPointers.First().Address) && countingFound && count >= 3)
+                            if (!staticPointersByAddress.ContainsKey(newAddy) && countingFound && count >= 3)
                             {
                                 heapPointersByPointingTo.Remove(newAddy);
                             }
