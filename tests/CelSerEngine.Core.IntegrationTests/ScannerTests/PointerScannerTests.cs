@@ -9,67 +9,87 @@ namespace CelSerEngine.Core.IntegrationTests.ScannerTests;
 
 public class PointerScannerTests
 {
-    [Fact]
-    public async Task PointerScanner_Should_Find_Pointer_With_Expected_Offsets()
+    private PointerScanner _pointerScanner;
+    private PointerScanOptions _scanOptions;
+    private string _expectedOffsets;
+    private Mock<INativeApi> _stubNativeApi;
+    private JsonSerializerOptions _jsonSerializerOptions;
+    private IntPtr _processHandle;
+    private int _processId;
+
+    public PointerScannerTests()
     {
-        var processId = 123;
-        var processHandle = new IntPtr(0x1337);
+        _processId = 123;
+        _processHandle = new IntPtr(0x1337);
         var searchedAddress = new IntPtr(0x1526B78);
-        var expectedOffsets = "10, 18, 0, 18";
         var moduleBaseAddress = new IntPtr(0x100000000);
         var moduleSize = (uint)0x344000;
+        _expectedOffsets = "10, 18, 0, 18";
 
         // first scan
-        var jsonOprions = new JsonSerializerOptions();
-        jsonOprions.Converters.Add(new IntPtrJsonConverter());
-        var stubVirtualMemoryRegions = 
+        _jsonSerializerOptions = new JsonSerializerOptions();
+        _jsonSerializerOptions.Converters.Add(new IntPtrJsonConverter());
+        var stubVirtualMemoryRegions =
             JsonSerializer.Deserialize<IList<VirtualMemoryRegion>>(
-                await File.ReadAllTextAsync("ScannerTests/PointerScannerData/VirtualMemoryRegions.json"),
-                jsonOprions)!;
+                File.ReadAllText("ScannerTests/PointerScannerData/VirtualMemoryRegions.json"),
+                _jsonSerializerOptions)!;
 
-        var stubNativeApi = new Mock<INativeApi>();
-        stubNativeApi
-            .Setup(x => x.GetProcessMainModule(processId))
+        _stubNativeApi = new Mock<INativeApi>();
+        _stubNativeApi
+            .Setup(x => x.GetProcessMainModule(_processId))
             .Returns(new ProcessModuleInfo("TestModule", moduleBaseAddress, moduleSize));
-        stubNativeApi
-            .Setup(x => x.GatherVirtualMemoryRegions(processHandle))
+        _stubNativeApi
+            .Setup(x => x.GatherVirtualMemoryRegions(_processHandle))
             .Returns(stubVirtualMemoryRegions);
-        stubNativeApi
-            .Setup(x => x.ReadVirtualMemory(processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
+        _stubNativeApi
+            .Setup(x => x.ReadVirtualMemory(_processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
             .Callback((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
             {
                 ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubVirtualMemoryRegions);
             });
 
-        var pointerScanner = new PointerScanner(stubNativeApi.Object);
-        var scanOptions = new PointerScanOptions()
+        _pointerScanner = new PointerScanner(_stubNativeApi.Object);
+        _scanOptions = new PointerScanOptions()
         {
-            ProcessId = processId,
-            ProcessHandle = processHandle,
+            ProcessId = _processId,
+            ProcessHandle = _processHandle,
             MaxLevel = 4,
             MaxOffset = 0x2000,
             SearchedAddress = searchedAddress
         };
+    }
 
-        var foundPointers = await pointerScanner.ScanForPointersAsync(scanOptions);
-        var expectedPointer = foundPointers.Where(x => x.OffsetsDisplayString == expectedOffsets).ToList();
+    [Fact]
+    public async Task PointerScanner_Should_Find_Pointer_With_Expected_Offsets()
+    {
+        var foundPointers = await _pointerScanner.ScanForPointersAsync(_scanOptions);
+        var expectedPointer = foundPointers.Where(x => x.OffsetsDisplayString == _expectedOffsets).ToList();
 
         Assert.Single(expectedPointer);
 
-        // Rescan
-        foundPointers = new List<Pointer>(expectedPointer);
+        await RescanPointerTest(foundPointers);
+    }
+
+    private async Task RescanPointerTest(IEnumerable<Pointer> firstScanPointers)
+    {
         var searchedAddressAfterRescan = new IntPtr(0x863AAE8);
-        stubVirtualMemoryRegions =
+        var stubVirtualMemoryRegions =
             JsonSerializer.Deserialize<IList<VirtualMemoryRegion>>(
                 await File.ReadAllTextAsync("ScannerTests/PointerScannerData/Rescan_VirtualMemoryRegions.json"),
-                jsonOprions)!;
+                _jsonSerializerOptions)!;
 
-        stubNativeApi
-            .Setup(x => x.GatherVirtualMemoryRegions(processHandle))
+        _stubNativeApi
+            .Setup(x => x.GatherVirtualMemoryRegions(_processHandle))
             .Returns(stubVirtualMemoryRegions);
+        _stubNativeApi
+            .Setup(x => x.ReadVirtualMemory(_processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
+            .Callback((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
+            {
+                ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubVirtualMemoryRegions);
+            });
 
-        var foundPointersAfterRescan = await pointerScanner.RescanPointersAsync(foundPointers, processId, processHandle, searchedAddressAfterRescan);
-        var expectedPointerAfterRescan = foundPointersAfterRescan.Where(x => x.OffsetsDisplayString == expectedOffsets).ToList();
+        var foundPointersAfterRescan = await _pointerScanner.RescanPointersAsync(firstScanPointers, _processId, _processHandle, searchedAddressAfterRescan);
+        var expectedPointerAfterRescan = foundPointersAfterRescan.Where(x => x.OffsetsDisplayString == _expectedOffsets).ToList();
 
         Assert.Single(expectedPointerAfterRescan);
     }
