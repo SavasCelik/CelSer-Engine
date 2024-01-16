@@ -37,8 +37,8 @@ public partial class PointerScanOptionsViewModel : ObservableRecipient
             MaxLevel = MaxLevel,
             MaxOffset = MaxOffset,
         };
-        await _pointerScanResultsViewModel.StartPointerScanAsync(pointerScanOptions);
         _pointerScanResultsViewModel.ShowPointerScanResultsDialog();
+        await _pointerScanResultsViewModel.StartPointerScanAsync(pointerScanOptions);
     }
 
     public bool ShowPointerScanDialog(string pointerScanAddress = "")

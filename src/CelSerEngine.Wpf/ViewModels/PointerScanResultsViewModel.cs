@@ -11,13 +11,16 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
 public partial class PointerScanResultsViewModel : ObservableRecipient
 {
     [ObservableProperty]
-    public IList<Pointer> _foundPointers;
+    private IList<Pointer> _foundPointers;
+    [ObservableProperty]
+    private Visibility _progressBarGridVisibility;
     private readonly PointerScanner _pointerScanner;
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly IMemoryScanService _memoryScanService;
@@ -39,6 +42,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         pointerScanOptions.ProcessHandle = selectedProcess.GetProcessHandle(_nativeApi); ;
         var foundPointers = await _pointerScanner.ScanForPointersAsync(pointerScanOptions);
         FoundPointers = foundPointers;
+        ProgressBarGridVisibility = Visibility.Collapsed;
     }
 
     [RelayCommand]
