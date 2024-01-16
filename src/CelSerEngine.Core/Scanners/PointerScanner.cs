@@ -26,15 +26,15 @@ public class PointerScanner
         _pathCounter = new Dictionary<IntPtr, int>();
     }
 
-    public async Task<IList<Pointer>> ScanForPointersAsync(PointerScanOptions pointerScanOptions)
+    public async Task<IList<Pointer>> ScanForPointersAsync(PointerScanOptions pointerScanOptions, CancellationToken token = default)
     {
-        var result = await Task.Run(() => ScanPointers(pointerScanOptions, useParallel: false)).ConfigureAwait(false);
+        var result = await Task.Run(() => ScanPointers(pointerScanOptions, token, useParallel: false)).ConfigureAwait(false);
         return result;
     }
 
-    public async Task<IList<Pointer>> ScanForPointersParallelAsync(PointerScanOptions pointerScanOptions)
+    public async Task<IList<Pointer>> ScanForPointersParallelAsync(PointerScanOptions pointerScanOptions, CancellationToken token = default)
     {
-        var result = await Task.Run(() => ScanPointers(pointerScanOptions, useParallel: true)).ConfigureAwait(false);
+        var result = await Task.Run(() => ScanPointers(pointerScanOptions, token, useParallel: true)).ConfigureAwait(false);
         return result;
     }
 
@@ -73,13 +73,18 @@ public class PointerScanner
         _pathCounter = new ConcurrentDictionary<IntPtr, int>();
     }
 
-    private IList<Pointer> ScanPointers(PointerScanOptions pointerScanOptions, bool useParallel)
+    private IList<Pointer> ScanPointers(PointerScanOptions pointerScanOptions, CancellationToken token, bool useParallel)
     {
         SetupPointerScan(pointerScanOptions);
         var pointerWithStaticPointerPaths = new List<Pointer>();
 
         for (var currentLevel = 0; currentLevel < pointerScanOptions.MaxLevel; currentLevel++)
         {
+            if (token.IsCancellationRequested)
+            {
+                break;
+            }
+
             var pointerList = _pointerList.OrderBy(x => x.Offsets.Last()).ToArray();
             _pointerList.Clear();
 
