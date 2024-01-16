@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -25,6 +26,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
     private readonly SelectProcessViewModel _selectProcessViewModel;
     private readonly IMemoryScanService _memoryScanService;
     private readonly INativeApi _nativeApi;
+    private CancellationTokenSource? _currentCts;
 
     public PointerScanResultsViewModel(SelectProcessViewModel selectProcessViewModel, IMemoryScanService memoryScanService, INativeApi nativeApi)
     {
@@ -39,10 +41,12 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
     {
         var selectedProcess = _selectProcessViewModel.SelectedProcess!;
         pointerScanOptions.ProcessId = selectedProcess.Process.Id;
-        pointerScanOptions.ProcessHandle = selectedProcess.GetProcessHandle(_nativeApi); ;
-        var foundPointers = await _pointerScanner.ScanForPointersAsync(pointerScanOptions);
+        pointerScanOptions.ProcessHandle = selectedProcess.GetProcessHandle(_nativeApi);
+        _currentCts = new CancellationTokenSource();
+        var foundPointers = await _pointerScanner.ScanForPointersAsync(pointerScanOptions, _currentCts.Token);
         FoundPointers = foundPointers;
         ProgressBarGridVisibility = Visibility.Collapsed;
+        _currentCts = null;
     }
 
     [RelayCommand]
@@ -70,9 +74,20 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         App.Current.Services.GetRequiredService<TrackedScanItemsViewModel>().TrackedScanItems.Add(new TrackedItem(observablePointer));
     }
 
+    [RelayCommand]
+    private void CancelScan()
+    {
+        _currentCts?.Cancel();
+    }
+
     public void ShowPointerScanResultsDialog()
     {
-        var selectProcessWidnwow = new PointerScanResults();
-        selectProcessWidnwow.Show();
+        var pointerScanResultsWidnwow = new PointerScanResults();
+        pointerScanResultsWidnwow.Show();
+        pointerScanResultsWidnwow.Closed += delegate 
+        {
+            FoundPointers = new List<Pointer>();
+            ProgressBarGridVisibility = Visibility.Visible;
+        };
     }
 }
