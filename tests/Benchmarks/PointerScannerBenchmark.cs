@@ -56,6 +56,7 @@ public class PointerScannerBenchmark
         };
     }
 
+    //TODO: sometime the foundPointers finds more elements, this makes no sense since we use a snapshot of the memory
     [Benchmark(Baseline = true)]
     public async Task FindPointer()
     {
