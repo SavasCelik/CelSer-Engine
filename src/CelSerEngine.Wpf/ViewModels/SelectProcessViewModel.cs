@@ -20,7 +20,7 @@ public partial class SelectProcessViewModel : ObservableRecipient
     [ObservableProperty]
     private string _selectedProcessDisplayString;
 
-    private const string NoProcessSelected = "- No process selected -";
+    private const string NoProcessSelected = "- No Process Selected -";
     private IList<ProcessAdapter> _allProcesses;
     private readonly INativeApi _nativeApi;
 
