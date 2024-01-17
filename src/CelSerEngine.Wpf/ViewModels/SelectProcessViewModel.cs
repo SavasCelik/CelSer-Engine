@@ -17,16 +17,25 @@ public partial class SelectProcessViewModel : ObservableRecipient
     private ProcessAdapter? _selectedProcess;
     [ObservableProperty]
     private string _searchProcessText;
+    [ObservableProperty]
+    private string _selectedProcessDisplayString;
 
+    private const string NoProcessSelected = "- No Process Selected -";
     private IList<ProcessAdapter> _allProcesses;
     private readonly INativeApi _nativeApi;
 
     public SelectProcessViewModel(INativeApi nativeApi)
     {
         _searchProcessText = "";
+        _selectedProcessDisplayString = NoProcessSelected;
         _allProcesses = new List<ProcessAdapter>();
         _processes = _allProcesses;
         _nativeApi = nativeApi;
+    }
+
+    partial void OnSelectedProcessChanged(ProcessAdapter? value)
+    {
+        SelectedProcessDisplayString = value == null ? NoProcessSelected : value.DisplayString;
     }
 
     partial void OnSearchProcessTextChanged(string value)

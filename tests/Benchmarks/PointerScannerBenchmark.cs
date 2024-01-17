@@ -39,10 +39,10 @@ public class PointerScannerBenchmark
             .Setup(x => x.GatherVirtualMemoryRegions(processHandle))
             .Returns(stubVirtualMemoryRegions);
         stubNativeApi
-            .Setup(x => x.ReadVirtualMemory(processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
-            .Callback((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
+            .Setup(x => x.TryReadVirtualMemory(processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
+            .Returns((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
             {
-                ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubVirtualMemoryRegions);
+                return ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubVirtualMemoryRegions);
             });
 
         _pointerScanner = new PointerScanner(stubNativeApi.Object);
@@ -56,6 +56,7 @@ public class PointerScannerBenchmark
         };
     }
 
+    //TODO: sometime the foundPointers finds more elements, this makes no sense since we use a snapshot of the memory
     [Benchmark(Baseline = true)]
     public async Task FindPointer()
     {
@@ -79,7 +80,7 @@ public class PointerScannerBenchmark
         var foundPointers = await _pointerScanner.ScanForPointersParallelAsync(_scanOptions);
         var expectedPointer = foundPointers.Where(x => x.OffsetsDisplayString == ExpectedOffsets).ToList();
     }
-    private void ReadVirtualMemoryImpl(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<VirtualMemoryRegion> virtualMemoryRegions)
+    private bool ReadVirtualMemoryImpl(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<VirtualMemoryRegion> virtualMemoryRegions)
     {
         var foundRegions = virtualMemoryRegions
             .Where(x => (x.BaseAddress + (long)x.RegionSize) >= address
@@ -88,10 +89,12 @@ public class PointerScannerBenchmark
             .ToList();
 
         if (foundRegions.Count == 0)
-            return;
+            return false;
 
         var region = foundRegions.Single();
         var offset = address - region.BaseAddress;
         Array.Copy(region.Bytes, offset.ToInt32(), buffer, 0, (int)numberOfBytesToRead);
+
+        return true;
     }
 }

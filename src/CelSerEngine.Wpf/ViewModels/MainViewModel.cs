@@ -31,7 +31,7 @@ public partial class MainViewModel : ObservableRecipient
     private float _progressBarValue;
 
     private const string WindowTitleBase = "CelSer Engine";
-    private readonly SelectProcessViewModel _selectProcessViewModel;
+    public SelectProcessViewModel SelectProcessViewModel { get; }
     private readonly ScanResultsViewModel _scanResultsViewModel;
     private readonly IMemoryScanService _memoryScanService;
     private readonly ScriptOverviewViewModel _scriptOverviewViewModel;
@@ -41,7 +41,7 @@ public partial class MainViewModel : ObservableRecipient
 
     public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService, ScriptOverviewViewModel scriptOverviewViewModel)
     {
-        _selectProcessViewModel = selectProcessViewModel;
+        SelectProcessViewModel = selectProcessViewModel;
         _scanResultsViewModel = scanResultsViewModel;
         _memoryScanService = memoryScanService;
         _scriptOverviewViewModel = scriptOverviewViewModel;
@@ -56,7 +56,7 @@ public partial class MainViewModel : ObservableRecipient
         {
             ProgressBarValue = newValue;
         });
-        _selectProcessViewModel.AttachToDebugGame();
+        SelectProcessViewModel.AttachToDebugGame();
     }
 
     private void HideFirstScanBtn()
@@ -80,7 +80,7 @@ public partial class MainViewModel : ObservableRecipient
         HideFirstScanBtn();
         Scanning = true;
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
-        var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
+        var processHandle = SelectProcessViewModel.GetSelectedProcessHandle();
         var foundItems = await _memoryScanService.ScanProcessMemoryAsync(scanConstraint, processHandle, _progressBarUpdater);
         AddFoundItems(foundItems);
         _progressBarUpdater.Report(0);
@@ -94,7 +94,7 @@ public partial class MainViewModel : ObservableRecipient
             return;
 
         Scanning = true;
-        var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
+        var processHandle = SelectProcessViewModel.GetSelectedProcessHandle();
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
         var allItems = _scanResultsViewModel.AllScanItems;
         var foundItems = await _memoryScanService.FilterMemorySegmentsByScanConstraintAsync(allItems, scanConstraint, processHandle, _progressBarUpdater);
@@ -122,9 +122,9 @@ public partial class MainViewModel : ObservableRecipient
     [RelayCommand]
     public void OpenSelectProcessWindow()
     {
-        if (_selectProcessViewModel.ShowSelectProcessDialog())
+        if (SelectProcessViewModel.ShowSelectProcessDialog())
         {
-            var processHandle = _selectProcessViewModel.GetSelectedProcessHandle();
+            var processHandle = SelectProcessViewModel.GetSelectedProcessHandle();
             Debug.WriteLine($"Opening Process {processHandle:X} was successful");
         }
     }
