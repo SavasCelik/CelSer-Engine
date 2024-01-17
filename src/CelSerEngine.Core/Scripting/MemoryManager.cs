@@ -34,7 +34,10 @@ public class MemoryManager
     {
         var memoryAddressIntPtr = new IntPtr(memoryAddress); 
         var typeSize = Marshal.SizeOf(typeof(T));
-        var bytes = _nativeApi.ReadVirtualMemory(_processHandle, memoryAddressIntPtr, (uint)typeSize);
+
+        if (_nativeApi.TryReadVirtualMemory(_processHandle, memoryAddressIntPtr, (uint)typeSize, out var bytes))
+            return default;
+        
         IntPtr ptr = Marshal.AllocHGlobal(typeSize);
         Marshal.Copy(bytes, 0, ptr, bytes.Length);
         var result = Marshal.PtrToStructure<T>(ptr);

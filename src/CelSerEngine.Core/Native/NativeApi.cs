@@ -74,16 +74,14 @@ public sealed class NativeApi : INativeApi
 
         return new ProcessModuleInfo(moduleEntry.szModule, moduleEntry.modBaseAddr, moduleEntry.modBaseSize);
     }
-    
-    public byte[] ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead)
-    {
-        var buffer = new byte[numberOfBytesToRead];
-        ReadVirtualMemory(hProcess, address, numberOfBytesToRead, buffer);
 
-        return buffer;
+    public bool TryReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, out byte[] buffer)
+    {
+        buffer = new byte[numberOfBytesToRead];
+        return TryReadVirtualMemory(hProcess, address, numberOfBytesToRead, buffer);
     }
-    
-    public void ReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer)
+
+    public bool TryReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer)
     {
         var result = NtReadVirtualMemory(
             hProcess,
@@ -92,8 +90,7 @@ public sealed class NativeApi : INativeApi
             numberOfBytesToRead,
             out _);
 
-        if (result != NTSTATUS.Success)
-            throw new Exception("Failed reading memory");
+        return result == NTSTATUS.Success;
     }
 
     public void WriteMemory(IntPtr hProcess, IMemorySegment trackedScanItem, string newValue)
@@ -173,8 +170,8 @@ public sealed class NativeApi : INativeApi
 
         var typeSize = memorySegment.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
-        ReadVirtualMemory(hProcess, memorySegment.Address, (uint)typeSize, buffer);
-        memorySegment.Value = buffer.ConvertToString(memorySegment.ScanDataType);
+        var successful = TryReadVirtualMemory(hProcess, memorySegment.Address, (uint)typeSize, buffer);
+        memorySegment.Value = successful ? buffer.ConvertToString(memorySegment.ScanDataType) : "???";
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
@@ -225,15 +222,15 @@ public sealed class NativeApi : INativeApi
         
         var typeSize = pointerAddress.ScanDataType.GetPrimitiveSize();
         var buffer = _byteArrayPool.Rent(typeSize);
-        ReadVirtualMemory(hProcess, pointerAddress.PointingTo, (uint)typeSize, buffer);
-        pointerAddress.Value = buffer.ConvertToString(pointerAddress.ScanDataType);
+        var successful = TryReadVirtualMemory(hProcess, pointerAddress.PointingTo, (uint)typeSize, buffer);
+        pointerAddress.Value = successful ? buffer.ConvertToString(pointerAddress.ScanDataType) : "???";
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
     public void ResolvePointerPath(IntPtr hProcess, IPointer pointerAddress)
     {
         var buffer = _byteArrayPool.Rent(sizeof(long));
-        ReadVirtualMemory(hProcess, pointerAddress.Address, sizeof(long), buffer);
+        TryReadVirtualMemory(hProcess, pointerAddress.Address, sizeof(long), buffer);
         pointerAddress.PointingTo = (IntPtr)BitConverter.ToInt64(buffer);
 
         for (var i = pointerAddress.Offsets.Count - 1; i >= 0; i--)
@@ -246,7 +243,7 @@ public sealed class NativeApi : INativeApi
                 break;
             }
 
-            ReadVirtualMemory(hProcess, pointerAddress.PointingTo + offset, sizeof(long), buffer);
+            TryReadVirtualMemory(hProcess, pointerAddress.PointingTo + offset, sizeof(long), buffer);
             pointerAddress.PointingTo = (IntPtr)BitConverter.ToInt64(buffer);
         }
 
@@ -290,9 +287,11 @@ public sealed class NativeApi : INativeApi
             {
                 //VirtualProtectEx(pHandle, new IntPtr((long)mem_basic_info.BaseAddress), new UIntPtr(mem_basic_info.RegionSize), 0x40, out var prt);
                 memoryBasicInfos.Add(mem_basic_info);
-                var memoryBytes = ReadVirtualMemory(hProcess, (IntPtr)mem_basic_info.BaseAddress, (uint)mem_basic_info.RegionSize);
-                var virtualMemoryRegion = new VirtualMemoryRegion((IntPtr)mem_basic_info.BaseAddress, mem_basic_info.RegionSize, memoryBytes);
-                virtualMemoryRegions.Add(virtualMemoryRegion);
+                if (TryReadVirtualMemory(hProcess, (IntPtr)mem_basic_info.BaseAddress, (uint)mem_basic_info.RegionSize, out var memoryBytes))
+                {
+                    var virtualMemoryRegion = new VirtualMemoryRegion((IntPtr)mem_basic_info.BaseAddress, mem_basic_info.RegionSize, memoryBytes);
+                    virtualMemoryRegions.Add(virtualMemoryRegion);
+                }
             }
 
             // move to the next memory chunk

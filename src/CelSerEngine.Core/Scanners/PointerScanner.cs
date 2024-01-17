@@ -225,7 +225,9 @@ public class PointerScanner
 
         for (var currentSize = 0; currentSize < mainModule.Size; currentSize += _pointerSize)
         {
-            _nativeApi.ReadVirtualMemory(processHandle, mainModule.BaseAddress + currentSize, (uint)_pointerSize, buffer);
+            if (!_nativeApi.TryReadVirtualMemory(processHandle, mainModule.BaseAddress + currentSize, (uint)_pointerSize, buffer))
+                continue;
+
             var foundAddress = BitConverter.ToInt64(buffer);
 
             if (foundAddress == 0)

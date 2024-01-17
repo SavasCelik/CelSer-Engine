@@ -97,16 +97,16 @@ public class PointerScannerTests
             .Setup(x => x.GatherVirtualMemoryRegions(_processHandle))
             .Returns(stubVirtualMemoryRegions);
         stubNativeApi
-            .Setup(x => x.ReadVirtualMemory(_processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
-            .Callback((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
+            .Setup(x => x.TryReadVirtualMemory(_processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
+            .Returns((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
             {
-                ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubVirtualMemoryRegions);
+                return ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubVirtualMemoryRegions);
             });
 
         return stubNativeApi;
     }
 
-    private void ReadVirtualMemoryImpl(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<VirtualMemoryRegion> virtualMemoryRegions)
+    private bool ReadVirtualMemoryImpl(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<VirtualMemoryRegion> virtualMemoryRegions)
     {
         var foundRegions = virtualMemoryRegions
             .Where(x => (x.BaseAddress + (long)x.RegionSize) >= address
@@ -115,10 +115,11 @@ public class PointerScannerTests
             .ToList();
 
         if (foundRegions.Count == 0)
-            return;
+            return false;
 
         var region = foundRegions.Single();
         var offset = address - region.BaseAddress;
         Array.Copy(region.Bytes, offset.ToInt32(), buffer, 0, (int)numberOfBytesToRead);
+        return true;
     }
 }
