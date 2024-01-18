@@ -3,7 +3,6 @@ using Xunit;
 
 namespace CelSerEngine.Core.UnitTests.Extensions;
 
-
 public class StringExtensionTests
 {
     [Theory]
