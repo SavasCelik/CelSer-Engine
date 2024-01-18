@@ -53,6 +53,58 @@ public class StringExtensionTests
         Assert.Throws<FormatException>(() => input.ParseNumber<double>());
     }
 
+    [Theory]
+    [MemberData(nameof(Short_TestData))]
+    public void TryParseNumber_Short_ValidInput_ReturnsParsedValue(string input, short expected)
+    {
+        var successful = input.TryParseNumber<short>(out var result);
+        Assert.True(successful);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [MemberData(nameof(Int_TestData))]
+    public void TryParseNumber_Int_ValidInput_ReturnsParsedValue(string input, int expected)
+    {
+        var successful = input.TryParseNumber<int>(out var result);
+        Assert.True(successful);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [MemberData(nameof(Long_TestData))]
+    public void TryParseNumber_Long_ValidInput_ReturnsParsedValue(string input, long expected)
+    {
+        var successful = input.TryParseNumber<long>(out var result);
+        Assert.True(successful);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [MemberData(nameof(Float_TestData))]
+    public void TryParseNumber_Float_ValidInput_ReturnsParsedValue(string input, float expected)
+    {
+        var successful = input.TryParseNumber<float>(out var result);
+        Assert.True(successful);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [MemberData(nameof(Double_TestData))]
+    public void TryParseNumber_Double_ValidInput_ReturnsParsedValue(string input, double expected)
+    {
+        var successful = input.TryParseNumber<double>(out var result);
+        Assert.True(successful);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [MemberData(nameof(Invalid_TestData))]
+    public void TryParseNumber_InvalidInput_ThrowsFormatException(string input)
+    {
+        Assert.False(input.TryParseNumber<double>(out _));
+    }
+
     public static IEnumerable<object[]> Short_TestData()
     {
         yield return new object[] { "123", (short)123 };
