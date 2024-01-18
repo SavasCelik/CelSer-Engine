@@ -100,7 +100,7 @@ public class StringExtensionTests
 
     [Theory]
     [MemberData(nameof(Invalid_TestData))]
-    public void TryParseNumber_InvalidInput_ThrowsFormatException(string input)
+    public void TryParseNumber_InvalidInput_ReturnsFalse(string input)
     {
         Assert.False(input.TryParseNumber<double>(out _));
     }
