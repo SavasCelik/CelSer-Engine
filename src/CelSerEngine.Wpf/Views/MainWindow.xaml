@@ -129,6 +129,15 @@
                 Content="Next Scan"
                 IsDefault="{Binding FirstScanDone}"
                 IsEnabled="{Binding FirstScanDone}" />
+            <Button
+                Width="88"
+                Height="26"
+                Margin="0,0,153,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Command="{Binding CancelScanCommand}"
+                Content="Cancel"
+                Visibility="{Binding CancelScanVisibility}" />
             <Label
                 x:Name="lblValue"
                 Width="41"

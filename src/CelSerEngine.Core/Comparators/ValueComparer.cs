@@ -51,12 +51,17 @@ public class ValueComparer : IScanComparer
         };
     }
 
-    public IList<IMemorySegment> GetMatchingMemorySegments(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float>? progressBarUpdater = null)
+    public IList<IMemorySegment> GetMatchingMemorySegments(IList<VirtualMemoryRegion> virtualMemoryRegions,
+                                                           IProgress<float>? progressBarUpdater = null,
+                                                           CancellationToken token = default)
     {
         var matchingProcessMemories = new List<IMemorySegment>();
 
         foreach (var virtualMemoryRegion in virtualMemoryRegions)
         {
+            if (token.IsCancellationRequested)
+                break;
+
             var regionBytesAsSpan = virtualMemoryRegion.Bytes.AsSpan();
 
             for (var i = 0; i < (int)virtualMemoryRegion.RegionSize; i += _sizeOfT)

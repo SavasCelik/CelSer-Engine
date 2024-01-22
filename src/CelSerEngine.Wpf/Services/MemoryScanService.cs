@@ -3,6 +3,7 @@ using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CelSerEngine.Wpf.Services;
@@ -18,13 +19,14 @@ public class MemoryScanService : IMemoryScanService
     public async Task<IList<IMemorySegment>> ScanProcessMemoryAsync(
         ScanConstraint scanConstraint,
         IntPtr processHandle,
-        IProgress<float> progressUpdater)
+        IProgress<float> progressUpdater,
+        CancellationToken token = default)
     {
         var matchingMemories = await Task.Run(() =>
         {
             var virtualMemoryRegions = _nativeApi.GatherVirtualMemoryRegions(processHandle);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, progressUpdater);
+            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, progressUpdater, token);
         }).ConfigureAwait(false);
 
         return matchingMemories;
@@ -34,16 +36,21 @@ public class MemoryScanService : IMemoryScanService
         IList<IMemorySegment> memorySegments,
         ScanConstraint scanConstraint,
         IntPtr processHandle,
-        IProgress<float> progressUpdater)
+        IProgress<float> progressUpdater,
+        CancellationToken token = default)
     {
         // TODO: this has to be better in performance try benchmarking linkedlist and using vectorcomparer
         var filteredMemorySegments = await Task.Run(() =>
         {
-            _nativeApi.UpdateAddresses(processHandle, memorySegments);
+            _nativeApi.UpdateAddresses(processHandle, memorySegments, token);
+
             var passedMemorySegments = new List<IMemorySegment>();
 
             for (var i = 0; i < memorySegments.Count; i++)
             {
+                if (token.IsCancellationRequested)
+                    break;
+
                 if (ValueComparer.MeetsTheScanConstraint(memorySegments[i].Value, scanConstraint.UserInput, scanConstraint))
                     passedMemorySegments.Add(memorySegments[i]);
             }
