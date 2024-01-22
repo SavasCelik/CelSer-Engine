@@ -28,12 +28,17 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
         };
     }
 
-    public IList<IMemorySegment> GetMatchingMemorySegments(IList<VirtualMemoryRegion> virtualMemoryRegions, IProgress<float>? progressBarUpdater = null)
+    public IList<IMemorySegment> GetMatchingMemorySegments(IList<VirtualMemoryRegion> virtualMemoryRegions,
+                                                           IProgress<float>? progressBarUpdater = null,
+                                                           CancellationToken token = default)
     {
         var matchingProcessMemories = new List<IMemorySegment>();
 
         for (var regionIndex = 0; regionIndex < virtualMemoryRegions.Count; regionIndex++)
         {
+            if (token.IsCancellationRequested)
+                break;
+
             var virtualMemoryRegion = virtualMemoryRegions[regionIndex];
             var foundMatchingSegments = FindMatchingMemorySegmentsInRegion(virtualMemoryRegion);
             matchingProcessMemories.AddRange(foundMatchingSegments);

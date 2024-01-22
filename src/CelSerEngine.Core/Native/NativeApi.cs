@@ -146,10 +146,13 @@ public sealed class NativeApi : INativeApi
         _byteArrayPool.Return(bytesToWrite);
     }
 
-    public void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses)
+    public void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses, CancellationToken token = default)
     {
         foreach (var address in virtualAddresses)
         {
+            if (token.IsCancellationRequested)
+                break;
+
             if (address == null)
                 continue;
 

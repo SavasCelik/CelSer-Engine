@@ -12,5 +12,5 @@ public interface INativeApi
     public void WriteMemory(IntPtr hProcess, IMemorySegment trackedScanItem, string newValue);
     public void WriteMemory<T>(IntPtr hProcess, IntPtr memoryAddress, T newValue) where T : struct;
     public IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(IntPtr hProcess);
-    public void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses);
+    public void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses, CancellationToken token = default);
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Wpf.Services;
+using System.Threading;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
@@ -21,6 +22,8 @@ public partial class MainViewModel : ObservableRecipient
     private Visibility _firstScanVisibility;
     [ObservableProperty]
     private Visibility _newScanVisibility;
+    [ObservableProperty]
+    private Visibility _cancelScanVisibility;
     [ObservableProperty]
     private string _foundItemsDisplayString;
     [ObservableProperty]
@@ -36,6 +39,7 @@ public partial class MainViewModel : ObservableRecipient
     private readonly IMemoryScanService _memoryScanService;
     private readonly ScriptOverviewViewModel _scriptOverviewViewModel;
     private readonly IProgress<float> _progressBarUpdater;
+    private CancellationTokenSource? _scanCts;
     public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
     public bool Scanning { get; set; }
 
@@ -48,6 +52,7 @@ public partial class MainViewModel : ObservableRecipient
         _windowTitle = WindowTitleBase;
         _firstScanVisibility = Visibility.Visible;
         _newScanVisibility = Visibility.Hidden;
+        _cancelScanVisibility = Visibility.Hidden;
         _foundItemsDisplayString = $"Found: 0";
         _selectedScanDataType = ScanDataType.Integer;
         _selectedScanCompareType = ScanCompareType.ExactValue;
@@ -79,11 +84,15 @@ public partial class MainViewModel : ObservableRecipient
 
         HideFirstScanBtn();
         Scanning = true;
+        _scanCts = new CancellationTokenSource();
+        CancelScanVisibility = Visibility.Visible;
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
         var processHandle = SelectProcessViewModel.GetSelectedProcessHandle();
-        var foundItems = await _memoryScanService.ScanProcessMemoryAsync(scanConstraint, processHandle, _progressBarUpdater);
+        var foundItems = await _memoryScanService.ScanProcessMemoryAsync(scanConstraint, processHandle, _progressBarUpdater, _scanCts.Token);
         AddFoundItems(foundItems);
         _progressBarUpdater.Report(0);
+        CancelScanVisibility = Visibility.Hidden;
+        _scanCts = null;
         Scanning = false;
     }
 
@@ -97,8 +106,12 @@ public partial class MainViewModel : ObservableRecipient
         var processHandle = SelectProcessViewModel.GetSelectedProcessHandle();
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
         var allItems = _scanResultsViewModel.AllScanItems;
-        var foundItems = await _memoryScanService.FilterMemorySegmentsByScanConstraintAsync(allItems, scanConstraint, processHandle, _progressBarUpdater);
+        _scanCts = new CancellationTokenSource();
+        CancelScanVisibility = Visibility.Visible;
+        var foundItems = await _memoryScanService.FilterMemorySegmentsByScanConstraintAsync(allItems, scanConstraint, processHandle, _progressBarUpdater, _scanCts.Token);
         AddFoundItems(foundItems);
+        CancelScanVisibility = Visibility.Hidden;
+        _scanCts = null;
         Scanning = false;
     }
 
@@ -127,6 +140,12 @@ public partial class MainViewModel : ObservableRecipient
             var processHandle = SelectProcessViewModel.GetSelectedProcessHandle();
             Debug.WriteLine($"Opening Process {processHandle:X} was successful");
         }
+    }
+
+    [RelayCommand]
+    private void CancelScan()
+    {
+        _scanCts?.Cancel();
     }
 
     /// <summary>
