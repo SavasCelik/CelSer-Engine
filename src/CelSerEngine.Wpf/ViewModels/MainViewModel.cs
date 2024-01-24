@@ -77,7 +77,7 @@ public partial class MainViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    public async Task FirstScan(string userInput)
+    private async Task FirstScan(string userInput)
     {
         if (string.IsNullOrWhiteSpace(userInput))
             return;
@@ -97,7 +97,7 @@ public partial class MainViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    public async Task NextScan(string userInput)
+    private async Task NextScan(string userInput)
     {
         if (string.IsNullOrWhiteSpace(userInput))
             return;
@@ -123,7 +123,7 @@ public partial class MainViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    public void NewScan()
+    private void NewScan()
     {
         ShowFirstScanBtn();
         var emptyList = new List<IMemorySegment>();
@@ -133,7 +133,7 @@ public partial class MainViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    public void OpenSelectProcessWindow()
+    private void OpenSelectProcessWindow()
     {
         if (SelectProcessViewModel.ShowSelectProcessDialog())
         {
