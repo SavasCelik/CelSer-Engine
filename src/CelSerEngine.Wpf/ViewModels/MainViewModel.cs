@@ -9,6 +9,8 @@ using System.Windows;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Wpf.Services;
 using System.Threading;
+using System.Runtime.InteropServices;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
@@ -43,6 +45,11 @@ public partial class MainViewModel : ObservableRecipient
     public bool FirstScanDone => FirstScanVisibility == Visibility.Hidden;
     public bool Scanning { get; set; }
 
+    private const string DllFilePath = @"D:\C#_Projekte\CelSerEngine\x64\Debug\CelSerEngine.NativeDLL.dll";
+
+    [DllImport(DllFilePath, CallingConvention = CallingConvention.Cdecl)]
+    private extern static int test(CPointer[] pointerList, int number);
+
     public MainViewModel(SelectProcessViewModel selectProcessViewModel, ScanResultsViewModel scanResultsViewModel, IMemoryScanService memoryScanService, ScriptOverviewViewModel scriptOverviewViewModel)
     {
         SelectProcessViewModel = selectProcessViewModel;
@@ -62,6 +69,17 @@ public partial class MainViewModel : ObservableRecipient
             ProgressBarValue = newValue;
         });
         SelectProcessViewModel.AttachToDebugGame();
+        var list2 = new List<CPointer>()
+        {
+            new() { Offsets = 99 }
+        };
+        var aa = test(list2.ToArray(), 10);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CPointer
+    {
+        public int Offsets;
     }
 
     private void HideFirstScanBtn()

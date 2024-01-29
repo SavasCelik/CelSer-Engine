@@ -85,7 +85,7 @@ public class PointerScanner
                 break;
             }
 
-            var pointerList = _pointerList.OrderBy(x => x.Offsets.Last()).ToArray();
+            var pointerList = _pointerList.OrderBy(x => x.Offsets).ToArray();
             _pointerList.Clear();
 
             if (useParallel)
