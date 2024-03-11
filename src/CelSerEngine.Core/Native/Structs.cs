@@ -39,7 +39,7 @@ internal static class Structs
         public ulong RegionSize;
         public uint State;
         public uint Protect;
-        public uint Type;
+        public IntPtr Type;
         public uint __alignment2;
     }
 
@@ -69,5 +69,29 @@ internal static class Structs
         public string szModule;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
         public string szExePath;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct THREADENTRY32
+    {
+        public uint dwSize;
+        public uint cntUsage;
+        public uint th32ThreadID;
+        public uint th32OwnerProcessID;
+        public int tpBasePri;
+        public int tpDeltaPri;
+        public uint dwFlags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct THREAD_BASIC_INFORMATION
+    {
+        public IntPtr ExitStatus;
+        public IntPtr TebBaseAddress;
+        public IntPtr UniqueProcessId;
+        public IntPtr UniqueThreadId;
+        public IntPtr AffinityMask;
+        public int Priority;
+        public int BasePriority;
     }
 }

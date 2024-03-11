@@ -1,5 +1,7 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
 using static CelSerEngine.Core.Native.Enums;
+using static CelSerEngine.Core.Native.NativeApi;
 using static CelSerEngine.Core.Native.Structs;
 
 namespace CelSerEngine.Core.Native;
@@ -39,4 +41,39 @@ internal static class Functions
         int MemoryInformationLength,
         out uint ReturnLength
     );
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION64 lpBuffer, uint dwLength);
+
+    [DllImport("psapi.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, int nSize);
+
+    [DllImport("psapi.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, uint cb);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    [DllImport("psapi.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr lphModule, uint cb, [MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool Thread32First(IntPtr hSnapshot, ref THREADENTRY32 lpte);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool Thread32Next(IntPtr hSnapshot, ref THREADENTRY32 lpte);
+
+    [DllImport("kernel32.dll")]
+    public static extern uint GetProcessId(IntPtr hProcess);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwThreadId);
+
+    [DllImport("ntdll.dll")]
+    public static extern NTSTATUS NtQueryInformationThread(IntPtr threadHandle, ThreadInfoClass threadInformationClass, ref THREAD_BASIC_INFORMATION threadInformation, int threadInformationLength, out uint returnLength);
 }
