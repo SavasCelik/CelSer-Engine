@@ -304,4 +304,42 @@ public sealed class NativeApi : INativeApi
 
         return virtualMemoryRegions;
     }
+
+    public IEnumerable<ModuleInfo> GetProcessModules(IntPtr hProcess)
+    {
+        // https://github.com/microsoft/clrmd/blob/main/src/Microsoft.Diagnostics.Runtime/DataReaders/Windows/WindowsProcessDataReader.cs#L138
+        EnumProcessModules(hProcess, null, 0, out uint needed);
+        var moduleHandles = new IntPtr[needed / IntPtr.Size];
+
+        if (!EnumProcessModules(hProcess, moduleHandles, needed, out _))
+            throw new InvalidOperationException("Unable to get process modules. " + Marshal.GetLastWin32Error());
+
+        var moduleInfos = new List<ModuleInfo>(moduleHandles.Length);
+        const int BufferSize = 1024;
+        var buffer = ArrayPool<char>.Shared.Rent(BufferSize);
+
+        try
+        {
+            for (var i = 0; i < moduleHandles.Length; i++)
+            {
+                var stringLength = GetModuleFileNameEx(hProcess, moduleHandles[i], buffer, BufferSize);
+
+                if (stringLength == 0)
+                    throw new InvalidOperationException("Unable to get module file name. " + Marshal.GetLastWin32Error());
+
+                var fileName = new string(buffer, 0, stringLength);
+
+                if (!GetModuleInformation(hProcess, moduleHandles[i], out var mi, Marshal.SizeOf<MODULEINFO>()))
+                    throw new InvalidOperationException("Unable to read module info. " + Marshal.GetLastWin32Error());
+
+                moduleInfos.Add(new ModuleInfo { Name = fileName, BaseAddress = mi.lpBaseOfDll, Size = mi.SizeOfImage, ModuleIndex = i });
+            }
+        }
+        finally
+        {
+            ArrayPool<char>.Shared.Return(buffer);
+        }
+
+        return moduleInfos;
+    }
 }

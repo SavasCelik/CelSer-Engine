@@ -70,4 +70,12 @@ internal static class Structs
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
         public string szExePath;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MODULEINFO
+    {
+        public IntPtr lpBaseOfDll;
+        public uint SizeOfImage;
+        public IntPtr EntryPoint;
+    }
 }

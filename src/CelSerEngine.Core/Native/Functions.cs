@@ -39,4 +39,13 @@ internal static class Functions
         int MemoryInformationLength,
         out uint ReturnLength
     );
+
+    [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "K32EnumProcessModules")]
+    public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr[]? lphModule, uint cb, [MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "K32GetModuleFileNameExW")]
+    public static extern int GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] char[] lpFilename, [MarshalAs(UnmanagedType.U4)] int nSize);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "K32GetModuleInformation")]
+    public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, int cb);
 }
