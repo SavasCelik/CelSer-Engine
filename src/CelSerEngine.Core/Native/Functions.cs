@@ -48,4 +48,22 @@ internal static class Functions
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "K32GetModuleInformation")]
     public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, int cb);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern int GetProcessId(IntPtr hProcess);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool Thread32First(IntPtr hSnapshot, ref THREADENTRY32 lpte);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool Thread32Next(IntPtr hSnapshot, ref THREADENTRY32 lpte);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwThreadId);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    public static extern NTSTATUS NtQueryInformationThread(IntPtr threadHandle, ThreadInfoClass threadInformationClass, out THREAD_BASIC_INFORMATION threadInformation, int threadInformationLength, out uint returnLength);
 }

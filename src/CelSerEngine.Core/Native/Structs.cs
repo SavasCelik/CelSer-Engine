@@ -78,4 +78,28 @@ internal static class Structs
         public uint SizeOfImage;
         public IntPtr EntryPoint;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct THREADENTRY32
+    {
+        public uint dwSize;
+        public uint cntUsage;
+        public uint th32ThreadID;
+        public uint th32OwnerProcessID;
+        public int tpBasePri;
+        public int tpDeltaPri;
+        public uint dwFlags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct THREAD_BASIC_INFORMATION
+    {
+        public IntPtr ExitStatus;
+        public IntPtr TebBaseAddress;
+        public IntPtr UniqueProcessId;
+        public IntPtr UniqueThreadId;
+        public IntPtr AffinityMask;
+        public int Priority;
+        public int BasePriority;
+    }
 }

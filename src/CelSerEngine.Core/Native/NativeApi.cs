@@ -305,7 +305,7 @@ public sealed class NativeApi : INativeApi
         return virtualMemoryRegions;
     }
 
-    public IEnumerable<ModuleInfo> GetProcessModules(IntPtr hProcess)
+    public IList<ModuleInfo> GetProcessModules(IntPtr hProcess)
     {
         // https://github.com/microsoft/clrmd/blob/main/src/Microsoft.Diagnostics.Runtime/DataReaders/Windows/WindowsProcessDataReader.cs#L138
         EnumProcessModules(hProcess, null, 0, out uint needed);
@@ -341,5 +341,106 @@ public sealed class NativeApi : INativeApi
         }
 
         return moduleInfos;
+    }
+
+    public IntPtr GetStackStart(IntPtr hProcess, int threadNr, IntPtr? krenel32ModuleHandle = null)
+    {
+        var _krenel32ModuleHandle = IntPtr.Zero;
+
+        if (krenel32ModuleHandle == null)
+            _krenel32ModuleHandle = GetModuleHandle("kernel32.dll");
+
+        if (_krenel32ModuleHandle == IntPtr.Zero)
+            throw new InvalidOperationException("Handle to kernel32.dll not found. " + Marshal.GetLastWin32Error());
+
+        if (!GetModuleInformation(hProcess, _krenel32ModuleHandle, out var mi, Marshal.SizeOf<MODULEINFO>()))
+            throw new InvalidOperationException("Failed fetching kernel32 module info. " + Marshal.GetLastWin32Error());
+
+        var processId = GetProcessId(hProcess);
+        IntPtr hSnapshot = CreateToolhelp32Snapshot(CreateToolhelp32SnapshotFlags.TH32CS_SNAPTHREAD, processId);
+
+        if (hSnapshot == IntPtr.Zero)
+            throw new InvalidOperationException("Failed taking snapshot. " + Marshal.GetLastWin32Error());
+
+        var stackStart = IntPtr.Zero;
+        var te32 = new THREADENTRY32
+        {
+            dwSize = (uint)Marshal.SizeOf(typeof(THREADENTRY32))
+        };
+
+        try
+        {
+            if (!Thread32First(hSnapshot, ref te32))
+                throw new InvalidOperationException("Failed getting first thread. " + Marshal.GetLastWin32Error());
+
+            do
+            {
+                if (te32.th32OwnerProcessID != processId)
+                    continue;
+
+                if (threadNr != 0)
+                {
+                    threadNr--;
+                    continue;
+                }
+
+                IntPtr hThread = OpenThread(ThreadAccess.QUERY_INFORMATION | ThreadAccess.GET_CONTEXT, false, te32.th32ThreadID);
+
+                if (hThread == IntPtr.Zero)
+                    throw new InvalidOperationException($"Failed getting thread handle. te32.th32ThreadID: {te32.th32ThreadID} " + Marshal.GetLastWin32Error());
+
+                var stackTopPtr = IntPtr.Zero;
+
+                if (NtQueryInformationThread(hThread, ThreadInfoClass.ThreadBasicInformation, out var tbi, Marshal.SizeOf<THREAD_BASIC_INFORMATION>(), out _) == NTSTATUS.Success)
+                {
+                    var stackTop = new byte[8];
+                    NtReadVirtualMemory(hProcess, tbi.TebBaseAddress + 8, stackTop, 8, out _);
+                    stackTopPtr = (IntPtr)BitConverter.ToInt64(stackTop);
+
+                    // This would give the same result:
+                    //NtReadVirtualMemory(hProcess, tbi.TebBaseAddress, stackTop4, (uint)Marshal.SizeOf(tbi), out _);
+                    //IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf<THREAD_BASIC_INFORMATION>());
+                    //Marshal.Copy(stackTop4, 0, ptr, stackTop4.Length);
+                    //var tbi2 = Marshal.PtrToStructure<THREAD_BASIC_INFORMATION>(ptr);
+                    //Marshal.FreeHGlobal(ptr);
+                    //stackTopPtr = tbi2.TebBaseAddress;
+                }
+
+                CloseHandle(hThread);
+
+                if (stackTopPtr == IntPtr.Zero)
+                    continue;
+
+                var buffer = _byteArrayPool.Rent(4096);
+
+                if (NtReadVirtualMemory(hProcess, stackTopPtr - 4096, buffer, 4096, out _) == NTSTATUS.Success)
+                {
+                    for (int i = (4096 / 8) - 1; i >= 0; i--)
+                    {
+                        var buffAddress = (IntPtr)BitConverter.ToUInt64(buffer, i * 8);
+
+                        if (InRange(buffAddress, mi.lpBaseOfDll, mi.lpBaseOfDll + (int)mi.SizeOfImage))
+                        {
+                            stackStart = stackTopPtr - 4096 + i * 8;
+                        }
+                    }
+                }
+
+                _byteArrayPool.Return(buffer);
+
+            } while (Thread32Next(hSnapshot, ref te32));
+
+        }
+        finally
+        {
+            CloseHandle(hSnapshot);
+        }
+
+        return stackStart;
+    }
+
+    private bool InRange(IntPtr value, IntPtr min, IntPtr max)
+    {
+        return value >= min && value <= max;
     }
 }
