@@ -10,7 +10,7 @@ internal static class Functions
     internal static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    internal static extern IntPtr CreateToolhelp32Snapshot( CreateToolhelp32SnapshotFlags dwFlags, int th32ProcessID);
+    internal static extern IntPtr CreateToolhelp32Snapshot(CreateToolhelp32SnapshotFlags dwFlags, int th32ProcessID);
 
     [DllImport("kernel32.dll")]
     internal static extern bool Module32First(IntPtr hSnapshot, ref MODULEENTRY32 lpme);

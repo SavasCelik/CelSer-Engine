@@ -6,6 +6,7 @@ using CelSerEngine.Core.Models;
 using System.Runtime.InteropServices;
 using CelSerEngine.Core.Extensions;
 using System.Buffers;
+using CelSerEngine.Core.Scanners;
 
 namespace CelSerEngine.Core.Native;
 
@@ -302,7 +303,65 @@ public sealed class NativeApi : INativeApi
             proc_min_address = new IntPtr((long)proc_min_address_l);
         }
 
+        var ps = new PointerScanner2(this, hProcess);
+        ps.StartPointerScan();
+
         return virtualMemoryRegions;
+    }
+
+    private StreamReader _stream;
+
+    public IEnumerable<string> GetStrings()
+    {
+        var stringLine = "";
+        while ((stringLine = _stream.ReadLine()) != null)
+        {
+            yield return stringLine;
+        }
+    }
+
+    internal IEnumerable<MEMORY_BASIC_INFORMATION64> GatherVirtualMemoryRegions2(IntPtr hProcess)
+    {
+        ulong currentAddress = 0x0;
+        ulong stopAddress = 0x7FFFFFFFFFFFFFFF;
+        var mbi = new MEMORY_BASIC_INFORMATION64();
+        var memoryRegions = new List<VirtualMemoryRegion2>();
+        var memInfoClass = (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation;
+
+        while (NtQueryVirtualMemory(hProcess, (IntPtr)currentAddress, memInfoClass, ref mbi, Marshal.SizeOf(mbi), out _) == NTSTATUS.Success
+            && currentAddress < stopAddress && (currentAddress + mbi.RegionSize) > currentAddress)
+        {
+            //if (!IsSystemModule(hProcess, (IntPtr)mbi.BaseAddress)
+            //    && mbi.State == (uint)MEMORY_STATE.MEM_COMMIT
+            //    && (mbi.Type & 0x40000) == 0
+            //    && (mbi.Protect & (uint)MEMORY_PROTECTION.PAGE_GUARD) == 0
+            //    && (mbi.Protect & (uint)MEMORY_PROTECTION.PAGE_NOACCESS) == 0
+            //    )
+            //{
+            //    var valid = false;
+
+            //    if ((mbi.AllocationProtect & (uint)MEMORY_PROTECTION.PAGE_WRITECOMBINE) == (uint)MEMORY_PROTECTION.PAGE_WRITECOMBINE
+            //        || (mbi.Protect & (uint)(MEMORY_PROTECTION.PAGE_READONLY | MEMORY_PROTECTION.PAGE_EXECUTE | MEMORY_PROTECTION.PAGE_EXECUTE_READ)) != 0)
+            //    {
+            //        valid = false;
+            //    }
+            //    else
+            //    {
+            //        valid = true;
+            //    }
+
+            //    var memoryRegion = new MemoryRegion();
+            //    memoryRegion.BaseAddress = (IntPtr)mbi.BaseAddress;
+            //    memoryRegion.MemorySize = mbi.RegionSize;
+            //    memoryRegion.InModule = IsWithinModule(hProcess, (IntPtr)mbi.BaseAddress, out _);
+            //    memoryRegion.ValidPointerRange = valid;
+            //    memoryRegions.Add(memoryRegion);
+            //}
+
+            yield return mbi;
+
+            currentAddress = mbi.BaseAddress + mbi.RegionSize;
+        }
     }
 
     public IList<ModuleInfo> GetProcessModules(IntPtr hProcess)
