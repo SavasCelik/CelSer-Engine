@@ -306,6 +306,9 @@ public sealed class NativeApi : INativeApi
         var ps = new CheatEnginePointerScanner(this, hProcess);
         ps.StartPointerScan();
 
+        var ps2 = new DefaultPointerScanner(this, hProcess);
+        ps2.StartPointerScan();
+
         return virtualMemoryRegions;
     }
 

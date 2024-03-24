@@ -14,7 +14,7 @@ public abstract class PointerScanner2
     private int _threadStacks = 2;
     private List<IntPtr> _stackList = new(2);
     public const int MaxQueueSize = 64;
-    public const int MaxLevel = 7;
+    public const int MaxLevel = 4;
     public const int StructSize = 4095;
     public const bool NoLoop = true;
     public const bool LimitToMaxOffsetsPerNode = true;
