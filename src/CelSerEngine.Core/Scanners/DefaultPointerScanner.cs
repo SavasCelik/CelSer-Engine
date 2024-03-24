@@ -165,7 +165,7 @@ internal class DefaultPointerScanner : PointerScanner2
 
             if (_keyArray[mid] <= searchedKey)
             {
-                if (_keyArray[mid] > minValue) // TODO: Test >= instead of >
+                if (_keyArray[mid] >= minValue)
                 {
                     closestLowerIndex = mid;
                 }
