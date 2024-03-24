@@ -1,29 +1,38 @@
-﻿using CelSerEngine.Core.Models;
+﻿using CelSerEngine.Core.Extensions;
+using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using static CelSerEngine.Core.Native.Enums;
 using static CelSerEngine.Core.Native.Structs;
 
 namespace CelSerEngine.Core.Scanners;
-public class PointerScanner2
+
+public abstract class PointerScanner2
 {
-    private readonly NativeApi _nativeApi;
-    private readonly nint _hProcess;
+    private readonly bool _useStacks;
     private IList<ModuleInfo> _modules;
-    private CheatEnginePointerScanStrategy _scanStrategy;
+    private int _threadStacks = 2;
+    private List<IntPtr> _stackList = new(2);
+    public const int MaxQueueSize = 64;
+    public const int MaxLevel = 4;
+    public const int StructSize = 4095;
+    public const bool NoLoop = true;
+    public const bool LimitToMaxOffsetsPerNode = true;
+    public const int MaxOffsetsPerNode = 3;
+    private bool _findValueInsteadOfAddress = false;
+
+    public NativeApi NativeApi { get; }
+    public IntPtr ProcessHandle { get; }
+    internal PathQueueElement[] PathQueue { get; set; } = new PathQueueElement[MaxQueueSize - 1];
+    public int PathQueueLength { get; set; } = 0;
+    public nint AutomaticAddress => new IntPtr(0x001A0AC8);
 
     public PointerScanner2(NativeApi nativeApi, IntPtr hProcess)
     {
-        _nativeApi = nativeApi;
-        _hProcess = hProcess;
-        _modules = _nativeApi.GetProcessModules(_hProcess);
-        _scanStrategy = new CheatEnginePointerScanStrategy();
+        NativeApi = nativeApi;
+        ProcessHandle = hProcess;
+        _useStacks = true;
+        _modules = NativeApi.GetProcessModules(ProcessHandle);
     }
 
     public void StartPointerScan()
@@ -31,8 +40,9 @@ public class PointerScanner2
         if (IntPtr.Size == 4)
             throw new NotImplementedException("32-bit is not supported yet.");
 
-        var memoryRegions = _nativeApi
-            .GatherVirtualMemoryRegions2(_hProcess)
+        FillTheStackList();
+        var memoryRegions = NativeApi
+            .GatherVirtualMemoryRegions2(ProcessHandle)
             .Where(m =>
                 !IsSystemModule(m)
                 && m.State == (uint)MEMORY_STATE.MEM_COMMIT
@@ -45,8 +55,8 @@ public class PointerScanner2
                 BaseAddress = (IntPtr)m.BaseAddress,
                 MemorySize = m.RegionSize,
                 InModule = TryGetModule((IntPtr)m.BaseAddress, out _),
-                ValidPointerRange = (m.AllocationProtect & (uint)MEMORY_PROTECTION.PAGE_WRITECOMBINE) == (uint)MEMORY_PROTECTION.PAGE_WRITECOMBINE
-                    || (m.Protect & (uint)(MEMORY_PROTECTION.PAGE_READONLY | MEMORY_PROTECTION.PAGE_EXECUTE | MEMORY_PROTECTION.PAGE_EXECUTE_READ)) != 0
+                ValidPointerRange = (m.AllocationProtect & (uint)MEMORY_PROTECTION.PAGE_WRITECOMBINE) != (uint)MEMORY_PROTECTION.PAGE_WRITECOMBINE
+                    && (m.Protect & (uint)(MEMORY_PROTECTION.PAGE_READONLY | MEMORY_PROTECTION.PAGE_EXECUTE | MEMORY_PROTECTION.PAGE_EXECUTE_READ)) == 0
             })
             .ToList();
 
@@ -56,23 +66,28 @@ public class PointerScanner2
         ConcatMemoryRegions(memoryRegions);
         MakeMemoryRegionChunks(memoryRegions);
         memoryRegions.Sort((region1, region2) => region1.BaseAddress.CompareTo(region2.BaseAddress));
-        var buffer = new byte[memoryRegions.Max(x => x.BaseAddress)];
+        FindPointersInMemoryRegions(memoryRegions);
+        FillLinkedList();
+        InitializeEmptyPathQueue();
 
-        foreach (var memoryRegion in memoryRegions.Where(x => x.ValidPointerRange))
+        var scanWorker = new PointerScanWorker(this);
+        scanWorker.Start();
+    }
+
+    private void FillTheStackList()
+    {
+        for (int i = 0; i < _threadStacks; i++)
         {
-            if (!_nativeApi.TryReadVirtualMemory(_hProcess, memoryRegion.BaseAddress, (uint)memoryRegion.MemorySize, buffer))
-                continue;
+            var threadStackStart = NativeApi.GetStackStart(ProcessHandle, i);
 
-            var lastAddress = (int)memoryRegion.MemorySize - IntPtr.Size;
-            for (var i = 0; i <= lastAddress; i += 4)
+            if (threadStackStart == IntPtr.Zero)
             {
-                var qwordPointer = (IntPtr)BitConverter.ToUInt64(buffer, i);
-
-                if (qwordPointer % 4 == 0 && IsPointer(qwordPointer, memoryRegions))
-                {
-                    _scanStrategy.AddPointer(qwordPointer, memoryRegion.BaseAddress + i, false);
-                }
+                _threadStacks = i;
+                break;
             }
+
+            _stackList.Add(threadStackStart);
+            _modules.Add(new ModuleInfo { ModuleIndex = _modules.Count, Name = $"THREADSTACK{i}", BaseAddress = threadStackStart });
         }
     }
 
@@ -150,7 +165,7 @@ public class PointerScanner2
         }
     }
 
-    private bool IsPointer(IntPtr address, List<VirtualMemoryRegion2> memoryRegions)
+    protected bool IsPointer(IntPtr address, List<VirtualMemoryRegion2> memoryRegions)
     {
         if (address == IntPtr.Zero)
             return false;
@@ -192,5 +207,83 @@ public class PointerScanner2
         }
 
         return result;
+    }
+
+    protected bool isStatic(IntPtr address, [NotNullWhen(true)] out ModuleInfo? moduleInfo)
+    {
+        moduleInfo = null;
+        const int stackSize = 4096;
+        var isStack = false;
+        var moduleBaseAddress = IntPtr.Zero;
+
+        if (_useStacks)
+        {
+            for (var i = 0; i < _threadStacks - 1; i++)
+            {
+                if (address.InRange(_stackList[i] - stackSize, _stackList[i]))
+                {
+                    moduleBaseAddress = _stackList[i];
+                    isStack = true;
+                }
+            }
+        }
+
+        if (!isStack)
+        {
+            //TODO this probably could just check for BaseAddress == address
+            moduleBaseAddress = _modules.Where(x => address >= x.BaseAddress && address < x.BaseAddress + x.Size).Select(x => x.BaseAddress).FirstOrDefault();
+        }
+
+        if (moduleBaseAddress != IntPtr.Zero)
+        {
+            moduleInfo = _modules.SingleOrDefault(x => x.BaseAddress == moduleBaseAddress);
+        }
+
+        return moduleInfo != null;
+    }
+
+    protected abstract void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions);
+    protected abstract void FillLinkedList();
+    internal abstract PointerList? FindPointerValue(IntPtr startValue, ref IntPtr stopValue);
+
+    public void InitializeEmptyPathQueue()
+    {
+        for (var i = 0; i < MaxQueueSize - 1; i++)
+        {
+            for (var j = 0; j < MaxLevel + 1; j++)
+            {
+                if (PathQueue[i] == null)
+                {
+                    PathQueue[i] = new PathQueueElement(MaxLevel);
+                }
+
+                PathQueue[i].TempResults[j] = new IntPtr(0xcececece);
+            }
+
+            if (NoLoop)
+            {
+                for (var j = 0; j < MaxLevel + 1; j++)
+                {
+                    if (PathQueue[i] == null)
+                    {
+                        PathQueue[i] = new PathQueueElement(MaxLevel);
+                    }
+                    PathQueue[i].ValueList[j] = new UIntPtr(0xcececececececece);
+                }
+            }
+        }
+
+        if (MaxLevel > 0)
+        {
+            if (true) // if (initializer) then //don't start the scan if it's a worker system
+            {
+                if (!_findValueInsteadOfAddress)
+                {
+                    PathQueue[PathQueueLength].StartLevel = 0;
+                    PathQueue[PathQueueLength].ValueToFind = AutomaticAddress;
+                    PathQueueLength++;
+                }
+            }
+        }
     }
 }

@@ -303,21 +303,10 @@ public sealed class NativeApi : INativeApi
             proc_min_address = new IntPtr((long)proc_min_address_l);
         }
 
-        var ps = new PointerScanner2(this, hProcess);
+        var ps = new CheatEnginePointerScanner(this, hProcess);
         ps.StartPointerScan();
 
         return virtualMemoryRegions;
-    }
-
-    private StreamReader _stream;
-
-    public IEnumerable<string> GetStrings()
-    {
-        var stringLine = "";
-        while ((stringLine = _stream.ReadLine()) != null)
-        {
-            yield return stringLine;
-        }
     }
 
     internal IEnumerable<MEMORY_BASIC_INFORMATION64> GatherVirtualMemoryRegions2(IntPtr hProcess)
@@ -434,59 +423,59 @@ public sealed class NativeApi : INativeApi
 
             do
             {
-                if (te32.th32OwnerProcessID != processId)
-                    continue;
-
-                if (threadNr != 0)
+                if (te32.th32OwnerProcessID == processId)
                 {
-                    threadNr--;
-                    continue;
-                }
-
-                IntPtr hThread = OpenThread(ThreadAccess.QUERY_INFORMATION | ThreadAccess.GET_CONTEXT, false, te32.th32ThreadID);
-
-                if (hThread == IntPtr.Zero)
-                    throw new InvalidOperationException($"Failed getting thread handle. te32.th32ThreadID: {te32.th32ThreadID} " + Marshal.GetLastWin32Error());
-
-                var stackTopPtr = IntPtr.Zero;
-
-                if (NtQueryInformationThread(hThread, ThreadInfoClass.ThreadBasicInformation, out var tbi, Marshal.SizeOf<THREAD_BASIC_INFORMATION>(), out _) == NTSTATUS.Success)
-                {
-                    var stackTop = new byte[8];
-                    NtReadVirtualMemory(hProcess, tbi.TebBaseAddress + 8, stackTop, 8, out _);
-                    stackTopPtr = (IntPtr)BitConverter.ToInt64(stackTop);
-
-                    // This would give the same result:
-                    //NtReadVirtualMemory(hProcess, tbi.TebBaseAddress, stackTop4, (uint)Marshal.SizeOf(tbi), out _);
-                    //IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf<THREAD_BASIC_INFORMATION>());
-                    //Marshal.Copy(stackTop4, 0, ptr, stackTop4.Length);
-                    //var tbi2 = Marshal.PtrToStructure<THREAD_BASIC_INFORMATION>(ptr);
-                    //Marshal.FreeHGlobal(ptr);
-                    //stackTopPtr = tbi2.TebBaseAddress;
-                }
-
-                CloseHandle(hThread);
-
-                if (stackTopPtr == IntPtr.Zero)
-                    continue;
-
-                var buffer = _byteArrayPool.Rent(4096);
-
-                if (NtReadVirtualMemory(hProcess, stackTopPtr - 4096, buffer, 4096, out _) == NTSTATUS.Success)
-                {
-                    for (int i = (4096 / 8) - 1; i >= 0; i--)
+                    if (threadNr != 0)
                     {
-                        var buffAddress = (IntPtr)BitConverter.ToUInt64(buffer, i * 8);
+                        threadNr--;
+                        continue;
+                    }
 
-                        if (InRange(buffAddress, mi.lpBaseOfDll, mi.lpBaseOfDll + (int)mi.SizeOfImage))
+                    IntPtr hThread = OpenThread(ThreadAccess.QUERY_INFORMATION | ThreadAccess.GET_CONTEXT, false, te32.th32ThreadID);
+
+                    if (hThread == IntPtr.Zero)
+                        throw new InvalidOperationException($"Failed getting thread handle. te32.th32ThreadID: {te32.th32ThreadID} " + Marshal.GetLastWin32Error());
+
+                    var stackTopPtr = IntPtr.Zero;
+
+                    if (NtQueryInformationThread(hThread, ThreadInfoClass.ThreadBasicInformation, out var tbi, Marshal.SizeOf<THREAD_BASIC_INFORMATION>(), out _) == NTSTATUS.Success)
+                    {
+                        var stackTop = new byte[8];
+                        NtReadVirtualMemory(hProcess, tbi.TebBaseAddress + 8, stackTop, 8, out _);
+                        stackTopPtr = (IntPtr)BitConverter.ToInt64(stackTop);
+
+                        // This would give the same result:
+                        //NtReadVirtualMemory(hProcess, tbi.TebBaseAddress, stackTop4, (uint)Marshal.SizeOf(tbi), out _);
+                        //IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf<THREAD_BASIC_INFORMATION>());
+                        //Marshal.Copy(stackTop4, 0, ptr, stackTop4.Length);
+                        //var tbi2 = Marshal.PtrToStructure<THREAD_BASIC_INFORMATION>(ptr);
+                        //Marshal.FreeHGlobal(ptr);
+                        //stackTopPtr = tbi2.TebBaseAddress;
+                    }
+
+                    CloseHandle(hThread);
+
+                    if (stackTopPtr == IntPtr.Zero)
+                        continue;
+
+                    var buffer = _byteArrayPool.Rent(4096);
+
+                    if (NtReadVirtualMemory(hProcess, stackTopPtr - 4096, buffer, 4096, out _) == NTSTATUS.Success)
+                    {
+                        for (int i = (4096 / 8) - 1; i >= 0; i--)
                         {
-                            stackStart = stackTopPtr - 4096 + i * 8;
+                            var buffAddress = (IntPtr)BitConverter.ToUInt64(buffer, i * 8);
+                        
+                            if (buffAddress.InRange(mi.lpBaseOfDll, mi.lpBaseOfDll + (int)mi.SizeOfImage))
+                            {
+                                stackStart = stackTopPtr - 4096 + i * 8;
+                            }
                         }
                     }
+
+                    _byteArrayPool.Return(buffer);
+                    break;
                 }
-
-                _byteArrayPool.Return(buffer);
-
             } while (Thread32Next(hSnapshot, ref te32));
 
         }
