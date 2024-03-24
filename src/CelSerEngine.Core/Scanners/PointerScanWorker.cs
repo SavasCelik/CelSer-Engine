@@ -89,7 +89,6 @@ internal class PointerScanWorker
 
         while (stopValue >= startValue)
         {
-            //fix this even first run result with plist = null
             if (plist == null)
             {
                 plist = _pointerScanner.FindPointerValue(startValue, ref stopValue);

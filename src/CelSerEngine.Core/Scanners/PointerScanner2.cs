@@ -14,7 +14,7 @@ public abstract class PointerScanner2
     private int _threadStacks = 2;
     private List<IntPtr> _stackList = new(2);
     public const int MaxQueueSize = 64;
-    public const int MaxLevel = 4;
+    public const int MaxLevel = 7;
     public const int StructSize = 4095;
     public const bool NoLoop = true;
     public const bool LimitToMaxOffsetsPerNode = true;
@@ -23,7 +23,7 @@ public abstract class PointerScanner2
 
     public NativeApi NativeApi { get; }
     public IntPtr ProcessHandle { get; }
-    internal PathQueueElement[] PathQueue { get; set; } = new PathQueueElement[MaxQueueSize - 1];
+    internal PathQueueElement[] PathQueue { get; set; } = new PathQueueElement[MaxQueueSize];
     public int PathQueueLength { get; set; } = 0;
     public nint AutomaticAddress => new IntPtr(0x001A0AC8);
 
@@ -218,7 +218,7 @@ public abstract class PointerScanner2
 
         if (_useStacks)
         {
-            for (var i = 0; i < _threadStacks - 1; i++)
+            for (var i = 0; i <= _threadStacks - 1; i++)
             {
                 if (address.InRange(_stackList[i] - stackSize, _stackList[i]))
                 {
@@ -248,9 +248,9 @@ public abstract class PointerScanner2
 
     public void InitializeEmptyPathQueue()
     {
-        for (var i = 0; i < MaxQueueSize - 1; i++)
+        for (var i = 0; i <= MaxQueueSize - 1; i++)
         {
-            for (var j = 0; j < MaxLevel + 1; j++)
+            for (var j = 0; j <= MaxLevel + 1; j++)
             {
                 if (PathQueue[i] == null)
                 {
