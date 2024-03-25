@@ -10,7 +10,7 @@ internal static class Functions
     internal static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    internal static extern IntPtr CreateToolhelp32Snapshot( CreateToolhelp32SnapshotFlags dwFlags, int th32ProcessID);
+    internal static extern IntPtr CreateToolhelp32Snapshot(CreateToolhelp32SnapshotFlags dwFlags, int th32ProcessID);
 
     [DllImport("kernel32.dll")]
     internal static extern bool Module32First(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
@@ -39,4 +39,31 @@ internal static class Functions
         int MemoryInformationLength,
         out uint ReturnLength
     );
+
+    [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "K32EnumProcessModules")]
+    public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr[]? lphModule, uint cb, [MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "K32GetModuleFileNameExW")]
+    public static extern int GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] char[] lpFilename, [MarshalAs(UnmanagedType.U4)] int nSize);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "K32GetModuleInformation")]
+    public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, int cb);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern int GetProcessId(IntPtr hProcess);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool Thread32First(IntPtr hSnapshot, ref THREADENTRY32 lpte);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool Thread32Next(IntPtr hSnapshot, ref THREADENTRY32 lpte);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwThreadId);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    public static extern NTSTATUS NtQueryInformationThread(IntPtr threadHandle, ThreadInfoClass threadInformationClass, out THREAD_BASIC_INFORMATION threadInformation, int threadInformationLength, out uint returnLength);
 }

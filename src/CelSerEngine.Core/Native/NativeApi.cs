@@ -286,7 +286,7 @@ public sealed class NativeApi : INativeApi
             );
 
             // if this memory chunk is accessible
-            if (returnLength > 0 && mem_basic_info.Protect == (uint)MEMORY_PROTECTION.PAGE_READWRITE && mem_basic_info.State == (uint)MEMORY_STATE.MEM_COMMIT)
+            if (returnLength > 0 && mem_basic_info.Protect == MEMORY_PROTECTION.PAGE_READWRITE && mem_basic_info.State == MEMORY_STATE.MEM_COMMIT)
             {
                 //VirtualProtectEx(pHandle, new IntPtr((long)mem_basic_info.BaseAddress), new UIntPtr(mem_basic_info.RegionSize), 0x40, out var prt);
                 memoryBasicInfos.Add(mem_basic_info);
@@ -303,5 +303,166 @@ public sealed class NativeApi : INativeApi
         }
 
         return virtualMemoryRegions;
+    }
+
+    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(IntPtr hProcess)
+    {
+        ulong currentAddress = 0x0;
+        ulong stopAddress = 0x7FFFFFFFFFFFFFFF;
+        // or
+        //GetSystemInfo(out var systemInfo);
+        //IntPtr proc_min_address = systemInfo.minimumApplicationAddress;
+        //IntPtr proc_max_address = systemInfo.maximumApplicationAddress;
+        var memInfoClass = (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation;
+        var mbi = new MEMORY_BASIC_INFORMATION64();
+
+        while (NtQueryVirtualMemory(hProcess, (IntPtr)currentAddress, memInfoClass, ref mbi, Marshal.SizeOf(mbi), out _) == NTSTATUS.Success
+            && currentAddress < stopAddress && (currentAddress + mbi.RegionSize) > currentAddress)
+        {
+            yield return mbi;
+            currentAddress = mbi.BaseAddress + mbi.RegionSize;
+        }
+    }
+
+    public IList<ModuleInfo> GetProcessModules(IntPtr hProcess)
+    {
+        // https://github.com/microsoft/clrmd/blob/main/src/Microsoft.Diagnostics.Runtime/DataReaders/Windows/WindowsProcessDataReader.cs#L138
+        EnumProcessModules(hProcess, null, 0, out uint needed);
+        var moduleHandles = new IntPtr[needed / IntPtr.Size];
+
+        if (!EnumProcessModules(hProcess, moduleHandles, needed, out _))
+            throw new InvalidOperationException("Unable to get process modules. " + Marshal.GetLastWin32Error());
+
+        var moduleInfos = new List<ModuleInfo>(moduleHandles.Length);
+        const int BufferSize = 1024;
+        var buffer = ArrayPool<char>.Shared.Rent(BufferSize);
+
+        try
+        {
+            for (var i = 0; i < moduleHandles.Length; i++)
+            {
+                var stringLength = GetModuleFileNameEx(hProcess, moduleHandles[i], buffer, BufferSize);
+
+                if (stringLength == 0)
+                    throw new InvalidOperationException("Unable to get module file name. " + Marshal.GetLastWin32Error());
+
+                var fileName = new string(buffer, 0, stringLength);
+
+                if (!GetModuleInformation(hProcess, moduleHandles[i], out var mi, Marshal.SizeOf<MODULEINFO>()))
+                    throw new InvalidOperationException("Unable to read module info. " + Marshal.GetLastWin32Error());
+
+                moduleInfos.Add(new ModuleInfo { Name = fileName, BaseAddress = mi.lpBaseOfDll, Size = mi.SizeOfImage, ModuleIndex = i });
+            }
+        }
+        finally
+        {
+            ArrayPool<char>.Shared.Return(buffer);
+        }
+
+        return moduleInfos;
+    }
+
+    public IntPtr GetStackStart(IntPtr hProcess, int threadNr, ModuleInfo? kernel32Module = null)
+    {
+        if (kernel32Module == null)
+        {
+            var _kernel32ModuleHandle = GetModuleHandle("kernel32.dll");
+
+            if (_kernel32ModuleHandle == IntPtr.Zero)
+                throw new InvalidOperationException("Handle to kernel32.dll not found. " + Marshal.GetLastWin32Error());
+
+            if (!GetModuleInformation(hProcess, _kernel32ModuleHandle, out var mi, Marshal.SizeOf<MODULEINFO>()))
+                throw new InvalidOperationException("Failed fetching kernel32 module info. " + Marshal.GetLastWin32Error());
+
+            kernel32Module = new ModuleInfo { Name = "kernel32.dll", BaseAddress = mi.lpBaseOfDll, Size = mi.SizeOfImage };
+        }
+
+        var processId = GetProcessId(hProcess);
+        IntPtr hSnapshot = CreateToolhelp32Snapshot(CreateToolhelp32SnapshotFlags.TH32CS_SNAPTHREAD, processId);
+
+        if (hSnapshot == IntPtr.Zero)
+            throw new InvalidOperationException("Failed taking snapshot. " + Marshal.GetLastWin32Error());
+
+        var stackStart = IntPtr.Zero;
+        var te32 = new THREADENTRY32
+        {
+            dwSize = (uint)Marshal.SizeOf(typeof(THREADENTRY32))
+        };
+
+        try
+        {
+            if (!Thread32First(hSnapshot, ref te32))
+                throw new InvalidOperationException("Failed getting first thread. " + Marshal.GetLastWin32Error());
+
+            do
+            {
+                if (te32.th32OwnerProcessID == processId)
+                {
+                    if (threadNr != 0)
+                    {
+                        threadNr--;
+                        continue;
+                    }
+
+                    IntPtr hThread = OpenThread(ThreadAccess.QUERY_INFORMATION | ThreadAccess.GET_CONTEXT, false, te32.th32ThreadID);
+
+                    if (hThread == IntPtr.Zero)
+                        throw new InvalidOperationException($"Failed getting thread handle. te32.th32ThreadID: {te32.th32ThreadID} " + Marshal.GetLastWin32Error());
+
+                    var stackTopPtr = IntPtr.Zero;
+
+                    if (NtQueryInformationThread(hThread, ThreadInfoClass.ThreadBasicInformation, out var tbi, Marshal.SizeOf<THREAD_BASIC_INFORMATION>(), out _) == NTSTATUS.Success)
+                    {
+                        var stackTop = new byte[8];
+                        NtReadVirtualMemory(hProcess, tbi.TebBaseAddress + 8, stackTop, 8, out _);
+                        stackTopPtr = (IntPtr)BitConverter.ToInt64(stackTop);
+
+                        // This would give the same result:
+                        //NtReadVirtualMemory(hProcess, tbi.TebBaseAddress, stackTop4, (uint)Marshal.SizeOf(tbi), out _);
+                        //IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf<THREAD_BASIC_INFORMATION>());
+                        //Marshal.Copy(stackTop4, 0, ptr, stackTop4.Length);
+                        //var tbi2 = Marshal.PtrToStructure<THREAD_BASIC_INFORMATION>(ptr);
+                        //Marshal.FreeHGlobal(ptr);
+                        //stackTopPtr = tbi2.TebBaseAddress;
+                    }
+
+                    CloseHandle(hThread);
+
+                    if (stackTopPtr == IntPtr.Zero)
+                        continue;
+
+                    var buffer = _byteArrayPool.Rent(4096);
+
+                    if (NtReadVirtualMemory(hProcess, stackTopPtr - 4096, buffer, 4096, out _) == NTSTATUS.Success)
+                    {
+                        for (int i = (4096 / 8) - 1; i >= 0; i--)
+                        {
+                            var buffAddress = (IntPtr)BitConverter.ToUInt64(buffer, i * 8);
+                        
+                            if (buffAddress.InRange(kernel32Module.BaseAddress, kernel32Module.BaseAddress + (int)kernel32Module.Size))
+                            {
+                                stackStart = stackTopPtr - 4096 + i * 8;
+                                break;
+                            }
+                        }
+                    }
+
+                    _byteArrayPool.Return(buffer);
+                    break;
+                }
+            } while (Thread32Next(hSnapshot, ref te32));
+
+        }
+        finally
+        {
+            CloseHandle(hSnapshot);
+        }
+
+        return stackStart;
+    }
+
+    private bool InRange(IntPtr value, IntPtr min, IntPtr max)
+    {
+        return value >= min && value <= max;
     }
 }

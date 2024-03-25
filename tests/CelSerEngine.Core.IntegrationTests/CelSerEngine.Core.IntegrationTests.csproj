@@ -28,6 +28,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ScannerTests\PointerScannerData\NewWay\MemoryRegions.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="ScannerTests\PointerScannerData\NewWay\Modules.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="ScannerTests\PointerScannerData\NewWay\StackStarts.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="ScannerTests\PointerScannerData\RescanOptions.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

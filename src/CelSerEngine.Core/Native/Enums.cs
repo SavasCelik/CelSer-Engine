@@ -1,6 +1,6 @@
 ﻿namespace CelSerEngine.Core.Native;
 
-internal static class Enums
+public static class Enums
 {
     /// <summary>
     /// Full value list here:
@@ -136,5 +136,27 @@ internal static class Enums
         /// th32ProcessID.
         /// </summary>
         TH32CS_SNAPALL = TH32CS_SNAPHEAPLIST | TH32CS_SNAPMODULE | TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD,
+    }
+
+    [Flags]
+    public enum ThreadAccess : uint
+    {
+        TERMINATE = 0x0001,
+        SUSPEND_RESUME = 0x0002,
+        GET_CONTEXT = 0x0008,
+        SET_CONTEXT = 0x0010,
+        SET_INFORMATION = 0x0020,
+        QUERY_INFORMATION = 0x0040,
+        SET_THREAD_TOKEN = 0x0080,
+        IMPERSONATE = 0x0100,
+        DIRECT_IMPERSONATION = 0x0200,
+        THREAD_HIJACK = 0x02000000
+    }
+
+    public enum ThreadInfoClass
+    {
+        ThreadBasicInformation = 0,
+        ThreadTimes,
+        ThreadPriority
     }
 }

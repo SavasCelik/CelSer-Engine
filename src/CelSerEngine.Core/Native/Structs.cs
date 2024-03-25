@@ -1,10 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.Core.Native;
 
 [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member")]
-internal static class Structs
+public static class Structs
 {
     [StructLayout(LayoutKind.Sequential)]
     internal struct CLIENT_ID
@@ -30,15 +31,15 @@ internal static class Structs
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct MEMORY_BASIC_INFORMATION64
+    public struct MEMORY_BASIC_INFORMATION64
     {
         public ulong BaseAddress;
         public ulong AllocationBase;
-        public uint AllocationProtect;
+        public MEMORY_PROTECTION AllocationProtect;
         public uint __alignment1;
         public ulong RegionSize;
-        public uint State;
-        public uint Protect;
+        public MEMORY_STATE State;
+        public MEMORY_PROTECTION Protect;
         public uint Type;
         public uint __alignment2;
     }
@@ -69,5 +70,37 @@ internal static class Structs
         public string szModule;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
         public string szExePath;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MODULEINFO
+    {
+        public IntPtr lpBaseOfDll;
+        public uint SizeOfImage;
+        public IntPtr EntryPoint;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct THREADENTRY32
+    {
+        public uint dwSize;
+        public uint cntUsage;
+        public uint th32ThreadID;
+        public uint th32OwnerProcessID;
+        public int tpBasePri;
+        public int tpDeltaPri;
+        public uint dwFlags;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct THREAD_BASIC_INFORMATION
+    {
+        public IntPtr ExitStatus;
+        public IntPtr TebBaseAddress;
+        public IntPtr UniqueProcessId;
+        public IntPtr UniqueThreadId;
+        public IntPtr AffinityMask;
+        public int Priority;
+        public int BasePriority;
     }
 }
