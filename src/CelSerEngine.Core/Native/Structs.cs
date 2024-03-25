@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.Core.Native;
 
@@ -34,11 +35,11 @@ internal static class Structs
     {
         public ulong BaseAddress;
         public ulong AllocationBase;
-        public uint AllocationProtect;
+        public MEMORY_PROTECTION AllocationProtect;
         public uint __alignment1;
         public ulong RegionSize;
-        public uint State;
-        public uint Protect;
+        public MEMORY_STATE State;
+        public MEMORY_PROTECTION Protect;
         public uint Type;
         public uint __alignment2;
     }

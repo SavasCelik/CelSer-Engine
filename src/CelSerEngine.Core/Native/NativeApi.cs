@@ -287,7 +287,7 @@ public sealed class NativeApi : INativeApi
             );
 
             // if this memory chunk is accessible
-            if (returnLength > 0 && mem_basic_info.Protect == (uint)MEMORY_PROTECTION.PAGE_READWRITE && mem_basic_info.State == (uint)MEMORY_STATE.MEM_COMMIT)
+            if (returnLength > 0 && mem_basic_info.Protect == MEMORY_PROTECTION.PAGE_READWRITE && mem_basic_info.State == MEMORY_STATE.MEM_COMMIT)
             {
                 //VirtualProtectEx(pHandle, new IntPtr((long)mem_basic_info.BaseAddress), new UIntPtr(mem_basic_info.RegionSize), 0x40, out var prt);
                 memoryBasicInfos.Add(mem_basic_info);

@@ -45,18 +45,20 @@ public abstract class PointerScanner2
             .GatherVirtualMemoryRegions2(ProcessHandle)
             .Where(m =>
                 !IsSystemModule(m)
-                && m.State == (uint)MEMORY_STATE.MEM_COMMIT
+                && m.State == MEMORY_STATE.MEM_COMMIT
                 && (m.Type & 0x40000) == 0
-                && (m.Protect & (uint)MEMORY_PROTECTION.PAGE_GUARD) == 0
-                && (m.Protect & (uint)MEMORY_PROTECTION.PAGE_NOACCESS) == 0
+                && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_GUARD)
+                && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_NOACCESS)
             )
             .Select(m => new VirtualMemoryRegion2
             {
                 BaseAddress = (IntPtr)m.BaseAddress,
                 MemorySize = m.RegionSize,
                 InModule = TryGetModule((IntPtr)m.BaseAddress, out _),
-                ValidPointerRange = (m.AllocationProtect & (uint)MEMORY_PROTECTION.PAGE_WRITECOMBINE) != (uint)MEMORY_PROTECTION.PAGE_WRITECOMBINE
-                    && (m.Protect & (uint)(MEMORY_PROTECTION.PAGE_READONLY | MEMORY_PROTECTION.PAGE_EXECUTE | MEMORY_PROTECTION.PAGE_EXECUTE_READ)) == 0
+                ValidPointerRange = !m.AllocationProtect.HasFlag(MEMORY_PROTECTION.PAGE_WRITECOMBINE)
+                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_READONLY)
+                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE)
+                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE_READ)
             })
             .ToList();
 
