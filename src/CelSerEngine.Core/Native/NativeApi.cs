@@ -316,9 +316,13 @@ public sealed class NativeApi : INativeApi
     {
         ulong currentAddress = 0x0;
         ulong stopAddress = 0x7FFFFFFFFFFFFFFF;
-        var mbi = new MEMORY_BASIC_INFORMATION64();
-        var memoryRegions = new List<VirtualMemoryRegion2>();
+        // or
+        //GetSystemInfo(out var systemInfo);
+        //IntPtr proc_min_address = systemInfo.minimumApplicationAddress;
+        //IntPtr proc_max_address = systemInfo.maximumApplicationAddress;
         var memInfoClass = (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation;
+        var memoryRegions = new List<VirtualMemoryRegion2>();
+        var mbi = new MEMORY_BASIC_INFORMATION64();
 
         while (NtQueryVirtualMemory(hProcess, (IntPtr)currentAddress, memInfoClass, ref mbi, Marshal.SizeOf(mbi), out _) == NTSTATUS.Success
             && currentAddress < stopAddress && (currentAddress + mbi.RegionSize) > currentAddress)
