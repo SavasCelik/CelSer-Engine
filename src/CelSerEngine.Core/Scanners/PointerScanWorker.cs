@@ -3,6 +3,7 @@
 public class PointerScanWorker
 {
     private readonly PointerScanner2 _pointerScanner;
+    private readonly CancellationToken _cancellationToken;
     private IntPtr[] _tempResults;
     private UIntPtr[] _valueList;
     private int _pathsEvaluated = 0;
@@ -11,9 +12,10 @@ public class PointerScanWorker
     private int _maxLevel;
     private int _structSize;
 
-    public PointerScanWorker(PointerScanner2 pointerScanner)
+    public PointerScanWorker(PointerScanner2 pointerScanner, CancellationToken cancellationToken)
     {
         _pointerScanner = pointerScanner;
+        _cancellationToken = cancellationToken;
         _structSize = pointerScanner.PointerScanOptions.MaxOffset;
         _maxLevel = pointerScanner.PointerScanOptions.MaxLevel;
         _tempResults = new IntPtr[_maxLevel];
@@ -41,7 +43,14 @@ public class PointerScanWorker
                 }
             }
 
-            ReverseScan(valueToFind, startLevel);
+            try
+            {
+                ReverseScan(valueToFind, startLevel);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
 
             if (_pointerScanner.PathQueueLength == 0)
             {
@@ -110,6 +119,7 @@ public class PointerScanWorker
             //go through the list of addresses that have this address(stopvalue) as their value
             for (var j = 0; j <= plist.Pos - 1; j++)
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 _pathsEvaluated++;
 
                 if (plist.List[j].StaticData == null) //this removes a lot of other possible paths. Perhaps a feature to remove this check ?

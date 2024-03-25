@@ -32,7 +32,7 @@ public abstract class PointerScanner2
         _modules = new List<ModuleInfo>();
     }
 
-    public IList<Pointer> StartPointerScan(IntPtr processHandle)
+    public async Task<IList<Pointer>> StartPointerScanAsync(IntPtr processHandle , CancellationToken cancellationToken = default)
     {
         if (IntPtr.Size == 4)
             throw new NotImplementedException("32-bit is not supported yet.");
@@ -70,18 +70,25 @@ public abstract class PointerScanner2
         FillLinkedList();
         InitializeEmptyPathQueue();
 
-        var scanWorker = new PointerScanWorker(this);
-        var foundPointers = scanWorker.Start();
-        var pPointers = foundPointers
-            .Select(x => new Pointer
-            {
-                ModuleName = _modules[x.ModuleIndex].Name,
-                BaseAddress = _modules[x.ModuleIndex].BaseAddress,
-                BaseOffset = _stackList.Contains(_modules[x.ModuleIndex].BaseAddress) ? (int)~x.Offset + 1 : (int)x.Offset,
-                Offsets = x.TempResults
-            }).ToList();
 
-        return pPointers;
+        var foundPointers = await Task.Factory.StartNew(() =>
+        {
+            var scanWorker = new PointerScanWorker(this, cancellationToken);
+            var scanResult = scanWorker.Start();
+            var foundPointers = scanResult
+                .Select(x => new Pointer
+                {
+                    ModuleName = _modules[x.ModuleIndex].Name,
+                    BaseAddress = _modules[x.ModuleIndex].BaseAddress,
+                    BaseOffset = _stackList.Contains(_modules[x.ModuleIndex].BaseAddress) ? (int)~x.Offset + 1 : (int)x.Offset,
+                    Offsets = x.TempResults
+                }).ToList();
+
+            return foundPointers;
+        }, cancellationToken);
+        
+
+        return foundPointers;
     }
 
     private void FillTheStackList(IntPtr processHandle)
