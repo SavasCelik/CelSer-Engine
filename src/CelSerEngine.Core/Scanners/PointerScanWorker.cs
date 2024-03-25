@@ -212,7 +212,7 @@ public class PointerScanWorker
     private void StorePath(int level, int moduleIndex, nint offset)
     {
         _pointersFound++;
-        _results.Add(new ResultPointer { Level = level, ModuleIndex = moduleIndex, Offset = offset, TempResults = _tempResults.ToArray() });
+        _results.Add(new ResultPointer { Level = level, ModuleIndex = moduleIndex, Offset = offset, TempResults = _tempResults.Take(level + 1).ToArray() });
         //var res = new ResultPointer
         //{
         //    Level = level,
