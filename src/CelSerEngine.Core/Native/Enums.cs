@@ -1,6 +1,6 @@
 ﻿namespace CelSerEngine.Core.Native;
 
-internal static class Enums
+public static class Enums
 {
     /// <summary>
     /// Full value list here:

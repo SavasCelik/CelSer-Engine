@@ -40,7 +40,7 @@ public abstract class PointerScanner2
         _modules = NativeApi.GetProcessModules(processHandle);
         FillTheStackList(processHandle);
         var memoryRegions = NativeApi
-            .GatherVirtualMemoryRegions2(processHandle)
+            .EnumerateVirtualMemoryRegions(processHandle)
             .Where(m =>
                 !IsSystemModule(m)
                 && m.State == MEMORY_STATE.MEM_COMMIT

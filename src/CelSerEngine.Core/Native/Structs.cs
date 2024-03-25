@@ -5,7 +5,7 @@ using static CelSerEngine.Core.Native.Enums;
 namespace CelSerEngine.Core.Native;
 
 [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>", Scope = "member")]
-internal static class Structs
+public static class Structs
 {
     [StructLayout(LayoutKind.Sequential)]
     internal struct CLIENT_ID
@@ -31,7 +31,7 @@ internal static class Structs
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct MEMORY_BASIC_INFORMATION64
+    public struct MEMORY_BASIC_INFORMATION64
     {
         public ulong BaseAddress;
         public ulong AllocationBase;
