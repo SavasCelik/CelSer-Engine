@@ -472,6 +472,7 @@ public sealed class NativeApi : INativeApi
                             if (buffAddress.InRange(mi.lpBaseOfDll, mi.lpBaseOfDll + (int)mi.SizeOfImage))
                             {
                                 stackStart = stackTopPtr - 4096 + i * 8;
+                                break;
                             }
                         }
                     }
