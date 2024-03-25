@@ -135,7 +135,7 @@ internal class DefaultPointerScanner : PointerScanner2
     internal override PointerList? FindPointerValue(nint startValue, ref nint stopValue)
     {
         var closestLowerKey = IntPtr.MaxValue;
-        if (!_pointerDict.TryGetValue(startValue, out var result))
+        if (!_pointerDict.TryGetValue(stopValue, out var result))
         {
             int closestLowerKeyIndex = BinarySearchClosestLowerKey(stopValue, startValue);
             if (closestLowerKeyIndex >= 0)
@@ -149,6 +149,9 @@ internal class DefaultPointerScanner : PointerScanner2
                 result = _pointerDict[closestLowerKey];
             }
         }
+
+        if (result != null)
+            stopValue = result.PointerValue;
 
         return result;
     }
