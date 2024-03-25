@@ -362,18 +362,20 @@ public sealed class NativeApi : INativeApi
         return moduleInfos;
     }
 
-    public IntPtr GetStackStart(IntPtr hProcess, int threadNr, IntPtr? krenel32ModuleHandle = null)
+    public IntPtr GetStackStart(IntPtr hProcess, int threadNr, ModuleInfo? kernel32Module = null)
     {
-        var _krenel32ModuleHandle = IntPtr.Zero;
+        if (kernel32Module == null)
+        {
+            var _kernel32ModuleHandle = GetModuleHandle("kernel32.dll");
 
-        if (krenel32ModuleHandle == null)
-            _krenel32ModuleHandle = GetModuleHandle("kernel32.dll");
+            if (_kernel32ModuleHandle == IntPtr.Zero)
+                throw new InvalidOperationException("Handle to kernel32.dll not found. " + Marshal.GetLastWin32Error());
 
-        if (_krenel32ModuleHandle == IntPtr.Zero)
-            throw new InvalidOperationException("Handle to kernel32.dll not found. " + Marshal.GetLastWin32Error());
+            if (!GetModuleInformation(hProcess, _kernel32ModuleHandle, out var mi, Marshal.SizeOf<MODULEINFO>()))
+                throw new InvalidOperationException("Failed fetching kernel32 module info. " + Marshal.GetLastWin32Error());
 
-        if (!GetModuleInformation(hProcess, _krenel32ModuleHandle, out var mi, Marshal.SizeOf<MODULEINFO>()))
-            throw new InvalidOperationException("Failed fetching kernel32 module info. " + Marshal.GetLastWin32Error());
+            kernel32Module = new ModuleInfo { Name = "kernel32.dll", BaseAddress = mi.lpBaseOfDll, Size = mi.SizeOfImage };
+        }
 
         var processId = GetProcessId(hProcess);
         IntPtr hSnapshot = CreateToolhelp32Snapshot(CreateToolhelp32SnapshotFlags.TH32CS_SNAPTHREAD, processId);
@@ -437,7 +439,7 @@ public sealed class NativeApi : INativeApi
                         {
                             var buffAddress = (IntPtr)BitConverter.ToUInt64(buffer, i * 8);
                         
-                            if (buffAddress.InRange(mi.lpBaseOfDll, mi.lpBaseOfDll + (int)mi.SizeOfImage))
+                            if (buffAddress.InRange(kernel32Module.BaseAddress, kernel32Module.BaseAddress + (int)kernel32Module.Size))
                             {
                                 stackStart = stackTopPtr - 4096 + i * 8;
                                 break;

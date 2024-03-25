@@ -93,9 +93,11 @@ public abstract class PointerScanner2
 
     private void FillTheStackList(IntPtr processHandle)
     {
+        var kernel32 = _modules.FirstOrDefault(x => x.Name.Contains("kernel32.dll", StringComparison.InvariantCultureIgnoreCase));
+
         for (int i = 0; i < _threadStacks; i++)
         {
-            var threadStackStart = NativeApi.GetStackStart(processHandle, i);
+            var threadStackStart = NativeApi.GetStackStart(processHandle, i, kernel32);
 
             if (threadStackStart == IntPtr.Zero)
             {
