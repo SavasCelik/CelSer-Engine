@@ -8,7 +8,7 @@ public class DefaultPointerScanner : PointerScanner2
     private SortedDictionary<IntPtr, PointerList> _pointerDict;
     private IntPtr[] _keyArray;
 
-    public DefaultPointerScanner(NativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
+    public DefaultPointerScanner(INativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
     {
         _pointerDict = new SortedDictionary<IntPtr, PointerList>();
         _keyArray = Array.Empty<IntPtr>();

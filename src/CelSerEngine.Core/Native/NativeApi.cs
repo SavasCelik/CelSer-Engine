@@ -305,7 +305,7 @@ public sealed class NativeApi : INativeApi
         return virtualMemoryRegions;
     }
 
-    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateVirtualMemoryRegions(IntPtr hProcess)
+    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(IntPtr hProcess)
     {
         ulong currentAddress = 0x0;
         ulong stopAddress = 0x7FFFFFFFFFFFFFFF;

@@ -10,7 +10,7 @@ public class CheatEnginePointerScanner : PointerScanner2
     private PointerList? _firstPointerList = null;
     private PointerList? _lastPointerList = null;
 
-    public CheatEnginePointerScanner(NativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
+    public CheatEnginePointerScanner(INativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
     {
     }
 

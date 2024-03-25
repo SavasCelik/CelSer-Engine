@@ -19,12 +19,12 @@ public abstract class PointerScanner2
     public const int MaxOffsetsPerNode = 3;
     private bool _findValueInsteadOfAddress = false;
 
-    public NativeApi NativeApi { get; }
+    public INativeApi NativeApi { get; }
     public PointerScanOptions PointerScanOptions { get; init; }
     internal PathQueueElement[] PathQueue { get; set; } = new PathQueueElement[MaxQueueSize];
     public int PathQueueLength { get; set; } = 0;
 
-    public PointerScanner2(NativeApi nativeApi, PointerScanOptions pointerScanOptions)
+    public PointerScanner2(INativeApi nativeApi, PointerScanOptions pointerScanOptions)
     {
         NativeApi = nativeApi;
         PointerScanOptions = pointerScanOptions;
@@ -40,7 +40,7 @@ public abstract class PointerScanner2
         _modules = NativeApi.GetProcessModules(processHandle);
         FillTheStackList(processHandle);
         var memoryRegions = NativeApi
-            .EnumerateVirtualMemoryRegions(processHandle)
+            .EnumerateMemoryRegions(processHandle)
             .Where(m =>
                 !IsSystemModule(m)
                 && m.State == MEMORY_STATE.MEM_COMMIT
