@@ -58,9 +58,9 @@ public class PointerScanWorker
             }
         }
 
-        var resa = _results.OrderBy(x => x.TempResults[0]).ThenBy(x => x.TempResults[1]).ToArray();
+        //var sorted = _results.OrderBy(x => x.TempResults[0]).ThenBy(x => x.TempResults[1]).ToArray();
 
-        return resa;
+        return _results;
     }
 
     private void ReverseScan(IntPtr valueToFind, int level)
