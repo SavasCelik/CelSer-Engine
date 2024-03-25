@@ -1,6 +1,6 @@
 ﻿namespace CelSerEngine.Core.Scanners;
 
-internal class PointerScanWorker
+public class PointerScanWorker
 {
     private readonly PointerScanner2 _pointerScanner;
     private IntPtr[] _tempResults;
@@ -8,15 +8,19 @@ internal class PointerScanWorker
     private int _pathsEvaluated = 0;
     private int _pointersFound = 0;
     private List<ResultPointer> _results = new List<ResultPointer>();
+    private int _maxLevel;
+    private int _structSize;
 
     public PointerScanWorker(PointerScanner2 pointerScanner)
     {
         _pointerScanner = pointerScanner;
-        _tempResults = new IntPtr[PointerScanner2.MaxLevel];
-        _valueList = new UIntPtr[PointerScanner2.MaxLevel];
+        _structSize = pointerScanner.PointerScanOptions.MaxOffset;
+        _maxLevel = pointerScanner.PointerScanOptions.MaxLevel;
+        _tempResults = new IntPtr[_maxLevel];
+        _valueList = new UIntPtr[_maxLevel];
     }
 
-    public void Start()
+    public IList<ResultPointer> Start()
     {
         while (true)
         {
@@ -29,11 +33,11 @@ internal class PointerScanWorker
                 var i = _pointerScanner.PathQueueLength;
                 valueToFind = _pointerScanner.PathQueue[i].ValueToFind;
                 startLevel = _pointerScanner.PathQueue[i].StartLevel;
-                Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, PointerScanner2.MaxLevel);
+                Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, _maxLevel);
 
                 if (PointerScanner2.NoLoop)
                 {
-                    Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, PointerScanner2.MaxLevel);
+                    Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, _maxLevel);
                 }
             }
 
@@ -46,12 +50,13 @@ internal class PointerScanWorker
         }
 
         var resa = _results.OrderBy(x => x.TempResults[0]).ThenBy(x => x.TempResults[1]).ToArray();
-        var hoh = "";
+
+        return resa;
     }
 
     private void ReverseScan(IntPtr valueToFind, int level)
     {
-        if (level >= PointerScanner2.MaxLevel)
+        if (level >= _maxLevel)
             return;
 
         var differentOffsetsInThisNode = 0;
@@ -61,7 +66,7 @@ internal class PointerScanWorker
 
         if (!exactOffset)
         {
-            startValue = valueToFind - PointerScanner2.StructSize;
+            startValue = valueToFind - _structSize;
             stopValue = valueToFind;
 
             if (startValue > stopValue)
@@ -113,14 +118,14 @@ internal class PointerScanWorker
                     {
                         //check if we should go deeper into these results (not if max level has been reached)
 
-                        if ((level + 1) < PointerScanner2.MaxLevel)
+                        if ((level + 1) < _maxLevel)
                         {
                             var addedToQueue = false;
 
                             //if (not terminated) and(not outofdiskspace ^) then //if there is not enough diskspace left wait till it's terminated, or diskspace is freed
 
                             if (
-                                ((level + 3 < PointerScanner2.MaxLevel) &&
+                                ((level + 3 < _maxLevel) &&
                                     (
                                         ((_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 3))) ||
                                         ((level <= 2) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 8))) ||
@@ -137,11 +142,11 @@ internal class PointerScanWorker
                                 {
                                     //still room
 
-                                    Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, PointerScanner2.MaxLevel);
+                                    Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, _maxLevel);
 
                                     if (PointerScanner2.NoLoop)
                                     {
-                                        Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, PointerScanner2.MaxLevel);
+                                        Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, _maxLevel);
                                     }
 
                                     _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].StartLevel = level + 1;

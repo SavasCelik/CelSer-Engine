@@ -3,25 +3,25 @@ using CelSerEngine.Core.Native;
 
 namespace CelSerEngine.Core.Scanners;
 
-internal class CheatEnginePointerScanner : PointerScanner2
+public class CheatEnginePointerScanner : PointerScanner2
 {
     private const int MaxNibble = 15; // Since a pointer is max 64Bit and 64 / 4(nibble) = 16, but since we start from 0 we need 15
     private ReversePointerTable[] _level0list = new ReversePointerTable[16];
     private PointerList? _firstPointerList = null;
     private PointerList? _lastPointerList = null;
 
-    public CheatEnginePointerScanner(NativeApi nativeApi, nint hProcess) : base(nativeApi, hProcess)
+    public CheatEnginePointerScanner(NativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
     {
     }
 
-    protected override void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions)
+    protected override void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle)
     {
         var buffer = new byte[memoryRegions.Max(x => x.MemorySize)];
 
         //initial scan to fetch the counts of memory
         foreach (var memoryRegion in memoryRegions.Where(x => x.ValidPointerRange))
         {
-            if (!NativeApi.TryReadVirtualMemory(ProcessHandle, memoryRegion.BaseAddress, (uint)memoryRegion.MemorySize, buffer))
+            if (!NativeApi.TryReadVirtualMemory(processHandle, memoryRegion.BaseAddress, (uint)memoryRegion.MemorySize, buffer))
                 continue;
 
             var lastAddress = (int)memoryRegion.MemorySize - IntPtr.Size;
@@ -39,7 +39,7 @@ internal class CheatEnginePointerScanner : PointerScanner2
         //actual add
         foreach (var memoryRegion in memoryRegions)
         {
-            if (!NativeApi.TryReadVirtualMemory(ProcessHandle, memoryRegion.BaseAddress, (uint)memoryRegion.MemorySize, buffer))
+            if (!NativeApi.TryReadVirtualMemory(processHandle, memoryRegion.BaseAddress, (uint)memoryRegion.MemorySize, buffer))
                 continue;
 
             var lastAddress = (int)memoryRegion.MemorySize - IntPtr.Size;

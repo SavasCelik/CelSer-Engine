@@ -14,35 +14,33 @@ public abstract class PointerScanner2
     private int _threadStacks = 2;
     private List<IntPtr> _stackList = new(2);
     public const int MaxQueueSize = 64;
-    public const int MaxLevel = 4;
-    public const int StructSize = 4095;
     public const bool NoLoop = true;
     public const bool LimitToMaxOffsetsPerNode = true;
     public const int MaxOffsetsPerNode = 3;
     private bool _findValueInsteadOfAddress = false;
 
     public NativeApi NativeApi { get; }
-    public IntPtr ProcessHandle { get; }
+    public PointerScanOptions PointerScanOptions { get; init; }
     internal PathQueueElement[] PathQueue { get; set; } = new PathQueueElement[MaxQueueSize];
     public int PathQueueLength { get; set; } = 0;
-    public nint AutomaticAddress => new IntPtr(0x001A0AC8);
 
-    public PointerScanner2(NativeApi nativeApi, IntPtr hProcess)
+    public PointerScanner2(NativeApi nativeApi, PointerScanOptions pointerScanOptions)
     {
         NativeApi = nativeApi;
-        ProcessHandle = hProcess;
+        PointerScanOptions = pointerScanOptions;
         _useStacks = true;
-        _modules = NativeApi.GetProcessModules(ProcessHandle);
+        _modules = new List<ModuleInfo>();
     }
 
-    public void StartPointerScan()
+    public IList<Pointer> StartPointerScan(IntPtr processHandle)
     {
         if (IntPtr.Size == 4)
             throw new NotImplementedException("32-bit is not supported yet.");
 
-        FillTheStackList();
+        _modules = NativeApi.GetProcessModules(processHandle);
+        FillTheStackList(processHandle);
         var memoryRegions = NativeApi
-            .GatherVirtualMemoryRegions2(ProcessHandle)
+            .GatherVirtualMemoryRegions2(processHandle)
             .Where(m =>
                 !IsSystemModule(m)
                 && m.State == MEMORY_STATE.MEM_COMMIT
@@ -68,19 +66,29 @@ public abstract class PointerScanner2
         ConcatMemoryRegions(memoryRegions);
         MakeMemoryRegionChunks(memoryRegions);
         memoryRegions.Sort((region1, region2) => region1.BaseAddress.CompareTo(region2.BaseAddress));
-        FindPointersInMemoryRegions(memoryRegions);
+        FindPointersInMemoryRegions(memoryRegions, processHandle);
         FillLinkedList();
         InitializeEmptyPathQueue();
 
         var scanWorker = new PointerScanWorker(this);
-        scanWorker.Start();
+        var foundPointers = scanWorker.Start();
+        var pPointers = foundPointers
+            .Select(x => new Pointer
+            {
+                ModuleName = _modules[x.ModuleIndex].Name,
+                BaseAddress = _modules[x.ModuleIndex].BaseAddress,
+                BaseOffset = _stackList.Contains(_modules[x.ModuleIndex].BaseAddress) ? (int)~x.Offset + 1 : (int)x.Offset,
+                Offsets = x.TempResults
+            }).ToList();
+
+        return pPointers;
     }
 
-    private void FillTheStackList()
+    private void FillTheStackList(IntPtr processHandle)
     {
         for (int i = 0; i < _threadStacks; i++)
         {
-            var threadStackStart = NativeApi.GetStackStart(ProcessHandle, i);
+            var threadStackStart = NativeApi.GetStackStart(processHandle, i);
 
             if (threadStackStart == IntPtr.Zero)
             {
@@ -244,7 +252,7 @@ public abstract class PointerScanner2
         return moduleInfo != null;
     }
 
-    protected abstract void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions);
+    protected abstract void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle);
     protected abstract void FillLinkedList();
     internal abstract PointerList? FindPointerValue(IntPtr startValue, ref IntPtr stopValue);
 
@@ -252,11 +260,11 @@ public abstract class PointerScanner2
     {
         for (var i = 0; i <= MaxQueueSize - 1; i++)
         {
-            for (var j = 0; j <= MaxLevel + 1; j++)
+            for (var j = 0; j <= PointerScanOptions.MaxLevel + 1; j++)
             {
                 if (PathQueue[i] == null)
                 {
-                    PathQueue[i] = new PathQueueElement(MaxLevel);
+                    PathQueue[i] = new PathQueueElement(PointerScanOptions.MaxLevel);
                 }
 
                 PathQueue[i].TempResults[j] = new IntPtr(0xcececece);
@@ -264,25 +272,25 @@ public abstract class PointerScanner2
 
             if (NoLoop)
             {
-                for (var j = 0; j < MaxLevel + 1; j++)
+                for (var j = 0; j < PointerScanOptions.MaxLevel + 1; j++)
                 {
                     if (PathQueue[i] == null)
                     {
-                        PathQueue[i] = new PathQueueElement(MaxLevel);
+                        PathQueue[i] = new PathQueueElement(PointerScanOptions.MaxLevel);
                     }
                     PathQueue[i].ValueList[j] = new UIntPtr(0xcececececececece);
                 }
             }
         }
 
-        if (MaxLevel > 0)
+        if (PointerScanOptions.MaxLevel > 0)
         {
             if (true) // if (initializer) then //don't start the scan if it's a worker system
             {
                 if (!_findValueInsteadOfAddress)
                 {
                     PathQueue[PathQueueLength].StartLevel = 0;
-                    PathQueue[PathQueueLength].ValueToFind = AutomaticAddress;
+                    PathQueue[PathQueueLength].ValueToFind = PointerScanOptions.SearchedAddress;
                     PathQueueLength++;
                 }
             }

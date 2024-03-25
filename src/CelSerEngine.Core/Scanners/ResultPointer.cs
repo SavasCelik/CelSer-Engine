@@ -1,9 +1,9 @@
 ﻿namespace CelSerEngine.Core.Scanners;
 
-internal class ResultPointer
+public class ResultPointer
 {
     public int ModuleIndex { get; set; }
     public IntPtr Offset { get; set; }
-    public IntPtr[] TempResults { get; set; } = new IntPtr[PointerScanner2.MaxLevel];
+    public required IntPtr[] TempResults { get; set; }
     public int Level { get; set; }
 }

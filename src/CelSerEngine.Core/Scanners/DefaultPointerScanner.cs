@@ -3,24 +3,24 @@ using CelSerEngine.Core.Native;
 
 namespace CelSerEngine.Core.Scanners;
 
-internal class DefaultPointerScanner : PointerScanner2
+public class DefaultPointerScanner : PointerScanner2
 {
     private SortedDictionary<IntPtr, PointerList> _pointerDict;
     private IntPtr[] _keyArray;
 
-    public DefaultPointerScanner(NativeApi nativeApi, nint hProcess) : base(nativeApi, hProcess)
+    public DefaultPointerScanner(NativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
     {
         _pointerDict = new SortedDictionary<IntPtr, PointerList>();
         _keyArray = Array.Empty<IntPtr>();
     }
 
-    protected override void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions)
+    protected override void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle)
     {
         var buffer = new byte[memoryRegions.Max(x => x.MemorySize)];
 
         foreach (var memoryRegion in memoryRegions)
         {
-            if (!NativeApi.TryReadVirtualMemory(ProcessHandle, memoryRegion.BaseAddress, (uint)memoryRegion.MemorySize, buffer))
+            if (!NativeApi.TryReadVirtualMemory(processHandle, memoryRegion.BaseAddress, (uint)memoryRegion.MemorySize, buffer))
                 continue;
 
             var lastAddress = (int)memoryRegion.MemorySize - IntPtr.Size;
