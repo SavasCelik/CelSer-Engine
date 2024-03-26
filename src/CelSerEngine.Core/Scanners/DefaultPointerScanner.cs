@@ -14,7 +14,7 @@ public class DefaultPointerScanner : PointerScanner2
         _keyArray = Array.Empty<IntPtr>();
     }
 
-    protected override void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle)
+    protected override void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle)
     {
         var buffer = new byte[memoryRegions.Max(x => x.MemorySize)];
 

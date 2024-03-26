@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using static CelSerEngine.Core.Native.Enums;
 using static CelSerEngine.Core.Native.Structs;
@@ -18,6 +19,7 @@ public abstract class PointerScanner2
     public const bool LimitToMaxOffsetsPerNode = true;
     public const int MaxOffsetsPerNode = 3;
     private bool _findValueInsteadOfAddress = false;
+    private Dictionary<IntPtr, IntPtr> _pointerByMemoryAddress = new();
 
     public INativeApi NativeApi { get; }
     public PointerScanOptions PointerScanOptions { get; init; }
@@ -39,6 +41,59 @@ public abstract class PointerScanner2
 
         _modules = NativeApi.GetProcessModules(processHandle);
         FillTheStackList(processHandle);
+        var memoryRegions = GetMemoryRegions(processHandle);
+        FindPointersInMemoryRegions(memoryRegions, processHandle);
+        FillLinkedList();
+        InitializeEmptyPathQueue();
+
+        var foundPointers = await Task.Factory.StartNew(() =>
+        {
+            var scanWorker = new PointerScanWorker(this, cancellationToken);
+            var scanResult = scanWorker.Start();
+            var foundPointers = scanResult
+                .Select(x => new Pointer
+                {
+                    ModuleName = _modules[x.ModuleIndex].Name,
+                    BaseAddress = _modules[x.ModuleIndex].BaseAddress,
+                    BaseOffset = _stackList.Contains(_modules[x.ModuleIndex].BaseAddress) ? (int)~x.Offset + 1 : (int)x.Offset,
+                    Offsets = x.TempResults
+                }).ToList();
+
+            return foundPointers;
+        }, cancellationToken);
+        
+
+        return foundPointers;
+    }
+
+    public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> firstScanPointers, IntPtr searchedAddress, IntPtr processHandle)
+    {
+        var memoryRegions = GetMemoryRegions(processHandle);
+        var buffer = new byte[memoryRegions.Max(x => x.MemorySize)];
+
+        foreach (var memoryRegion in memoryRegions)
+        {
+            if (!NativeApi.TryReadVirtualMemory(processHandle, memoryRegion.BaseAddress, (uint)memoryRegion.MemorySize, buffer))
+                continue;
+
+            var lastAddress = (int)memoryRegion.MemorySize - IntPtr.Size;
+            for (var i = 0; i <= lastAddress; i += 4)
+            {
+                var currentPointer = (IntPtr)BitConverter.ToUInt64(buffer, i);
+
+                if (currentPointer % 4 == 0 && IsPointer(currentPointer, memoryRegions))
+                {
+                    var memoryAddress = memoryRegion.BaseAddress + i;
+                    _pointerByMemoryAddress.Add(memoryAddress, currentPointer);
+                }
+            }
+        }
+
+        return await FilterPointersAsync(firstScanPointers, searchedAddress);
+    }
+
+    private IReadOnlyList<VirtualMemoryRegion2> GetMemoryRegions(IntPtr processHandle)
+    {
         var memoryRegions = NativeApi
             .EnumerateMemoryRegions(processHandle)
             .Where(m =>
@@ -66,29 +121,39 @@ public abstract class PointerScanner2
         ConcatMemoryRegions(memoryRegions);
         MakeMemoryRegionChunks(memoryRegions);
         memoryRegions.Sort((region1, region2) => region1.BaseAddress.CompareTo(region2.BaseAddress));
-        FindPointersInMemoryRegions(memoryRegions, processHandle);
-        FillLinkedList();
-        InitializeEmptyPathQueue();
 
+        return memoryRegions;
+    }
 
-        var foundPointers = await Task.Factory.StartNew(() =>
+    private async Task<IList<Pointer>> FilterPointersAsync(IEnumerable<Pointer> firstScanPointers, IntPtr searchedAddress)
+    {
+        var foundPointer = Task.Factory.StartNew(() =>
         {
-            var scanWorker = new PointerScanWorker(this, cancellationToken);
-            var scanResult = scanWorker.Start();
-            var foundPointers = scanResult
-                .Select(x => new Pointer
+            var foundPointer = new ConcurrentBag<Pointer>();
+            firstScanPointers.AsParallel().ForAll(x =>
+            {
+                var currentAddress = x.BaseAddress + x.BaseOffset;
+                IntPtr currentPointer;
+
+                if (!_pointerByMemoryAddress.TryGetValue(currentAddress, out currentPointer))
+                    return;
+
+                for (var i = x.Offsets.Count - 1; i >= 0; i--)
                 {
-                    ModuleName = _modules[x.ModuleIndex].Name,
-                    BaseAddress = _modules[x.ModuleIndex].BaseAddress,
-                    BaseOffset = _stackList.Contains(_modules[x.ModuleIndex].BaseAddress) ? (int)~x.Offset + 1 : (int)x.Offset,
-                    Offsets = x.TempResults
-                }).ToList();
+                    currentAddress = currentPointer + x.Offsets[i];
 
-            return foundPointers;
-        }, cancellationToken);
-        
+                    if (!_pointerByMemoryAddress.TryGetValue(currentAddress, out currentPointer))
+                        break;
+                }
 
-        return foundPointers;
+                if (currentAddress == searchedAddress)
+                    foundPointer.Add(x);
+            });
+
+            return foundPointer.ToList();
+        });
+
+        return await foundPointer;
     }
 
     private void FillTheStackList(IntPtr processHandle)
@@ -184,7 +249,7 @@ public abstract class PointerScanner2
         }
     }
 
-    protected bool IsPointer(IntPtr address, List<VirtualMemoryRegion2> memoryRegions)
+    protected bool IsPointer(IntPtr address, IReadOnlyList<VirtualMemoryRegion2> memoryRegions)
     {
         if (address == IntPtr.Zero)
             return false;
@@ -194,7 +259,7 @@ public abstract class PointerScanner2
         return index != -1 && memoryRegions[index].ValidPointerRange;
     }
 
-    private int BinSearchMemoryRegions(IntPtr address, List<VirtualMemoryRegion2> memoryRegions)
+    private int BinSearchMemoryRegions(IntPtr address, IReadOnlyList<VirtualMemoryRegion2> memoryRegions)
     {
         int first = 0; // Sets the first item of the range
         int last = memoryRegions.Count - 1; // Sets the last item of the range
@@ -261,7 +326,7 @@ public abstract class PointerScanner2
         return moduleInfo != null;
     }
 
-    protected abstract void FindPointersInMemoryRegions(List<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle);
+    protected abstract void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle);
     protected abstract void FillLinkedList();
     internal abstract PointerList? FindPointerValue(IntPtr startValue, ref IntPtr stopValue);
 

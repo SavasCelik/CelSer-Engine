@@ -61,7 +61,9 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         var processId = selectedProcess.Process.Id;
         var processHandle = selectedProcess.GetProcessHandle(_nativeApi);
         var searchedAddress = new IntPtr(long.Parse(nextAddress, NumberStyles.HexNumber));
-        var foundPointers = await _pointerScanner.RescanPointersAsync(FoundPointers, processId, processHandle, searchedAddress);
+        //var foundPointers = await _pointerScanner.RescanPointersAsync(FoundPointers, processId, processHandle, searchedAddress);
+        var pointerScanner = new DefaultPointerScanner((NativeApi)_nativeApi, new PointerScanOptions());
+        var foundPointers = await pointerScanner.RescanPointersAsync(FoundPointers, searchedAddress, processHandle);
         FoundPointers = foundPointers;
     }
 
