@@ -97,18 +97,18 @@ public class NewPointerScannerTests
 
         var region = foundRegions.Single();
         var offset = address - (IntPtr)region.BaseAddress;
-
-        if (region.RegionSize >= numberOfBytesToRead)
+        var dataLength = (int)region.RegionSize - offset.ToInt32();
+        if (dataLength >= numberOfBytesToRead)
         {
             Array.Copy(region.Data, offset.ToInt32(), buffer, 0, (int)numberOfBytesToRead);
             return true;
         }
 
         //Since the desired numberOfBytesToRead is larger than the RegionSize, we get the next contiguous memory region
-        Array.Copy(region.Data, offset.ToInt32(), buffer, 0, (int)region.RegionSize);
-        var newBuffer = new byte[numberOfBytesToRead - region.RegionSize];
-        ReadVirtualMemoryImpl(hProcess, (IntPtr)(region.BaseAddress + region.RegionSize), (uint)newBuffer.Length, newBuffer, memoryRegions);
-        Array.Copy(newBuffer, 0, buffer, (int)region.RegionSize, newBuffer.Length);
+        Array.Copy(region.Data, offset.ToInt32(), buffer, 0, dataLength);
+        var newBuffer = new byte[numberOfBytesToRead - dataLength];
+        ReadVirtualMemoryImpl(hProcess, (IntPtr)(region.BaseAddress + (uint)dataLength), (uint)newBuffer.Length, newBuffer, memoryRegions);
+        Array.Copy(newBuffer, 0, buffer, dataLength, newBuffer.Length);
 
         return true;
     }
