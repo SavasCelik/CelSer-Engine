@@ -31,17 +31,33 @@ public class NewPointerScannerTests
     [Fact]
     public async Task PointerScanner_Should_Find_Pointer_With_Expected_Offsets()
     {
-        var memoryRegions = JsonSerializer.Deserialize<IList<MemoryRegionTestClass>>(
+        var stubMemoryRegions = JsonSerializer.Deserialize<IList<MemoryRegionTestClass>>(
                 File.ReadAllText("ScannerTests/PointerScannerData/NewWay/MemoryRegions.json"),
                 _jsonSerializerOptions)!;
-        var stubNativeApi = GetStubNativeApi(memoryRegions);
+        var stubNativeApi = GetStubNativeApi(stubMemoryRegions);
         var pointerScanner = new DefaultPointerScanner(stubNativeApi.Object, _scanOptions);
-        var foundPointers = await pointerScanner.StartPointerScanAsync(_scanOptions.ProcessHandle);
+        var foundPointers = await pointerScanner.StartPointerScanAsync(IntPtr.Zero);
         var expectedPointer = foundPointers.Where(x => x.OffsetsDisplayString == _expectedOffsets).ToList();
 
         Assert.Single(expectedPointer);
+
+        await RescanPointerTest(foundPointers);
     }
 
+    private async Task RescanPointerTest(IEnumerable<Pointer> firstScanPointers)
+    {
+        var searchedAddressAfterRescan = new IntPtr(0x014F3DC8);
+        var stubMemoryRegions =
+            JsonSerializer.Deserialize<IList<MemoryRegionTestClass>>(
+                await File.ReadAllTextAsync("ScannerTests/PointerScannerData/NewWay/Rescan_MemoryRegions.json"),
+                _jsonSerializerOptions)!;
+        var stubNativeApi = GetStubNativeApi(stubMemoryRegions);
+        var pointerScanner = new DefaultPointerScanner(stubNativeApi.Object, new PointerScanOptions());
+        var foundPointersAfterRescan = await pointerScanner.RescanPointersAsync(firstScanPointers, searchedAddressAfterRescan, IntPtr.Zero);
+        var expectedPointerAfterRescan = foundPointersAfterRescan.Where(x => x.OffsetsDisplayString == _expectedOffsets).ToList();
+
+        Assert.Single(expectedPointerAfterRescan);
+    }
 
     private Mock<INativeApi> GetStubNativeApi(IList<MemoryRegionTestClass> stubMemoryRegions)
     {
