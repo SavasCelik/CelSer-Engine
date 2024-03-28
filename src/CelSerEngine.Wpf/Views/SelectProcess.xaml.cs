@@ -32,17 +32,4 @@ public partial class SelectProcess : Window
             searchProcessTxtBox.Background = null;
         }
     }
-
-    /// <summary>
-    /// [View Exclusive Method] Close window when an item is selected and double clicked
-    /// </summary>
-    private void DoubleClickOnProcessInDataGrid(object sender, MouseButtonEventArgs e)
-    {
-        var datagrid = sender as DataGrid;
-        if (datagrid != null && datagrid.SelectedItem != null)
-        {
-            DialogResult = true;
-            Close();
-        }
-    }
 }
