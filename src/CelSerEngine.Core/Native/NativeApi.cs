@@ -6,6 +6,7 @@ using CelSerEngine.Core.Models;
 using System.Runtime.InteropServices;
 using CelSerEngine.Core.Extensions;
 using System.Buffers;
+using Microsoft.Win32.SafeHandles;
 
 namespace CelSerEngine.Core.Native;
 
@@ -19,19 +20,19 @@ public sealed class NativeApi : INativeApi
         _byteArrayPool = ArrayPool<byte>.Shared;
     }
 
-    public IntPtr OpenProcess(string processName)
+    public SafeProcessHandle OpenProcess(string processName)
     {
         var processList = Process.GetProcessesByName(processName);
 
         if (processList.Length == 0)
-            return IntPtr.Zero;
+            return new SafeProcessHandle();
 
         var process = processList.First();
 
         return OpenProcess(process.Id);
     }
 
-    public IntPtr OpenProcess(int processId)
+    public SafeProcessHandle OpenProcess(int processId)
     {
         Debug.WriteLine($"ProcessID: {processId}");
 
@@ -75,13 +76,13 @@ public sealed class NativeApi : INativeApi
         return new ProcessModuleInfo(moduleEntry.szModule, moduleEntry.modBaseAddr, moduleEntry.modBaseSize);
     }
 
-    public bool TryReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, out byte[] buffer)
+    public bool TryReadVirtualMemory(SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, out byte[] buffer)
     {
         buffer = new byte[numberOfBytesToRead];
         return TryReadVirtualMemory(hProcess, address, numberOfBytesToRead, buffer);
     }
 
-    public bool TryReadVirtualMemory(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer)
+    public bool TryReadVirtualMemory(SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer)
     {
         var result = NtReadVirtualMemory(
             hProcess,
@@ -93,7 +94,7 @@ public sealed class NativeApi : INativeApi
         return result == NTSTATUS.Success;
     }
 
-    public void WriteMemory(IntPtr hProcess, IMemorySegment trackedScanItem, string newValue)
+    public void WriteMemory(SafeProcessHandle hProcess, IMemorySegment trackedScanItem, string newValue)
     {
         var memoryAddress = trackedScanItem.Address;
 
@@ -126,7 +127,7 @@ public sealed class NativeApi : INativeApi
         
     }
 
-    public void WriteMemory<T>(IntPtr hProcess, IntPtr memoryAddress, T newValue)
+    public void WriteMemory<T>(SafeProcessHandle hProcess, IntPtr memoryAddress, T newValue)
         where T : struct
     {
         var typeSize = Marshal.SizeOf(typeof(T));
@@ -146,7 +147,7 @@ public sealed class NativeApi : INativeApi
         _byteArrayPool.Return(bytesToWrite);
     }
 
-    public void UpdateAddresses(IntPtr hProcess, IEnumerable<IMemorySegment> virtualAddresses, CancellationToken token = default)
+    public void UpdateAddresses(SafeProcessHandle hProcess, IEnumerable<IMemorySegment> virtualAddresses, CancellationToken token = default)
     {
         foreach (var address in virtualAddresses)
         {
@@ -166,7 +167,7 @@ public sealed class NativeApi : INativeApi
         }
     }
 
-    public void UpdateMemorySegmennt(IntPtr hProcess, IMemorySegment memorySegment)
+    public void UpdateMemorySegmennt(SafeProcessHandle hProcess, IMemorySegment memorySegment)
     {
         if (memorySegment == null)
             return;
@@ -216,7 +217,7 @@ public sealed class NativeApi : INativeApi
     //    trackedPointerScanItem.DetermineAddressDisplayString();
     //}
 
-    public void UpdatePointerAddress(IntPtr hProcess, IPointer? pointerAddress)
+    public void UpdatePointerAddress(SafeProcessHandle hProcess, IPointer? pointerAddress)
     {
         if (pointerAddress == null)
             return;
@@ -230,7 +231,7 @@ public sealed class NativeApi : INativeApi
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
-    public void ResolvePointerPath(IntPtr hProcess, IPointer pointerAddress)
+    public void ResolvePointerPath(SafeProcessHandle hProcess, IPointer pointerAddress)
     {
         var buffer = _byteArrayPool.Rent(sizeof(long));
         TryReadVirtualMemory(hProcess, pointerAddress.Address, sizeof(long), buffer);
@@ -253,9 +254,9 @@ public sealed class NativeApi : INativeApi
         _byteArrayPool.Return(buffer, clearArray: true);
     }
 
-    public IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(IntPtr hProcess)
+    public IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(SafeProcessHandle hProcess)
     {
-        if (hProcess == IntPtr.Zero)
+        if (hProcess.IsInvalid)
             throw new ArgumentNullException(nameof(hProcess));
 
         var virtualMemoryRegions = new List<VirtualMemoryRegion>();
@@ -305,7 +306,7 @@ public sealed class NativeApi : INativeApi
         return virtualMemoryRegions;
     }
 
-    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(IntPtr hProcess)
+    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(SafeProcessHandle hProcess)
     {
         ulong currentAddress = 0x0;
         ulong stopAddress = 0x7FFFFFFFFFFFFFFF;
@@ -324,7 +325,7 @@ public sealed class NativeApi : INativeApi
         }
     }
 
-    public IList<ModuleInfo> GetProcessModules(IntPtr hProcess)
+    public IList<ModuleInfo> GetProcessModules(SafeProcessHandle hProcess)
     {
         // https://github.com/microsoft/clrmd/blob/main/src/Microsoft.Diagnostics.Runtime/DataReaders/Windows/WindowsProcessDataReader.cs#L138
         EnumProcessModules(hProcess, null, 0, out uint needed);
@@ -362,7 +363,7 @@ public sealed class NativeApi : INativeApi
         return moduleInfos;
     }
 
-    public IntPtr GetStackStart(IntPtr hProcess, int threadNr, ModuleInfo? kernel32Module = null)
+    public IntPtr GetStackStart(SafeProcessHandle hProcess, int threadNr, ModuleInfo? kernel32Module = null)
     {
         if (kernel32Module == null)
         {

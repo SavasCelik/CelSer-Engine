@@ -2,6 +2,7 @@
 using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -50,6 +51,11 @@ public partial class SelectProcessViewModel : ObservableRecipient
         }
     }
 
+    partial void OnSelectedProcessChanging(ProcessAdapter? oldValue, ProcessAdapter? newValue)
+    {
+        oldValue?.Dispose();
+    }
+
     public bool ShowSelectProcessDialog()
     {
         SearchProcessText = "";
@@ -68,12 +74,12 @@ public partial class SelectProcessViewModel : ObservableRecipient
         return selectProcessWindow.ShowDialog() ?? false;
     }
 
-    public IntPtr GetSelectedProcessHandle()
+    public SafeProcessHandle GetSelectedProcessHandle()
     {
         if (SelectedProcess != null)
             return SelectedProcess.GetProcessHandle(_nativeApi);
 
-        return IntPtr.Zero;
+        return new SafeProcessHandle();
     }
 
     [Conditional("DEBUG")]
@@ -84,7 +90,7 @@ public partial class SelectProcessViewModel : ObservableRecipient
         SelectedProcess = new ProcessAdapter(process);
         var pHandle = GetSelectedProcessHandle();
 
-        if (pHandle != IntPtr.Zero)
+        if (!pHandle.IsInvalid)
             Debug.WriteLine("Attached To DebugGame");
     }
 

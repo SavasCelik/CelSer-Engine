@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using Microsoft.Win32.SafeHandles;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using static CelSerEngine.Core.Native.Enums;
@@ -34,7 +35,7 @@ public abstract class PointerScanner2
         _modules = new List<ModuleInfo>();
     }
 
-    public async Task<IList<Pointer>> StartPointerScanAsync(IntPtr processHandle , CancellationToken cancellationToken = default)
+    public async Task<IList<Pointer>> StartPointerScanAsync(SafeProcessHandle processHandle , CancellationToken cancellationToken = default)
     {
         if (IntPtr.Size == 4)
             throw new NotImplementedException("32-bit is not supported yet.");
@@ -66,7 +67,7 @@ public abstract class PointerScanner2
         return foundPointers;
     }
 
-    public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> firstScanPointers, IntPtr searchedAddress, IntPtr processHandle)
+    public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> firstScanPointers, IntPtr searchedAddress, SafeProcessHandle processHandle)
     {
         var memoryRegions = GetMemoryRegions(processHandle);
         var buffer = new byte[memoryRegions.Max(x => x.MemorySize)];
@@ -92,7 +93,7 @@ public abstract class PointerScanner2
         return await FilterPointersAsync(firstScanPointers, searchedAddress);
     }
 
-    private IReadOnlyList<VirtualMemoryRegion2> GetMemoryRegions(IntPtr processHandle)
+    private IReadOnlyList<VirtualMemoryRegion2> GetMemoryRegions(SafeProcessHandle processHandle)
     {
         var memoryRegions = NativeApi
             .EnumerateMemoryRegions(processHandle)
@@ -156,7 +157,7 @@ public abstract class PointerScanner2
         return await foundPointer;
     }
 
-    private void FillTheStackList(IntPtr processHandle)
+    private void FillTheStackList(SafeProcessHandle processHandle)
     {
         var kernel32 = _modules.FirstOrDefault(x => x.Name.Contains("kernel32.dll", StringComparison.InvariantCultureIgnoreCase));
 
@@ -326,7 +327,7 @@ public abstract class PointerScanner2
         return moduleInfo != null;
     }
 
-    protected abstract void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle);
+    protected abstract void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, SafeProcessHandle processHandle);
     protected abstract void FillLinkedList();
     internal abstract PointerList? FindPointerValue(IntPtr startValue, ref IntPtr stopValue);
 

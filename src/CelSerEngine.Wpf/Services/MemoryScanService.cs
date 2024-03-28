@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Comparators;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -18,7 +19,7 @@ public class MemoryScanService : IMemoryScanService
 
     public async Task<IList<IMemorySegment>> ScanProcessMemoryAsync(
         ScanConstraint scanConstraint,
-        IntPtr processHandle,
+        SafeProcessHandle processHandle,
         IProgress<float> progressUpdater,
         CancellationToken token = default)
     {
@@ -35,7 +36,7 @@ public class MemoryScanService : IMemoryScanService
     public async Task<IList<IMemorySegment>> FilterMemorySegmentsByScanConstraintAsync(
         IList<IMemorySegment> memorySegments,
         ScanConstraint scanConstraint,
-        IntPtr processHandle,
+        SafeProcessHandle processHandle,
         IProgress<float> progressUpdater,
         CancellationToken token = default)
     {

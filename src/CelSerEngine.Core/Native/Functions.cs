@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Microsoft.Win32.SafeHandles;
+using System.Runtime.InteropServices;
 using static CelSerEngine.Core.Native.Enums;
 using static CelSerEngine.Core.Native.Structs;
 
@@ -22,17 +23,17 @@ internal static class Functions
     internal static extern bool CloseHandle(IntPtr hObject);
 
     [DllImport("ntdll.dll", SetLastError = true)]
-    internal static extern NTSTATUS NtOpenProcess(out IntPtr ProcessHandle, uint AccessMask, out OBJECT_ATTRIBUTES ObjectAttributes, ref CLIENT_ID ClientId);
+    internal static extern NTSTATUS NtOpenProcess(out SafeProcessHandle ProcessHandle, uint AccessMask, out OBJECT_ATTRIBUTES ObjectAttributes, ref CLIENT_ID ClientId);
 
     [DllImport("ntdll.dll", SetLastError = true)]
-    internal static extern NTSTATUS NtReadVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, uint NumberOfBytesToRead, out uint NumberOfBytesRead);
+    internal static extern NTSTATUS NtReadVirtualMemory(SafeProcessHandle ProcessHandle, IntPtr BaseAddress, byte[] Buffer, uint NumberOfBytesToRead, out uint NumberOfBytesRead);
 
     [DllImport("ntdll.dll", SetLastError = true)]
-    internal static extern NTSTATUS NtWriteVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, uint NumberOfBytesToWrite, out uint NumberOfBytesWritten);
+    internal static extern NTSTATUS NtWriteVirtualMemory(SafeProcessHandle ProcessHandle, IntPtr BaseAddress, byte[] Buffer, uint NumberOfBytesToWrite, out uint NumberOfBytesWritten);
 
     [DllImport("ntdll.dll")]
     internal static extern NTSTATUS NtQueryVirtualMemory(
-        IntPtr ProcessHandle,
+        SafeProcessHandle ProcessHandle,
         IntPtr BaseAddress,
         int MemoryInformationClass,
         ref MEMORY_BASIC_INFORMATION64 MemoryInformation,
@@ -41,19 +42,19 @@ internal static class Functions
     );
 
     [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "K32EnumProcessModules")]
-    public static extern bool EnumProcessModules(IntPtr hProcess, [Out] IntPtr[]? lphModule, uint cb, [MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
+    public static extern bool EnumProcessModules(SafeProcessHandle hProcess, [Out] IntPtr[]? lphModule, uint cb, [MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "K32GetModuleFileNameExW")]
-    public static extern int GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] char[] lpFilename, [MarshalAs(UnmanagedType.U4)] int nSize);
+    public static extern int GetModuleFileNameEx(SafeProcessHandle hProcess, IntPtr hModule, [Out] char[] lpFilename, [MarshalAs(UnmanagedType.U4)] int nSize);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "K32GetModuleInformation")]
-    public static extern bool GetModuleInformation(IntPtr hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, int cb);
+    public static extern bool GetModuleInformation(SafeProcessHandle hProcess, IntPtr hModule, out MODULEINFO lpmodinfo, int cb);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern IntPtr GetModuleHandle(string lpModuleName);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    public static extern int GetProcessId(IntPtr hProcess);
+    public static extern int GetProcessId(SafeProcessHandle hProcess);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool Thread32First(IntPtr hSnapshot, ref THREADENTRY32 lpte);

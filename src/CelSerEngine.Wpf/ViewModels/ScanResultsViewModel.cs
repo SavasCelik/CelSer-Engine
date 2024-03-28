@@ -83,7 +83,7 @@ public partial class ScanResultsViewModel : ObservableRecipient
 
         var pHandle = _selectProcessViewModel.GetSelectedProcessHandle();
 
-        if (pHandle == IntPtr.Zero)
+        if (pHandle.IsInvalid)
             return;
 
         await Task.Run(() =>

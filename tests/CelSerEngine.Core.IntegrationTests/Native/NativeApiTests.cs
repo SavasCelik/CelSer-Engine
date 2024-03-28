@@ -14,7 +14,7 @@ public class NativeApiTests
 
         var actualProcessHandle = nativeApi.OpenProcess(currentProcess.ProcessName);
 
-        Assert.NotEqual(IntPtr.Zero, actualProcessHandle);
+        Assert.False(actualProcessHandle.IsInvalid);
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class NativeApiTests
 
         var actualProcessHandle = nativeApi.OpenProcess(currentProcess.Id);
 
-        Assert.NotEqual(IntPtr.Zero, actualProcessHandle);
+        Assert.False(actualProcessHandle.IsInvalid);
     }
 
     [Fact]

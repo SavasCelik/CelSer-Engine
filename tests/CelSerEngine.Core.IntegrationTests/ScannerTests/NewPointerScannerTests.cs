@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
+using Microsoft.Win32.SafeHandles;
 using Moq;
 using System.Text.Json;
 using Xunit;
@@ -21,7 +22,7 @@ public class NewPointerScannerTests
         _scanOptions = new PointerScanOptions()
         {
             ProcessId = "DoesNotMatter".GetHashCode(),
-            ProcessHandle = "DoesNotMatter".GetHashCode(),
+            ProcessHandle = new SafeProcessHandle(),
             MaxLevel = 4,
             MaxOffset = 0x1000,
             SearchedAddress = new IntPtr(0x014FA308)
@@ -36,7 +37,7 @@ public class NewPointerScannerTests
                 _jsonSerializerOptions)!;
         var stubNativeApi = GetStubNativeApi(stubMemoryRegions);
         var pointerScanner = new DefaultPointerScanner(stubNativeApi.Object, _scanOptions);
-        var foundPointers = await pointerScanner.StartPointerScanAsync(IntPtr.Zero);
+        var foundPointers = await pointerScanner.StartPointerScanAsync(_scanOptions.ProcessHandle);
         var expectedPointer = foundPointers.Where(x => x.OffsetsDisplayString == _expectedOffsets).ToList();
 
         Assert.Single(expectedPointer);
@@ -53,7 +54,7 @@ public class NewPointerScannerTests
                 _jsonSerializerOptions)!;
         var stubNativeApi = GetStubNativeApi(stubMemoryRegions);
         var pointerScanner = new DefaultPointerScanner(stubNativeApi.Object, new PointerScanOptions());
-        var foundPointersAfterRescan = await pointerScanner.RescanPointersAsync(firstScanPointers, searchedAddressAfterRescan, IntPtr.Zero);
+        var foundPointersAfterRescan = await pointerScanner.RescanPointersAsync(firstScanPointers, searchedAddressAfterRescan, _scanOptions.ProcessHandle);
         var expectedPointerAfterRescan = foundPointersAfterRescan.Where(x => x.OffsetsDisplayString == _expectedOffsets).ToList();
 
         Assert.Single(expectedPointerAfterRescan);
@@ -79,17 +80,17 @@ public class NewPointerScannerTests
         });
         var stubNativeApi = new Mock<INativeApi>();
         stubNativeApi
-            .Setup(x => x.GetProcessModules(It.IsAny<IntPtr>()))
+            .Setup(x => x.GetProcessModules(It.IsAny<SafeProcessHandle>()))
             .Returns(modules);
         stubNativeApi
-            .Setup(x => x.GetStackStart(It.IsAny<IntPtr>(), It.IsAny<int>(), It.IsAny<ModuleInfo>()))
-            .Returns((IntPtr hProcess, int threadNr, ModuleInfo? mi) => stackStarts[threadNr]);
+            .Setup(x => x.GetStackStart(It.IsAny<SafeProcessHandle>(), It.IsAny<int>(), It.IsAny<ModuleInfo>()))
+            .Returns((SafeProcessHandle hProcess, int threadNr, ModuleInfo? mi) => stackStarts[threadNr]);
         stubNativeApi
-            .Setup(x => x.EnumerateMemoryRegions(It.IsAny<IntPtr>()))
+            .Setup(x => x.EnumerateMemoryRegions(It.IsAny<SafeProcessHandle>()))
             .Returns(mbis);
         stubNativeApi
-            .Setup(x => x.TryReadVirtualMemory(It.IsAny<IntPtr>(), It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
-            .Returns((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
+            .Setup(x => x.TryReadVirtualMemory(It.IsAny<SafeProcessHandle>(), It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
+            .Returns((SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
             {
                 return ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubMemoryRegions);
             });
@@ -100,7 +101,7 @@ public class NewPointerScannerTests
     /// <summary>
     /// Performs a ReadVirtualMemory with the given memory regions
     /// </summary>
-    private bool ReadVirtualMemoryImpl(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<MemoryRegionTestClass> memoryRegions)
+    private bool ReadVirtualMemoryImpl(SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<MemoryRegionTestClass> memoryRegions)
     {
         var foundRegions = memoryRegions
             .Where(x => ((IntPtr)x.BaseAddress + (long)x.RegionSize) >= address

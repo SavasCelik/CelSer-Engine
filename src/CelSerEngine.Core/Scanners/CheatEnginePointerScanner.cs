@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using Microsoft.Win32.SafeHandles;
 
 namespace CelSerEngine.Core.Scanners;
 
@@ -14,7 +15,7 @@ public class CheatEnginePointerScanner : PointerScanner2
     {
     }
 
-    protected override void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, IntPtr processHandle)
+    protected override void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, SafeProcessHandle processHandle)
     {
         var buffer = new byte[memoryRegions.Max(x => x.MemorySize)];
 

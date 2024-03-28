@@ -45,7 +45,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
 
         var pHandle = _selectProcessViewModel.GetSelectedProcessHandle();
 
-        if (pHandle == IntPtr.Zero)
+        if (pHandle.IsInvalid)
             return;
 
         // TODO Maybe IMemorySegment should have an Update class? instead of calling NativeApi.UpdateAddresses.
