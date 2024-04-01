@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+﻿using System.Windows;
+using System.Windows.Media;
 
 namespace CelSerEngine.Wpf.Extensions;
 
@@ -22,5 +23,17 @@ public static class WpfExtension
         }
 
         return child as T;
+    }
+
+    public static T? GetVisualParent<T>(this DependencyObject referenceVisual) where T : DependencyObject
+    {
+        DependencyObject? parent = referenceVisual;
+
+        while ((parent != null) && !(parent is T))
+        {
+            parent = VisualTreeHelper.GetParent(parent);
+        }
+
+        return parent as T;
     }
 }

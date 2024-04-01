@@ -30,7 +30,7 @@
         VirtualizingPanel.VirtualizationMode="Recycling">
         <intr:Interaction.Triggers>
             <intr:EventTrigger EventName="MouseDoubleClick">
-                <intr:InvokeCommandAction Command="{Binding AddItemToTrackedScanItemCommand}" CommandParameter="{Binding ElementName=ScanItemsDataGrid, Path=SelectedItem}" />
+                <csebeh:DataGridRowDoubleClickBehavior Command="{Binding AddItemToTrackedScanItemCommand}" CommandParameter="{Binding ElementName=ScanItemsDataGrid, Path=SelectedItem}" />
             </intr:EventTrigger>
             <csebeh:RoutedEventTrigger RoutedEvent="ScrollViewer.ScrollChanged">
                 <intr:InvokeCommandAction Command="{Binding ScrollingScanResultsCommand}" PassEventArgsToCommand="True" />

@@ -1,4 +1,5 @@
 ﻿using CelSerEngine.Core.Native;
+using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 
 namespace CelSerEngine.Core.Scripting;
@@ -8,7 +9,7 @@ namespace CelSerEngine.Core.Scripting;
 /// </summary>
 public class MemoryManager
 {
-    private readonly IntPtr _processHandle;
+    private readonly SafeProcessHandle _processHandle;
     private readonly INativeApi _nativeApi;
 
     /// <summary>
@@ -17,7 +18,7 @@ public class MemoryManager
     /// <param name="processHandle">A pointer (<see cref="IntPtr"/>) to the target process handle</param>
     /// <param name="nativeApi">An instance of an object that implements the <see cref="INativeApi"/> interface.
     /// This provides the underlying mechanism to interact with system-level operations for reading and writing memory.</param>
-    public MemoryManager(IntPtr processHandle, INativeApi nativeApi)
+    public MemoryManager(SafeProcessHandle processHandle, INativeApi nativeApi)
     {
         _processHandle = processHandle;
         _nativeApi = nativeApi;

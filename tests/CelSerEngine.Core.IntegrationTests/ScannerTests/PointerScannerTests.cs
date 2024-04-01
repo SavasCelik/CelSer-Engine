@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
+using Microsoft.Win32.SafeHandles;
 using Moq;
 using System.Text.Json;
 using Xunit;
@@ -12,13 +13,13 @@ public class PointerScannerTests
     private PointerScanOptions _scanOptions;
     private string _expectedOffsets;
     private JsonSerializerOptions _jsonSerializerOptions;
-    private IntPtr _processHandle;
+    private SafeProcessHandle _processHandle;
     private int _processId;
 
     public PointerScannerTests()
     {
         _processId = 123;
-        _processHandle = new IntPtr(0x1337);
+        _processHandle = new SafeProcessHandle();
         _expectedOffsets = "10, 18, 0, 18";
         _jsonSerializerOptions = new JsonSerializerOptions();
         _jsonSerializerOptions.Converters.Add(new IntPtrJsonConverter());
@@ -98,7 +99,7 @@ public class PointerScannerTests
             .Returns(stubVirtualMemoryRegions);
         stubNativeApi
             .Setup(x => x.TryReadVirtualMemory(_processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
-            .Returns((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
+            .Returns((SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
             {
                 return ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubVirtualMemoryRegions);
             });
@@ -106,7 +107,7 @@ public class PointerScannerTests
         return stubNativeApi;
     }
 
-    private bool ReadVirtualMemoryImpl(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<VirtualMemoryRegion> virtualMemoryRegions)
+    private bool ReadVirtualMemoryImpl(SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<VirtualMemoryRegion> virtualMemoryRegions)
     {
         var foundRegions = virtualMemoryRegions
             .Where(x => (x.BaseAddress + (long)x.RegionSize) >= address

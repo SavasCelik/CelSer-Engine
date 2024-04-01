@@ -5,6 +5,7 @@ using CelSerEngine.Core.Scripting;
 using CelSerEngine.Core.Scripting.Template;
 using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Services;
+using Microsoft.Win32.SafeHandles;
 using Moq;
 using System.IO.Abstractions;
 using System.Text.Json;
@@ -27,7 +28,7 @@ public class ScriptServiceTests
         _mockScriptCompiler = new Mock<ScriptCompiler>();
         _scriptService = new ScriptService(_mockScriptRepository.Object, _mockScriptCompiler.Object, _mockFileSystem.Object);
         var stubINativeApi = new Mock<INativeApi>();
-        _stubMemoryManager = new MemoryManager(IntPtr.Zero, stubINativeApi.Object);
+        _stubMemoryManager = new MemoryManager(new SafeProcessHandle(), stubINativeApi.Object);
     }
 
     [Fact]

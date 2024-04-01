@@ -2,6 +2,8 @@
 using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,12 +16,22 @@ public partial class SelectProcessViewModel : ObservableRecipient
     [ObservableProperty]
     private IList<ProcessAdapter> _processes;
     [ObservableProperty]
-    private ProcessAdapter? _selectedProcess;
-    [ObservableProperty]
     private string _searchProcessText;
     [ObservableProperty]
     private string _selectedProcessDisplayString;
 
+    public ProcessAdapter? SelectedProcess
+    {
+        get => _selectedProcess;
+        private set
+        {
+            _selectedProcess?.Dispose();
+            _selectedProcess = value;
+            SelectedProcessDisplayString = _selectedProcess?.DisplayString ?? NoProcessSelected;
+        }
+    }
+
+    private ProcessAdapter? _selectedProcess;
     private const string NoProcessSelected = "- No Process Selected -";
     private IList<ProcessAdapter> _allProcesses;
     private readonly INativeApi _nativeApi;
@@ -31,11 +43,6 @@ public partial class SelectProcessViewModel : ObservableRecipient
         _allProcesses = new List<ProcessAdapter>();
         _processes = _allProcesses;
         _nativeApi = nativeApi;
-    }
-
-    partial void OnSelectedProcessChanged(ProcessAdapter? value)
-    {
-        SelectedProcessDisplayString = value == null ? NoProcessSelected : value.DisplayString;
     }
 
     partial void OnSearchProcessTextChanged(string value)
@@ -68,12 +75,18 @@ public partial class SelectProcessViewModel : ObservableRecipient
         return selectProcessWindow.ShowDialog() ?? false;
     }
 
-    public IntPtr GetSelectedProcessHandle()
+    public SafeProcessHandle GetSelectedProcessHandle()
     {
         if (SelectedProcess != null)
             return SelectedProcess.GetProcessHandle(_nativeApi);
 
-        return IntPtr.Zero;
+        return new SafeProcessHandle();
+    }
+
+    [RelayCommand]
+    private void SelectProcess(ProcessAdapter processAdapter)
+    {
+        SelectedProcess = processAdapter;
     }
 
     [Conditional("DEBUG")]
@@ -84,7 +97,7 @@ public partial class SelectProcessViewModel : ObservableRecipient
         SelectedProcess = new ProcessAdapter(process);
         var pHandle = GetSelectedProcessHandle();
 
-        if (pHandle != IntPtr.Zero)
+        if (!pHandle.IsInvalid)
             Debug.WriteLine("Attached To DebugGame");
     }
 

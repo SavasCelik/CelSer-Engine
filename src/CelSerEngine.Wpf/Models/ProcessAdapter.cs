@@ -1,4 +1,5 @@
 ﻿using CelSerEngine.Core.Native;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,13 +10,13 @@ using System.Windows.Media.Imaging;
 
 namespace CelSerEngine.Wpf.Models;
 
-public class ProcessAdapter
+public class ProcessAdapter : IDisposable
 {
     public Process Process { get; private set; }
     public string DisplayString { get; private set; }
     public BitmapSource? IconSource { get; private set; }
     public ProcessModule? MainModule { get; private set; }
-    private IntPtr _processHandle;
+    private SafeProcessHandle? _processHandle;
 
     public ProcessAdapter(Process process)
     {
@@ -49,11 +50,26 @@ public class ProcessAdapter
         }
     }
 
-    public IntPtr GetProcessHandle(INativeApi nativeApi)
+    public SafeProcessHandle GetProcessHandle(INativeApi nativeApi)
     {
-        if (_processHandle == IntPtr.Zero)
+        if (_processHandle == null)
             _processHandle = nativeApi.OpenProcess(Process.Id);
 
         return _processHandle;
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_processHandle != null && !_processHandle.IsInvalid)
+        {
+            // Free the handle
+            _processHandle.Dispose();
+        }
     }
 }

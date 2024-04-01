@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using Microsoft.Win32.SafeHandles;
 using System.Buffers;
 using System.Collections.Concurrent;
 
@@ -181,7 +182,7 @@ public class PointerScanner
         return foundPointers;
     }
 
-    public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> pointers, int processId, IntPtr processHandle, IntPtr searchedAddress)
+    public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> pointers, int processId, SafeProcessHandle processHandle, IntPtr searchedAddress)
     {
         var result = await Task.Run(() =>
         {
@@ -217,7 +218,7 @@ public class PointerScanner
         return result;
     }
 
-    private IList<Pointer> GetStaticPointers(int processId, IntPtr processHandle)
+    private IList<Pointer> GetStaticPointers(int processId, SafeProcessHandle processHandle)
     {
         var mainModule = _nativeApi.GetProcessMainModule(processId);
         var listOfBaseAddresses = new List<Pointer>();
@@ -247,7 +248,7 @@ public class PointerScanner
         return listOfBaseAddresses;
     }
 
-    private IList<Pointer> GetHeapPointers(IntPtr processHandle)
+    private IList<Pointer> GetHeapPointers(SafeProcessHandle processHandle)
     {
         var virtualMemoryRegions = _nativeApi.GatherVirtualMemoryRegions(processHandle);
         var allAddresses = new List<Pointer>();

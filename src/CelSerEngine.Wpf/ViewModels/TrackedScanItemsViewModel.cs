@@ -45,7 +45,7 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
 
         var pHandle = _selectProcessViewModel.GetSelectedProcessHandle();
 
-        if (pHandle == IntPtr.Zero)
+        if (pHandle.IsInvalid)
             return;
 
         // TODO Maybe IMemorySegment should have an Update class? instead of calling NativeApi.UpdateAddresses.
@@ -62,12 +62,12 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    public void DblClickedCell(DataGrid dataGrid)
+    public void DblClickedItem(DataGrid dataGrid)
     {
         if (dataGrid.CurrentColumn?.Header is not string colHeaderName)
             return;
 
-        if (colHeaderName == nameof(IMemorySegment.Value))
+        if (colHeaderName == nameof(TrackedItem.Item.Value))
         {
             ShowChangeValueDialog(dataGrid.SelectedItems);
         }
