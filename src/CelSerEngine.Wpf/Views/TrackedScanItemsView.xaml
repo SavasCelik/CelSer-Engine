@@ -2,6 +2,7 @@
     x:Class="CelSerEngine.Wpf.Views.TrackedScanItemsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:csebeh="clr-namespace:CelSerEngine.Wpf.XamlBehaviors"
     xmlns:csevm="clr-namespace:CelSerEngine.Wpf.ViewModels"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:intr="http://schemas.microsoft.com/xaml/behaviors"
@@ -48,7 +49,7 @@
                     <intr:InvokeCommandAction Command="{Binding SomeSelectionsCommand}" CommandParameter="{Binding ElementName=AddressList, Path=SelectedItems}" />
                 </intr:EventTrigger>-->
             <intr:EventTrigger EventName="MouseDoubleClick">
-                <intr:InvokeCommandAction Command="{Binding DblClickedCellCommand}" CommandParameter="{Binding ElementName=TrackedScanItemsDataGrid, Path=.}" />
+                <csebeh:DataGridRowDoubleClickBehavior Command="{Binding DblClickedCellCommand}" CommandParameter="{Binding ElementName=TrackedScanItemsDataGrid, Path=.}" />
             </intr:EventTrigger>
         </intr:Interaction.Triggers>
         <DataGrid.RowStyle>
