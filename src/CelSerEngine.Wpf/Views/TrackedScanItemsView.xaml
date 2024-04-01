@@ -49,7 +49,7 @@
                     <intr:InvokeCommandAction Command="{Binding SomeSelectionsCommand}" CommandParameter="{Binding ElementName=AddressList, Path=SelectedItems}" />
                 </intr:EventTrigger>-->
             <intr:EventTrigger EventName="MouseDoubleClick">
-                <csebeh:DataGridRowDoubleClickBehavior Command="{Binding DblClickedCellCommand}" CommandParameter="{Binding ElementName=TrackedScanItemsDataGrid, Path=.}" />
+                <csebeh:DataGridRowDoubleClickBehavior Command="{Binding DblClickedItemCommand}" CommandParameter="{Binding ElementName=TrackedScanItemsDataGrid, Path=.}" />
             </intr:EventTrigger>
         </intr:Interaction.Triggers>
         <DataGrid.RowStyle>

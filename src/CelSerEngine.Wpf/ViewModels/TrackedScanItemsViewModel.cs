@@ -62,12 +62,12 @@ public partial class TrackedScanItemsViewModel : ObservableRecipient
     }
 
     [RelayCommand]
-    public void DblClickedCell(DataGrid dataGrid)
+    public void DblClickedItem(DataGrid dataGrid)
     {
         if (dataGrid.CurrentColumn?.Header is not string colHeaderName)
             return;
 
-        if (colHeaderName == nameof(IMemorySegment.Value))
+        if (colHeaderName == nameof(TrackedItem.Item.Value))
         {
             ShowChangeValueDialog(dataGrid.SelectedItems);
         }
