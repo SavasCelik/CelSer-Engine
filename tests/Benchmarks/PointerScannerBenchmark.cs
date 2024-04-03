@@ -5,6 +5,7 @@ using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
 using Moq;
 using System.Text.Json;
+using Microsoft.Win32.SafeHandles;
 
 namespace Benchmarks;
 
@@ -19,7 +20,7 @@ public class PointerScannerBenchmark
     public async Task SetupData()
     {
         var processId = 123;
-        var processHandle = new IntPtr(0x1337);
+        var processHandle = new SafeProcessHandle();
         var searchedAddress = new IntPtr(0x1526B78);
         var moduleBaseAddress = new IntPtr(0x100000000);
         var moduleSize = (uint)0x344000;
@@ -34,13 +35,13 @@ public class PointerScannerBenchmark
         var stubNativeApi = new Mock<INativeApi>();
         stubNativeApi
             .Setup(x => x.GetProcessMainModule(processId))
-            .Returns(new ProcessModuleInfo("TestModule", moduleBaseAddress, moduleSize));
+            .Returns(() => new ProcessModuleInfo("TestModule", moduleBaseAddress, moduleSize));
         stubNativeApi
             .Setup(x => x.GatherVirtualMemoryRegions(processHandle))
-            .Returns(stubVirtualMemoryRegions);
+            .Returns(() => stubVirtualMemoryRegions.ToList());
         stubNativeApi
             .Setup(x => x.TryReadVirtualMemory(processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
-            .Returns((IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
+            .Returns((SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
             {
                 return ReadVirtualMemoryImpl(hProcess, address, numberOfBytesToRead, buffer, stubVirtualMemoryRegions);
             });
@@ -80,7 +81,7 @@ public class PointerScannerBenchmark
         var foundPointers = await _pointerScanner.ScanForPointersParallelAsync(_scanOptions);
         var expectedPointer = foundPointers.Where(x => x.OffsetsDisplayString == ExpectedOffsets).ToList();
     }
-    private bool ReadVirtualMemoryImpl(IntPtr hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<VirtualMemoryRegion> virtualMemoryRegions)
+    private bool ReadVirtualMemoryImpl(SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer, IList<VirtualMemoryRegion> virtualMemoryRegions)
     {
         var foundRegions = virtualMemoryRegions
             .Where(x => (x.BaseAddress + (long)x.RegionSize) >= address
