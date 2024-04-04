@@ -96,7 +96,7 @@ public class PointerScannerTests
             .Returns(new ProcessModuleInfo("TestModule", moduleBaseAddress, moduleSize));
         stubNativeApi
             .Setup(x => x.GatherVirtualMemoryRegions(_processHandle))
-            .Returns(stubVirtualMemoryRegions);
+            .Returns(() => stubVirtualMemoryRegions.ToList());
         stubNativeApi
             .Setup(x => x.TryReadVirtualMemory(_processHandle, It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
             .Returns((SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>
