@@ -5,7 +5,7 @@ namespace CelSerEngine.Wpf.Models;
 
 public partial class ValueAddress : ObservableMemorySegment
 {
-    public string? PrevoiusValue { get; set; }
+    public string? PreviousValue { get; set; }
 
     public ValueAddress(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType) : base(baseAddress, baseOffset, value, scanDataType)
     {
