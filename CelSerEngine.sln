@@ -19,7 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngine.Wpf.UnitTests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CelSerEngine.Wpf.IntegrationTests", "tests\CelSerEngine.Wpf.IntegrationTests\CelSerEngine.Wpf.IntegrationTests.csproj", "{63162414-F17C-4274-827C-84DE363EC509}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks", "tests\Benchmarks\Benchmarks.csproj", "{3F817FA9-B8C5-439A-ACEC-E3A6DE7F27DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "tests\Benchmarks\Benchmarks.csproj", "{3F817FA9-B8C5-439A-ACEC-E3A6DE7F27DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CelSerEngine.WpfBlazor", "src\CelSerEngine.WpfBlazor\CelSerEngine.WpfBlazor.csproj", "{4BE7180A-94A5-4665-A926-855829C6E1B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +57,10 @@ Global
 		{3F817FA9-B8C5-439A-ACEC-E3A6DE7F27DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F817FA9-B8C5-439A-ACEC-E3A6DE7F27DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3F817FA9-B8C5-439A-ACEC-E3A6DE7F27DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BE7180A-94A5-4665-A926-855829C6E1B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BE7180A-94A5-4665-A926-855829C6E1B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BE7180A-94A5-4665-A926-855829C6E1B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BE7180A-94A5-4665-A926-855829C6E1B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +73,7 @@ Global
 		{392A7F40-213F-412E-A72C-57ADBEFF69F1} = {108185D4-63DE-42F8-A620-2936B87E9838}
 		{63162414-F17C-4274-827C-84DE363EC509} = {108185D4-63DE-42F8-A620-2936B87E9838}
 		{3F817FA9-B8C5-439A-ACEC-E3A6DE7F27DC} = {108185D4-63DE-42F8-A620-2936B87E9838}
+		{4BE7180A-94A5-4665-A926-855829C6E1B4} = {515CE63A-73D7-4D39-BD22-0784F60BA1DF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30031E47-D3BE-4D7C-AF3D-C6AAB0EF3CE1}
