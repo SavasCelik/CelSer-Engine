@@ -11,7 +11,12 @@
     Height="450"
     mc:Ignorable="d">
     <Grid>
-        <blazor:BlazorWebView HostPage="wwwroot\index.html" Services="{DynamicResource services}">
+        <blazor:BlazorWebView
+            x:Name="blazorWebView"
+            Margin="0"
+            HostPage="wwwroot\index.html"
+            Services="{DynamicResource services}"
+            Visibility="Hidden">
             <blazor:BlazorWebView.RootComponents>
                 <blazor:RootComponent ComponentType="{x:Type local:Counter}" Selector="#app" />
             </blazor:BlazorWebView.RootComponents>
