@@ -6,9 +6,9 @@ namespace CelSerEngine.WpfBlazor.Components;
 
 public partial class SelectProcess : ComponentBase
 {
-    private IList<ProcessAdapter> _processes;
+    private List<ProcessAdapter> _processes = new();
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         _processes = Process.GetProcesses()
             .OrderBy(p => p.ProcessName)
@@ -16,7 +16,7 @@ public partial class SelectProcess : ComponentBase
             .Where(pa => pa.MainModule != null)
             .ToList();
 
-        return base.OnInitializedAsync();
+        await base.OnInitializedAsync();
     }
     HashSet<ProcessAdapter> selectedItems = new HashSet<ProcessAdapter>();
     ProcessAdapter? lastClickedItem = null;
