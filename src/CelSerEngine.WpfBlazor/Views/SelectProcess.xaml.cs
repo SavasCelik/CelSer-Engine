@@ -1,36 +1,34 @@
-﻿using CelSerEngine.WpfBlazor.Extensions;
-using CelSerEngine.WpfBlazor.Views;
-using Microsoft.AspNetCore.Components.WebView;
+﻿using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.AspNetCore.Components.WebView.Wpf;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.Media;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
-namespace CelSerEngine.WpfBlazor;
+namespace CelSerEngine.WpfBlazor.Views;
 /// <summary>
-/// Interaction logic for MainWindow.xaml
+/// Interaction logic for SelectProcess.xaml
 /// </summary>
-public partial class MainWindow : Window
+public partial class SelectProcess : Window
 {
-    public IServiceProvider Services { get; set; }
-
-    public MainWindow()
+    public SelectProcess(MainWindow mainWindow)
     {
-
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddWpfBlazorWebView();
-#if DEBUG
-        serviceCollection.AddBlazorWebViewDeveloperTools();
-#endif
-        serviceCollection.AddSingleton(this);
-        Services = serviceCollection.BuildServiceProvider();
-        Resources.Add("services", Services);
-
         InitializeComponent();
-
+        Resources.Add("services", mainWindow.Services);
         blazorWebView.BlazorWebViewInitialized += BlazorWebView_BlazorWebViewInitialized;
-        Closing += async (s, args) =>
+        Closing += async (s, args) => 
         {
             await blazorWebView.DisposeAsync();
         };
@@ -52,14 +50,8 @@ public partial class MainWindow : Window
             blazorWebView.WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
         }
 
+        blazorWebView.Visibility = Visibility.Visible;
         blazorWebView.Focus();
         blazorWebView.WebView.Focus();
-    }
-    private SelectProcess? _modalWindow;
-
-    public void OpenProcessSelector()
-    {
-        var selectProcess = new SelectProcess(this);
-        selectProcess.ShowModal(this);
     }
 }

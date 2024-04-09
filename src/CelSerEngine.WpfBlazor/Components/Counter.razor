@@ -1,14 +1,4 @@
-﻿<h1>Counter</h1>
-
-<p>Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
-@code {
-    private int currentCount = 0;
-
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
-}
+﻿<p>@Message</p>
+<button @onclick="OpenSelectProcess" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    Open Process Selector
+</button>

@@ -6,13 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WpfBlazor</title>
     <base href="/" />
-    <!--<link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />-->
-    <link href="css/app.min.css" rel="stylesheet" />
-    <link href="WpfBlazor.styles.css" rel="stylesheet" />
+    <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
 </head>
 
 <body>
-    <div id="app">Loading...</div>
+    <div id="app">
+        <div class="vh-100 d-flex">
+            <div class="spinner-border m-auto" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
 
     <div id="blazor-error-ui" data-nosnippet>
         An unhandled error has occurred.
@@ -20,6 +25,7 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webview.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
 </body>
 
 </html>

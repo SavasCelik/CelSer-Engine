@@ -1,0 +1,15 @@
+﻿<div class="d-flex flex-column vh-100">
+    <div class="flex-grow-1 m-2 overflow-y-auto border">
+        <table class="table-bordered table" style="border-top-color: transparent; border-left-color: transparent;">
+            <tbody>
+                @foreach (var item in _processes)
+                {
+                    <tr @onclick="() => RowDblClicked(item)" class="@GetRowStyle(item)">
+                        <td class="py-1"><img height="20" width="20" src="data:image/png;base64,@item.IconBase64Source" alt="Process Icon" /> @item.DisplayString</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-5"></div>
+</div>

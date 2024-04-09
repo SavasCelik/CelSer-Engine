@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family: "Segoe UI", 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    user-select: none;
 }
 
 h1:focus {
