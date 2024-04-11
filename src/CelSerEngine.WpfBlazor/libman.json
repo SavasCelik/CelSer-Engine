@@ -3,12 +3,28 @@
   "defaultProvider": "cdnjs",
   "libraries": [
     {
-      "provider": "cdnjs",
       "library": "bootstrap@5.3.3",
       "destination": "wwwroot/lib/bootstrap/",
       "files": [
         "js/bootstrap.min.js",
         "css/bootstrap.min.css"
+      ]
+    },
+    {
+      "library": "bootstrap-icons@1.11.3",
+      "destination": "wwwroot/lib/bootstrap-icons/",
+      "files": [
+        "font/bootstrap-icons.min.css",
+        "font/fonts/bootstrap-icons.woff",
+        "font/fonts/bootstrap-icons.woff2"
+      ]
+    },
+    {
+      "provider": "cdnjs",
+      "library": "ag-grid@31.2.1",
+      "destination": "wwwroot/lib/ag-grid/",
+      "files": [
+        "ag-grid-community.min.js"
       ]
     }
   ]

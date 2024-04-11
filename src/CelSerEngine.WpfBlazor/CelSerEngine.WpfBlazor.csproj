@@ -19,6 +19,12 @@
     <ProjectReference Include="..\CelSerEngine.Core\CelSerEngine.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 	
 
 </Project>

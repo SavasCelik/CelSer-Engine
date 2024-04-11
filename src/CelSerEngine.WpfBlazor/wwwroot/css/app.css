@@ -52,3 +52,47 @@ a, .btn-link {
         right: 0.75rem;
         top: 0.5rem;
     }
+
+[data-bs-theme="dark"] body {
+/*    --bs-body-bg: #1c1e1f; Also good*/
+}
+
+.removeTableHead .ag-root .ag-header {
+    display: none;
+}
+
+.ag-cell:focus-within, .ag-cell-focus:focus-within {
+    /*    outline: none !important;*/
+    /*    border: none !important;*/
+    border-color: transparent !important;
+}
+
+.ag-theme-quartz, .ag-theme-quartz-dark {
+    --ag-grid-size: 5px;
+    --ag-list-item-height: 20px;
+    --ag-line-height: 20px;
+    --ag-row-height: 25px;
+    --ag-font-size: 12px;
+    --ag-font-family: "Segoe UI";
+}
+
+.ag-theme-quartz-dark {
+    --ag-header-background-color: var(--bs-gray-800);
+    --ag-background-color: var(--bs-gray-900);
+}
+
+.has-search .form-control {
+    padding-left: 2.375rem;
+}
+
+.has-search .form-control-feedback {
+    position: absolute;
+    z-index: 2;
+    display: block;
+    width: 2.375rem;
+    height: 2.375rem;
+    line-height: 2.375rem;
+    text-align: center;
+    pointer-events: none;
+    color: #aaa;
+}

@@ -1,12 +1,16 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using System.Diagnostics;
-using System.Windows.Input;
+using System.Text.Json;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
 public partial class SelectProcess : ComponentBase
 {
     private List<ProcessAdapter> _processes = new();
+
+    [Inject]
+    public IJSRuntime JS { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -18,43 +22,13 @@ public partial class SelectProcess : ComponentBase
 
         await base.OnInitializedAsync();
     }
-    HashSet<ProcessAdapter> selectedItems = new HashSet<ProcessAdapter>();
-    ProcessAdapter? lastClickedItem = null;
 
-    protected void RowDblClicked(ProcessAdapter item)
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!Keyboard.IsKeyDown(Key.LeftCtrl))
+        if (firstRender)
         {
-            selectedItems.Clear();
+            var module = await JS.InvokeAsync<IJSObjectReference>("import", "/js/selectProcess.js");
+            await module.InvokeVoidAsync("ready", JsonSerializer.Serialize(_processes.Select((x, i) => new { Name = x.DisplayString, x.IconBase64Source }).ToList()));
         }
-
-        if (lastClickedItem == null || (!Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.RightShift)))
-        {
-            lastClickedItem = item;
-            selectedItems.Add(item);
-        }
-
-        int startIndex = _processes.IndexOf(lastClickedItem);
-        int endIndex = _processes.IndexOf(item);
-
-        if (startIndex < endIndex)
-        {
-            for (int i = startIndex; i <= endIndex; i++)
-            {
-                selectedItems.Add(_processes[i]);
-            }
-        }
-        else
-        {
-            for (int i = startIndex; i >= endIndex; i--)
-            {
-                selectedItems.Add(_processes[i]);
-            }
-        }
-    }
-
-    string GetRowStyle(ProcessAdapter item)
-    {
-        return selectedItems.Contains(item) ? "table-primary" : "";
     }
 }
