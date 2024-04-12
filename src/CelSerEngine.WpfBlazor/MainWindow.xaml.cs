@@ -1,4 +1,5 @@
-﻿using CelSerEngine.WpfBlazor.Extensions;
+﻿using CelSerEngine.Core.Native;
+using CelSerEngine.WpfBlazor.Extensions;
 using CelSerEngine.WpfBlazor.Views;
 using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.AspNetCore.Components.WebView.Wpf;
@@ -24,6 +25,7 @@ public partial class MainWindow : Window
         serviceCollection.AddBlazorWebViewDeveloperTools();
 #endif
         serviceCollection.AddSingleton(this);
+        serviceCollection.AddSingleton<INativeApi, NativeApi>();
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);
 

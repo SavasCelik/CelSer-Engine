@@ -1,4 +1,21 @@
-﻿<p>@Message</p>
+﻿<div class="d-flex vh-100">
+    <div class="d-flex flex-column flex-grow-1 row-gap-2 m-2">
+        <div class="d-flex flex-row gap-2">
+            <div id="scanResultsGrid" class="ag-theme-quartz flex-grow-1" style="height: 200px"></div>
+            <div>
+                <div class="form-group has-search" style="width: 200px;">
+                    <span class="bi bi-search form-control-feedback"></span>
+                    <input id="filter-text-field" type="search" class="form-control" placeholder="Value">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <button @onclick="OpenSelectProcess" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
     Open Process Selector
+</button>
+
+<button @onclick="NextScan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    Next Scan
 </button>
