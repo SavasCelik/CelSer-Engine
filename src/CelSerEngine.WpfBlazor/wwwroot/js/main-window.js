@@ -1,6 +1,9 @@
 let gridApi;
+let dotNetHelper;
 
-function ready() {
+function ready(_dotNetHelper) {
+    dotNetHelper = _dotNetHelper;
+
     // Grid Options: Contains all of the grid configurations
     const gridOptions = {
         defaultColDef: {
@@ -33,22 +36,15 @@ function ready() {
 var data = [];
 const itemHeight = 25;
 const maxDivHeight = 32000000;
-
-function applyData(data2) {
-    //gridApi.setGridOption("rowData", JSON.parse(data));
-    for (let i = 0; i < 2000000; i++) {
-        data[i] = { "Address": i, "Value": i };
-    }
-
-
-    //gridApi.setGridOption("rowData", theData);
-
+let totalItemCount = 0;
+function applyData(visibleItems, totalCount) {
+    totalItemCount = totalCount;
     const fakeVscroll = document.querySelector(".ag-body-vertical-scroll");
     const clone = fakeVscroll.cloneNode(true);
     fakeVscroll.replaceWith(clone);
     clone.classList.remove("ag-hidden");
     document.querySelector(".ag-body-vertical-scroll-viewport").addEventListener("scroll", () => onScroll());
-    document.querySelector(".ag-body-vertical-scroll-container").style.height = `${Math.min(data.length * itemHeight, maxDivHeight)}px`;
+    document.querySelector(".ag-body-vertical-scroll-container").style.height = `${Math.min(totalCount * itemHeight, maxDivHeight)}px`;
     document.querySelector(".ag-body-viewport").addEventListener("wheel", function (e) {
 
         if (Math.abs(e.deltaY) > 0) {
@@ -59,81 +55,45 @@ function applyData(data2) {
         }
     });
 
-    document.body.addEventListener("mousedown", function (e) {
-        // Check if the middle mouse button was clicked
-        if (e.button === 1) {
-            // Handle the middle mouse button click event here
-            e.preventDefault();
-        }
-    });
-
-    document.querySelector(".ag-center-cols-container").addEventListener("click", function (e) {
+    document.querySelector(".ag-center-cols-container").addEventListener("click", async function (e) {
         const clickedRow = e.target.parentElement;
         if (clickedRow.classList.contains("ag-row")) {
+            const rowId = clickedRow.getAttribute("row-id");
 
             if (!e.shiftKey && !e.ctrlKey) {
-                selectedAddresses.clear();
+                await dotNetHelper.invokeMethodAsync("ClearSelectedItems", rowId);
             }
 
-            const rowId = clickedRow.getAttribute("row-id");
-            const lastSelectedRow = Array.from(selectedAddresses).slice(-1)[0];
-            if (e.shiftKey && lastSelectedRow) {
-                selectBetween(lastSelectedRow, rowId);
-                gridApi.deselectAll();
-                selectedAddresses.forEach((address) => gridApi.getRowNode(address)?.selectThisNode(true));
+            if (e.shiftKey) {
+                e.preventDefault();
+                await dotNetHelper.invokeMethodAsync("SelectTillItemAsync", rowId);
+                gridApi.forEachNode(async (node) => node.selectThisNode(await dotNetHelper.invokeMethodAsync("IsItemSelectedAsync", node.data.Address)));
                 return;
             }
 
             const rowIsSelected = gridApi.getRowNode(rowId).isSelected();
             if (rowIsSelected) {
-                selectedAddresses.add(rowId);
+                dotNetHelper.invokeMethodAsync("AddSelectedItemAsync", rowId);
             }
             else {
-                selectedAddresses.delete(rowId);
+                dotNetHelper.invokeMethodAsync("RemoveSelectedItemAsync", rowId);
             }
         }
     });
 
-
-    let theData = [];
-    for (let i = 0; i < Math.ceil(document.querySelector(".ag-body-vertical-scroll-viewport").clientHeight / itemHeight); i++) {
-        theData[i] = { "Address": i, "Value": i };
-    }
-
-    gridApi.setGridOption("rowData", theData);
+    gridApi.setGridOption("rowData", JSON.parse(visibleItems));
 }
-
-function selectBetween(firstAddress, lastAddress) {
-    let isSlecting = false;
-    for (let i = 0; i < data.length; i++) {
-
-        if (data[i].Address == firstAddress || data[i].Address == lastAddress) {
-            isSlecting = !isSlecting;
-
-            if (!isSlecting) {
-                selectedAddresses.add(data[i].Address.toString());
-                break;
-            }
-        }
-
-        if (isSlecting) {
-            selectedAddresses.add(data[i].Address.toString());
-        }
-    }
-}
-
-var selectedAddresses = new Set();
 
 var lastStartIndex = -1;
-function onScroll() {
+async function onScroll() {
     let startIndex = lastStartIndex;
     const myGrid = document.querySelector(".ag-body-vertical-scroll-viewport");
 
     if (myGrid.clientHeight + myGrid.scrollTop == maxDivHeight) {
-        startIndex = data.length - Math.ceil(myGrid.clientHeight / itemHeight) ;
+        startIndex = totalItemCount - Math.ceil(myGrid.clientHeight / itemHeight) ;
     }
-    else if (((data.length) * itemHeight) >= maxDivHeight) {
-        startIndex = Math.floor((((data.length) * itemHeight) / maxDivHeight) * myGrid.scrollTop / itemHeight);
+    else if ((totalItemCount * itemHeight) >= maxDivHeight) {
+        startIndex = Math.floor(((totalItemCount * itemHeight) / maxDivHeight) * myGrid.scrollTop / itemHeight);
     }
     else {
         startIndex = Math.floor(myGrid.scrollTop / itemHeight);
@@ -144,11 +104,12 @@ function onScroll() {
     }
 
     const endIndex = myGrid.clientHeight / itemHeight;
-    var visibleItems = data.slice(startIndex, startIndex + Math.ceil(endIndex));
+    const visibleItems = await dotNetHelper.invokeMethodAsync('GetItemsAsync', startIndex, Math.ceil(endIndex))
+        .then(x => JSON.parse(x));
     gridApi.setGridOption("rowData", visibleItems);
 
     for (var i = 0; i < visibleItems.length; i++) {
-        var isSelected = selectedAddresses.has(visibleItems[i].Address.toString());
+        var isSelected = await dotNetHelper.invokeMethodAsync("IsItemSelectedAsync", visibleItems[i].Address.toString());
         if (isSelected) {
             gridApi.getDisplayedRowAtIndex(i).selectThisNode(true);
         }

@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
-public partial class Counter : ComponentBase
+public partial class Counter : ComponentBase, IAsyncDisposable
 {
     [Inject]
     public IJSRuntime JS { get; set; } = default!;
@@ -21,14 +21,15 @@ public partial class Counter : ComponentBase
 
     private IJSObjectReference? _module;
 
-    protected string Message { get; set; } = "Hellow";
+    private DotNetObjectReference<Counter>? _dotNetHelper;
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            _dotNetHelper = DotNetObjectReference.Create(this);
             _module = await JS.InvokeAsync<IJSObjectReference>("import", "/js/main-window.js");
-            await _module.InvokeVoidAsync("ready");
+            await _module.InvokeVoidAsync("ready", _dotNetHelper);
         }
     }
 
@@ -38,7 +39,6 @@ public partial class Counter : ComponentBase
 
     private async Task OpenSelectProcess()
     {
-        await _module.InvokeVoidAsync("applyData", "");
         var process = Process.GetProcessesByName("chrome").First();
         var selectedProcess = new ProcessAdapter(process);
         var pHandle = selectedProcess.GetProcessHandle(NativeApi);
@@ -47,7 +47,7 @@ public partial class Counter : ComponentBase
         var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
         _memorySegments = comparer.GetMatchingMemorySegments(virtualMemoryRegions, null);
         selectedProcess.Dispose();
-        //await _module.InvokeVoidAsync("applyData", JsonSerializer.Serialize(_memorySegments.Take(1_000_000).Select(x => new { Address = x.Address.ToString("X"), x.Value })));
+        await _module.InvokeVoidAsync("applyData", JsonSerializer.Serialize(_memorySegments.Take(8).Select(x => new { Address = x.Address.ToString("X"), x.Value })), _memorySegments.Count);
         //MainWindow.OpenProcessSelector();
     }
 
@@ -71,5 +71,92 @@ public partial class Counter : ComponentBase
         selectedProcess.Dispose();
         await _module.InvokeVoidAsync("applyData", JsonSerializer.Serialize(passedMemorySegments.Select(x => new { Address = x.Address.ToString("X"), x.Value })));
         //MainWindow.OpenProcessSelector();
+    }
+
+    [JSInvokable]
+    public Task<string> GetItemsAsync(int startIndex, int amount)
+    {
+        var visibleItems = _memorySegments.Skip(startIndex).Take(amount);
+
+        return Task.FromResult(JsonSerializer.Serialize(visibleItems.Select(x => new { Address = x.Address.ToString("X"), x.Value })));
+    }
+
+    private HashSet<string> _selectedItems = [];
+
+    [JSInvokable]
+    public Task SelectTillItemAsync(string selectTillItem)
+    {
+        var isSlecting = false;
+        var lastAddress = selectTillItem;
+        var firstAddress = _selectedItems.LastOrDefault();
+
+        if (firstAddress == null)
+        {
+            _selectedItems.Add(lastAddress);
+
+            return Task.CompletedTask;
+        }
+
+        foreach (var item in _memorySegments)
+        {
+            var address = item.Address.ToString("X");
+            if (address == firstAddress || address == lastAddress)
+            {
+                isSlecting = !isSlecting;
+
+                if (!isSlecting)
+                {
+                    _selectedItems.Add(address);
+                    break;
+                }
+            }
+
+            if (isSlecting)
+            {
+                _selectedItems.Add(address);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task<bool> IsItemSelectedAsync(string item)
+    {
+        return Task.FromResult(_selectedItems.Contains(item));
+    }
+
+    [JSInvokable]
+    public Task ClearSelectedItems()
+    {
+        _selectedItems.Clear();
+
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task AddSelectedItemAsync(string item)
+    {
+        _selectedItems.Add(item);
+
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task RemoveSelectedItemAsync(string item)
+    {
+        _selectedItems.Remove(item);
+
+        return Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _dotNetHelper?.Dispose();
+
+        if (_module != null)
+        {
+            await _module.DisposeAsync();
+        }
     }
 }
