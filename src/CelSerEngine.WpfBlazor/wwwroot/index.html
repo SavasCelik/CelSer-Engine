@@ -28,6 +28,15 @@
     </div>
     <script src="_framework/blazor.webview.js"></script>
     <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script>
+        document.body.addEventListener("mousedown", function (e) {
+            // Check if the middle mouse button was clicked
+            if (e.button === 1) {
+                // Handle the middle mouse button click event here
+                e.preventDefault();
+            }
+        });
+    </script>
 </body>
 
 </html>
