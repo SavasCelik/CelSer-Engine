@@ -38,6 +38,7 @@ public partial class Counter : ComponentBase
 
     private async Task OpenSelectProcess()
     {
+        await _module.InvokeVoidAsync("applyData", "");
         var process = Process.GetProcessesByName("chrome").First();
         var selectedProcess = new ProcessAdapter(process);
         var pHandle = selectedProcess.GetProcessHandle(NativeApi);
@@ -46,7 +47,7 @@ public partial class Counter : ComponentBase
         var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
         _memorySegments = comparer.GetMatchingMemorySegments(virtualMemoryRegions, null);
         selectedProcess.Dispose();
-        await _module.InvokeVoidAsync("applyData", JsonSerializer.Serialize(_memorySegments.Take(1_000_000).Select(x => new { Address = x.Address.ToString("X"), x.Value })));
+        //await _module.InvokeVoidAsync("applyData", JsonSerializer.Serialize(_memorySegments.Take(1_000_000).Select(x => new { Address = x.Address.ToString("X"), x.Value })));
         //MainWindow.OpenProcessSelector();
     }
 

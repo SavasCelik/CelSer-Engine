@@ -96,3 +96,9 @@ a, .btn-link {
     pointer-events: none;
     color: #aaa;
 }
+
+.ag-body-vertical-scroll, .ag-body-vertical-scroll-viewport {
+    width: 17px !important;
+    max-width: 17px !important;
+    min-width: 17px !important;
+}
