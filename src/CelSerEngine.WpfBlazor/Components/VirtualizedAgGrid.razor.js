@@ -5,30 +5,6 @@ const itemHeight = 25;
 const maxDivHeight = 32000000;
 let totalItemCount = 0;
 
-class CustomLoadingOverlay {
-    init(params) {
-        this.eGui = document.createElement('div');
-
-        if (params.isScanning) {
-            this.eGui.innerHTML =
-                `<div class="ag-overlay-loading-center">
-                    <div class="spinner-border m-auto" role="status"></div>
-                </div>`;
-        }
-        else {
-            this.eGui.innerHTML = ``;
-        }
-    }
-
-    getGui() {
-        return this.eGui;
-    }
-
-    refresh(params) {
-        return false;
-    }
-}
-
 function initVirtualizedAgGrid(_dotNetHelper) {
     dotNetHelper = _dotNetHelper;
 
