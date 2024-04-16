@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
-public partial class Counter : ComponentBase
+public partial class Index : ComponentBase
 {
     [Inject]
     public INativeApi NativeApi { get; set; } = default!;
