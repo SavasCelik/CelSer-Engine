@@ -102,3 +102,7 @@ a, .btn-link {
     max-width: 17px !important;
     min-width: 17px !important;
 }
+
+.btn {
+    width: 90px;
+}
