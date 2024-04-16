@@ -19,6 +19,7 @@ public partial class Index : ComponentBase
 
     private async Task OpenSelectProcess()
     {
+        await _virtualizedAgGridRef.ShowScanningOverlay();
         var process = Process.GetProcessesByName("chrome").First();
         var selectedProcess = new ProcessAdapter(process);
         var pHandle = selectedProcess.GetProcessHandle(NativeApi);

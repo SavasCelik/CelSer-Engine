@@ -5,8 +5,56 @@ const itemHeight = 25;
 const maxDivHeight = 32000000;
 let totalItemCount = 0;
 
+class CustomLoadingOverlay {
+    init(params) {
+        this.eGui = document.createElement('div');
+
+        if (params.isScanning) {
+            this.eGui.innerHTML =
+                `<div class="ag-overlay-loading-center">
+                    <div class="spinner-border m-auto" role="status"></div>
+                </div>`;
+        }
+        else {
+            this.eGui.innerHTML = ``;
+        }
+    }
+
+    getGui() {
+        return this.eGui;
+    }
+
+    refresh(params) {
+        return false;
+    }
+}
+
 function initVirtualizedAgGrid(_dotNetHelper) {
     dotNetHelper = _dotNetHelper;
+
+    const loadingOverlay = class CustomLoadingOverlay {
+        init(params) {
+            this.eGui = document.createElement('div');
+
+            if (params.isScanning) {
+                this.eGui.innerHTML =
+                    `<div class="ag-overlay-loading-center">
+                    <div class="spinner-border m-auto" role="status"></div>
+                </div>`;
+            }
+            else {
+                this.eGui.innerHTML = ``;
+            }
+        }
+
+        getGui() {
+            return this.eGui;
+        }
+
+        refresh(params) {
+            return false;
+        }
+    };
 
     const gridOptions = {
         defaultColDef: {
@@ -16,6 +64,10 @@ function initVirtualizedAgGrid(_dotNetHelper) {
         },
         rowSelection: 'multiple',
         animateRows: false,
+        loadingOverlayComponent: loadingOverlay,
+        loadingOverlayComponentParams: {
+            isScanning: false,
+        },
         getRowId: (params) => params.data.Address,
         // Column Definitions: Defines the columns to be displayed.
         columnDefs: [
@@ -83,6 +135,9 @@ function handleEvents() {
 }
 
 async function onResize(entry) {
+    if (totalItemCount == 0)
+        return;
+
     const currentHeight = entry[0].target.clientHeight;
     const previousHeight = entry[0].target.dataset.previousHeight || 0;
 
@@ -99,7 +154,12 @@ async function onResize(entry) {
     }
 }
 
-async function ItemsChanged(totalCount) {
+function showScanningOverlay() {
+    gridApi.setGridOption("loadingOverlayComponentParams", { isScanning: true });
+    gridApi.showLoadingOverlay();
+}
+
+async function itemsChanged(totalCount) {
     totalItemCount = totalCount;
     document.querySelector(".ag-body-vertical-scroll-container").style.height = `${Math.min(totalItemCount * itemHeight, maxDivHeight)}px`;
     await loadItemsIntoGrid(0, getVisibleRowCount());
@@ -153,4 +213,4 @@ async function onScroll() {
     }
 }
 
-export { initVirtualizedAgGrid, ItemsChanged }
+export { initVirtualizedAgGrid, itemsChanged, showScanningOverlay }

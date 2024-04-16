@@ -44,7 +44,12 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
 
     public async Task ApplyDataAsync()
     {
-        await _module!.InvokeVoidAsync("ItemsChanged", Items.Count);
+        await _module!.InvokeVoidAsync("itemsChanged", Items.Count);
+    }
+
+    public async Task ShowScanningOverlay()
+    {
+        await _module!.InvokeVoidAsync("showScanningOverlay");
     }
 
     [JSInvokable]
