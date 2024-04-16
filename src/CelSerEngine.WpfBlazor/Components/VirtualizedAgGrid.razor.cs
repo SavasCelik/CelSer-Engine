@@ -44,7 +44,7 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
 
     public async Task ApplyDataAsync()
     {
-        await _module!.InvokeVoidAsync("applyData", JsonSerializer.Serialize(Items.Take(8).Select(SerializableItem)), Items.Count);
+        await _module!.InvokeVoidAsync("ItemsChanged", Items.Count);
     }
 
     [JSInvokable]

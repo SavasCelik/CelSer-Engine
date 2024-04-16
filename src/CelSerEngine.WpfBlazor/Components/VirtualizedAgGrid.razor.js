@@ -1,5 +1,9 @@
 let gridApi;
 let dotNetHelper;
+let verticalViewport;
+const itemHeight = 25;
+const maxDivHeight = 32000000;
+let totalItemCount = 0;
 
 function initVirtualizedAgGrid(_dotNetHelper) {
     dotNetHelper = _dotNetHelper;
@@ -28,20 +32,24 @@ function initVirtualizedAgGrid(_dotNetHelper) {
 
     const myGridElement = document.querySelector('#scanResultsGrid');
     gridApi = agGrid.createGrid(myGridElement, gridOptions);
-    handleEvents();
-}
 
-function handleEvents() {
+    myGridElement.dataset.previousHeight = myGridElement.clientHeight;
+    new ResizeObserver(onResize).observe(myGridElement);
     const fakeVscroll = document.querySelector(".ag-body-vertical-scroll");
     const clone = fakeVscroll.cloneNode(true);
     fakeVscroll.replaceWith(clone);
     clone.classList.remove("ag-hidden");
-    document.querySelector(".ag-body-vertical-scroll-viewport").addEventListener("scroll", async () => await onScroll());
+    verticalViewport = document.querySelector(".ag-body-vertical-scroll-viewport");
+    handleEvents();
+}
+
+function handleEvents() {
+    verticalViewport.addEventListener("scroll", async () => await onScroll());
     document.querySelector(".ag-body-vertical-scroll-container").style.height = `${Math.min(totalItemCount * itemHeight, maxDivHeight)}px`;
     document.querySelector(".ag-body-viewport").addEventListener("wheel", function (e) {
         if (Math.abs(e.deltaY) > 0) {
             const deltaSign = Math.sign(e.deltaY);
-            document.querySelector(".ag-body-vertical-scroll-viewport").scrollBy(0, itemHeight * deltaSign);
+            verticalViewport.scrollBy(0, itemHeight * deltaSign);
             this.scrollTop = (this.scrollHeight - this.clientHeight) * deltaSign;
             e.preventDefault();
         }
@@ -74,40 +82,68 @@ function handleEvents() {
     });
 }
 
-const itemHeight = 25;
-const maxDivHeight = 32000000;
-let totalItemCount = 0;
+async function onResize(entry) {
+    const currentHeight = entry[0].target.clientHeight;
+    const previousHeight = entry[0].target.dataset.previousHeight || 0;
 
-function applyData(visibleItems, totalCount) {
+    if (currentHeight > previousHeight) {
+        if (currentHeight - previousHeight >= itemHeight) {
+            entry[0].target.dataset.previousHeight = currentHeight;
+            const visibleRowCount = getVisibleRowCount();
+            await loadItemsIntoGrid(getStartIndex(visibleRowCount), visibleRowCount);
+        }
+    } else if (currentHeight < previousHeight) {
+        if (previousHeight - currentHeight >= itemHeight) {
+            entry[0].target.dataset.previousHeight = currentHeight;
+        }
+    }
+}
+
+async function ItemsChanged(totalCount) {
     totalItemCount = totalCount;
     document.querySelector(".ag-body-vertical-scroll-container").style.height = `${Math.min(totalItemCount * itemHeight, maxDivHeight)}px`;
-    gridApi.setGridOption("rowData", JSON.parse(visibleItems));
+    await loadItemsIntoGrid(0, getVisibleRowCount());
+}
+
+async function loadItemsIntoGrid(startIndex, rowCount) {
+    const visibleItems = await dotNetHelper.invokeMethodAsync('GetItemsAsync', startIndex, rowCount)
+        .then(x => JSON.parse(x));
+    gridApi.setGridOption("rowData", visibleItems);
+
+    return visibleItems;
+}
+
+function getStartIndex(visibleRowCount) {
+    let startIndex = -1;
+
+    if (verticalViewport.clientHeight + verticalViewport.scrollTop == maxDivHeight) {
+        startIndex = totalItemCount - visibleRowCount;
+    }
+    else if ((totalItemCount * itemHeight) >= maxDivHeight) {
+        startIndex = Math.floor(((totalItemCount * itemHeight) / maxDivHeight) * verticalViewport.scrollTop / itemHeight);
+    }
+    else {
+        startIndex = Math.floor(verticalViewport.scrollTop / itemHeight);
+    }
+
+    return startIndex;
+}
+
+function getVisibleRowCount() {
+    return Math.ceil(verticalViewport.clientHeight / itemHeight);
 }
 
 var lastStartIndex = -1;
 async function onScroll() {
-    let startIndex = lastStartIndex;
-    const myGrid = document.querySelector(".ag-body-vertical-scroll-viewport");
-
-    if (myGrid.clientHeight + myGrid.scrollTop == maxDivHeight) {
-        startIndex = totalItemCount - Math.ceil(myGrid.clientHeight / itemHeight);
-    }
-    else if ((totalItemCount * itemHeight) >= maxDivHeight) {
-        startIndex = Math.floor(((totalItemCount * itemHeight) / maxDivHeight) * myGrid.scrollTop / itemHeight);
-    }
-    else {
-        startIndex = Math.floor(myGrid.scrollTop / itemHeight);
-    }
+    const visibleRowCount = getVisibleRowCount();
+    let startIndex = getStartIndex(visibleRowCount);
 
     if (lastStartIndex == startIndex) {
         return;
     }
 
     lastStartIndex = startIndex;
-    const endIndex = myGrid.clientHeight / itemHeight;
-    const visibleItems = await dotNetHelper.invokeMethodAsync('GetItemsAsync', startIndex, Math.ceil(endIndex))
-        .then(x => JSON.parse(x));
-    gridApi.setGridOption("rowData", visibleItems);
+    const visibleItems = await loadItemsIntoGrid(startIndex, visibleRowCount);
 
     for (var i = 0; i < visibleItems.length; i++) {
         var isSelected = await dotNetHelper.invokeMethodAsync("IsItemSelectedAsync", visibleItems[i].Address.toString());
@@ -117,4 +153,4 @@ async function onScroll() {
     }
 }
 
-export { initVirtualizedAgGrid, applyData }
+export { initVirtualizedAgGrid, ItemsChanged }

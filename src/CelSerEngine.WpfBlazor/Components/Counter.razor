@@ -1,10 +1,10 @@
 ﻿<div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-2 m-2">
-        <div class="d-flex flex-row gap-2">
-            <VirtualizedAgGrid 
-                @ref="_virtualizedAgGridRef" 
-                Items="_memorySegments" 
-                GetRowId='(x) => x.Address.ToString("X")' 
+        <div class="d-flex flex-row h-100 gap-2">
+            <VirtualizedAgGrid
+                @ref="_virtualizedAgGridRef"
+                Items="_memorySegments"
+                GetRowId='(x) => x.Address.ToString("X")'
                 SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value }'>
             </VirtualizedAgGrid>
 
