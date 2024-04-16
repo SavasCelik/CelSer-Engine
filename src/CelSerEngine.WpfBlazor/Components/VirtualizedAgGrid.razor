@@ -1,4 +1,7 @@
 ﻿@typeparam TItem
+@using System.Globalization
 
-<div id="scanResultsGrid" class="ag-theme-quartz flex-grow-1 h-100" style="min-height: 200px"></div>
-
+<div class="d-flex flex-column flex-grow-1">
+    <div class="text-center">Found: <span>@Items.Count.ToString("n0", new CultureInfo("en-US"))</span></div>
+    <div id="scanResultsGrid" class="ag-theme-quartz flex-grow-1 h-100" style="min-height: 200px"></div>
+</div>
