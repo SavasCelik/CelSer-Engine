@@ -1,10 +1,7 @@
-﻿using CelSerEngine.Core.Models;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System.Diagnostics;
-using System.Reflection;
+using System.Globalization;
 using System.Text.Json;
-using System.Windows.Automation.Provider;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
@@ -27,6 +24,7 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
     [Parameter]
     public Func<TItem, object> SerializableItem { get; set; } = default!;
 
+    private CultureInfo _cultureInfo = new("en-US");
     private IJSObjectReference? _module;
 
     private DotNetObjectReference<VirtualizedAgGrid<TItem>>? _dotNetHelper;
