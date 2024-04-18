@@ -1,11 +1,13 @@
-﻿<div class="d-flex vh-100">
+﻿@using CelSerEngine.Core.Models
+@using CelSerEngine.Core.Extensions
+
+<div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-2 m-2">
         <div class="d-flex flex-row h-100 gap-2">
-            <VirtualizedAgGrid
-                @ref="_virtualizedAgGridRef"
-                Items="_memorySegments"
-                GetRowId='(x) => x.Address.ToString("X")'
-                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value }'>
+            <VirtualizedAgGrid @ref="_virtualizedAgGridRef"
+                               Items="_memorySegments"
+                               GetRowId='(x) => x.Address.ToString("X")'
+                               SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value }'>
             </VirtualizedAgGrid>
 
             <div class="d-flex flex-column gap-2">
@@ -17,6 +19,15 @@
                 <div>
                     <button type="button" class="btn btn-primary">First Scan</button>
                     <button type="button" class="btn btn-outline-primary" disabled>Next Scan</button>
+                </div>
+
+                <div>
+                    <select class="form-select decorated" @bind="SelectedScanDataType">
+                        @foreach (var item in Enum.GetValues<ScanDataType>())
+                        {
+                            <option value="@item.ToString()">@item.GetDisplayName()</option>
+                        }
+                    </select>
                 </div>
             </div>
         </div>
