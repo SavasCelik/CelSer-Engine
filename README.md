@@ -1,5 +1,5 @@
 # CelSer Engine
-A Memory Editor & Scripting Platform for Hacking Games and other Software.
+A Memory Editor & Scripting Platform for Hacking Games and Other Software.
 
 ### Main Window
 ![CelSer Engine GUI](https://i.imgur.com/G92f1d7.png)
