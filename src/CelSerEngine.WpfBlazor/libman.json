@@ -26,6 +26,14 @@
       "files": [
         "ag-grid-community.min.js"
       ]
+    },
+    {
+      "library": "slim-select@2.8.2",
+      "destination": "wwwroot/lib/slim-select/",
+      "files": [
+        "slimselect.min.css",
+        "slimselect.min.js"
+      ]
     }
   ]
 }
