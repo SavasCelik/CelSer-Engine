@@ -17,7 +17,9 @@ public partial class Index : ComponentBase
     private VirtualizedAgGrid<IMemorySegment> _virtualizedAgGridRef = default!;
     private List<IMemorySegment> _memorySegments = [];
 
-    public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
+    private ScanDataType _selectedScanDataType = ScanDataType.Integer;
+    private ScanCompareType _selectedScanCompareType = ScanCompareType.ExactValue;
+
     private async Task OpenSelectProcess()
     {
         await _virtualizedAgGridRef.ShowScanningOverlay();

@@ -10,19 +10,30 @@
                                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value }'>
             </VirtualizedAgGrid>
 
-            <div class="d-flex flex-column gap-2">
-                <div class="form-group has-search" style="width: 200px;">
+            <div class="d-flex flex-column gap-2" style="width: 300px">
+                <div class="form-group has-search">
                     <span class="bi bi-search form-control-feedback"></span>
                     <input id="filter-text-field" type="search" class="form-control" placeholder="Value">
                 </div>
                 @* buttons *@
-                <div>
+                <div class="mb-3">
                     <button type="button" class="btn btn-primary">First Scan</button>
                     <button type="button" class="btn btn-outline-primary" disabled>Next Scan</button>
                 </div>
 
-                <div>
-                    <select class="form-select decorated" @bind="SelectedScanDataType">
+                @* scan type & value type *@
+                <div class="d-inline-flex gap-2">
+                    <label for="scanCompareType" class="text-end align-self-center" style="width: 100px">Scan Type</label>
+                    <select id="scanCompareType" @bind="_selectedScanCompareType">
+                        @foreach (var item in Enum.GetValues<ScanCompareType>())
+                        {
+                            <option value="@item.ToString()">@item.GetDisplayName()</option>
+                        }
+                    </select>
+                </div>
+                <div class="d-inline-flex gap-2">
+                    <label for="selectScanDataType" class="text-end align-self-center" style="width: 100px">Value Type</label>
+                    <select id="selectScanDataType" @bind="_selectedScanDataType">
                         @foreach (var item in Enum.GetValues<ScanDataType>())
                         {
                             <option value="@item.ToString()">@item.GetDisplayName()</option>
@@ -41,3 +52,18 @@
 <button @onclick="NextScan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
     Next Scan
 </button>
+
+<script>
+    new SlimSelect({
+        select: '#selectScanDataType',
+        settings: {
+            showSearch: false,
+        }
+    })
+    new SlimSelect({
+        select: '#scanCompareType',
+        settings: {
+            showSearch: false,
+        }
+    })
+</script>
