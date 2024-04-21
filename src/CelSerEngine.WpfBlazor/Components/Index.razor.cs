@@ -2,6 +2,7 @@
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using System.Diagnostics;
 
 namespace CelSerEngine.WpfBlazor.Components;
@@ -17,24 +18,36 @@ public partial class Index : ComponentBase
     private VirtualizedAgGrid<IMemorySegment> _virtualizedAgGridRef = default!;
     private List<IMemorySegment> _memorySegments = [];
 
-    private ScanDataType _selectedScanDataType = ScanDataType.Integer;
-    private ScanCompareType _selectedScanCompareType = ScanCompareType.ExactValue;
+    private string _searchValue { get; set; } = string.Empty;
+    private ScanDataType _selectedScanDataType { get; set; } = ScanDataType.Integer;
+    private ScanCompareType _selectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
 
-    private async Task OpenSelectProcess()
+    private async Task FirstScan()
     {
         await _virtualizedAgGridRef.ShowScanningOverlay();
-        var process = Process.GetProcessesByName("chrome").First();
+        var process = Process.GetProcessesByName("SmallGame").First();
         var selectedProcess = new ProcessAdapter(process);
         var pHandle = selectedProcess.GetProcessHandle(NativeApi);
         var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(pHandle);
-        var scanConstraint = new ScanConstraint(ScanCompareType.ExactValue, ScanDataType.Integer, "1");
+        var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
         var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
         _memorySegments.Clear();
         _memorySegments.AddRange(comparer.GetMatchingMemorySegments(virtualMemoryRegions, null));
         selectedProcess.Dispose();
         await _virtualizedAgGridRef.ApplyDataAsync();
-        //await _module.InvokeVoidAsync("applyData", JsonSerializer.Serialize(_memorySegments.Take(8).Select(x => new { Address = x.Address.ToString("X"), x.Value })), _memorySegments.Count);
-        //MainWindow.OpenProcessSelector();
+    }
+
+    public async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter")
+        {
+            await FirstScan();
+        }
+    }
+
+    private async Task OpenSelectProcess()
+    {
+        MainWindow.OpenProcessSelector();
     }
 
     private async Task NextScan()

@@ -13,11 +13,12 @@
             <div class="d-flex flex-column gap-2" style="width: 300px">
                 <div class="form-group has-search">
                     <span class="bi bi-search form-control-feedback"></span>
-                    <input id="filter-text-field" type="search" class="form-control" placeholder="Value">
+                    <input @bind-value="_searchValue" @bind-value:event="oninput" @onkeydown="@Enter" id="filter-text-field" type="search" class="form-control" placeholder="Value">
                 </div>
+
                 @* buttons *@
                 <div class="mb-3">
-                    <button type="button" class="btn btn-primary">First Scan</button>
+                    <button @onclick="FirstScan" type="button" class="btn btn-primary">First Scan</button>
                     <button type="button" class="btn btn-outline-primary" disabled>Next Scan</button>
                 </div>
 
@@ -40,6 +41,7 @@
                         }
                     </select>
                 </div>
+
             </div>
         </div>
     </div>
