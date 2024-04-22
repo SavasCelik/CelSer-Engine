@@ -14,6 +14,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
     public INativeApi NativeApi { get; set; } = default!;
 
     [Inject]
+    public EngineSession EngineSession { get; set; } = default!;
+
+    [Inject]
     private MainWindow? MainWindow { get; set; }
 
     private VirtualizedAgGrid<ScanResultItem> _virtualizedAgGridRef = default!;
@@ -29,18 +32,25 @@ public partial class Index : ComponentBase, IAsyncDisposable
         _scanResultsUpdater = new Timer((e) => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
     }
 
+    protected override void OnInitialized()
+    {
+        var process = Process.GetProcessesByName("SmallGame").First();
+        var selectedProcess = new ProcessAdapter(process)
+        {
+            ProcessHandle = NativeApi.OpenProcess(process.Id)
+        };
+
+        EngineSession.SelectedProcess = selectedProcess;
+    }
+
     private async Task FirstScan()
     {
         await _virtualizedAgGridRef.ShowScanningOverlay();
-        var process = Process.GetProcessesByName("SmallGame").First();
-        var selectedProcess = new ProcessAdapter(process);
-        var pHandle = selectedProcess.GetProcessHandle(NativeApi);
-        var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(pHandle);
+        var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(EngineSession.SelectedProcessHandle);
         var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
         var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
         _scanResultItems.Clear();
         _scanResultItems.AddRange(comparer.GetMatchingMemorySegments(virtualMemoryRegions, null).Select(x => new ScanResultItem(x)));
-        selectedProcess.Dispose();
         await _virtualizedAgGridRef.ApplyDataAsync();
         _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
     }
@@ -61,11 +71,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private async Task NextScan()
     {
         await _virtualizedAgGridRef.ShowScanningOverlay();
-        var process = Process.GetProcessesByName("SmallGame").First();
-        var selectedProcess = new ProcessAdapter(process);
-        var pHandle = selectedProcess.GetProcessHandle(NativeApi);
         var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
-        NativeApi.UpdateAddresses(pHandle, _scanResultItems);
+        NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, _scanResultItems);
         var passedMemorySegments = new List<ScanResultItem>();
 
         for (var i = 0; i < _scanResultItems.Count; i++)
@@ -77,7 +84,6 @@ public partial class Index : ComponentBase, IAsyncDisposable
             }
         }
 
-        selectedProcess.Dispose();
         _scanResultItems.Clear();
         _scanResultItems.AddRange(passedMemorySegments);
         await _virtualizedAgGridRef.ApplyDataAsync();
@@ -85,12 +91,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     private async void UpdateVisibleScanResults()
     {
-        var process = Process.GetProcessesByName("SmallGame").First();
-        var selectedProcess = new ProcessAdapter(process);
-        var pHandle = selectedProcess.GetProcessHandle(NativeApi);
         var visibleItems = _virtualizedAgGridRef.GetVisibleItems().ToList();
-        NativeApi.UpdateAddresses(pHandle, visibleItems);
-        selectedProcess.Dispose();
+        NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, visibleItems);
         await _virtualizedAgGridRef.ApplyDataAsync();
     }
 

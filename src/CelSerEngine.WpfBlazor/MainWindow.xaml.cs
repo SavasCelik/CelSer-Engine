@@ -25,6 +25,7 @@ public partial class MainWindow : Window
         serviceCollection.AddBlazorWebViewDeveloperTools();
 #endif
         serviceCollection.AddSingleton(this);
+        serviceCollection.AddSingleton<EngineSession>();
         serviceCollection.AddSingleton<INativeApi, NativeApi>();
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);

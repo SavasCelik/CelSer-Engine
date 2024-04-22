@@ -1,13 +1,7 @@
-﻿using CelSerEngine.Core.Native;
-using Microsoft.Win32.SafeHandles;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Drawing;
-using System.Threading.Tasks;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows;
@@ -22,7 +16,7 @@ public class ProcessAdapter : IDisposable
     public BitmapSource? IconSource { get; private set; }
     public string? IconBase64Source { get; private set; }
     public ProcessModule? MainModule { get; private set; }
-    private SafeProcessHandle? _processHandle;
+    public SafeProcessHandle ProcessHandle { get; set; }
 
     public ProcessAdapter(Process process)
     {
@@ -30,6 +24,7 @@ public class ProcessAdapter : IDisposable
         TryGetMainModule();
         DisplayString = MainModule != null ? $"0x{Process.Id:X8} - {MainModule.ModuleName}" : "MainModule not found!";
         GetIconImageSource();
+        ProcessHandle = new SafeProcessHandle();
     }
 
     private void TryGetMainModule()
@@ -62,14 +57,6 @@ public class ProcessAdapter : IDisposable
         }
     }
 
-    public SafeProcessHandle GetProcessHandle(INativeApi nativeApi)
-    {
-        if (_processHandle == null)
-            _processHandle = nativeApi.OpenProcess(Process.Id);
-
-        return _processHandle;
-    }
-
     public void Dispose()
     {
         Dispose(disposing: true);
@@ -78,10 +65,10 @@ public class ProcessAdapter : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (_processHandle != null && !_processHandle.IsInvalid)
+        if (ProcessHandle.IsInvalid)
         {
             // Free the handle
-            _processHandle.Dispose();
+            ProcessHandle.Dispose();
         }
     }
 }
