@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Comparators;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using System.Diagnostics;
@@ -15,8 +16,8 @@ public partial class Index : ComponentBase
     [Inject]
     private MainWindow? MainWindow { get; set; }
 
-    private VirtualizedAgGrid<IMemorySegment> _virtualizedAgGridRef = default!;
-    private List<IMemorySegment> _memorySegments = [];
+    private VirtualizedAgGrid<ScanResultItem> _virtualizedAgGridRef = default!;
+    private List<ScanResultItem> _scanResultItems { get; set; } = [];
 
     private string _searchValue { get; set; } = string.Empty;
     private ScanDataType _selectedScanDataType { get; set; } = ScanDataType.Integer;
@@ -31,8 +32,8 @@ public partial class Index : ComponentBase
         var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(pHandle);
         var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
         var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-        _memorySegments.Clear();
-        _memorySegments.AddRange(comparer.GetMatchingMemorySegments(virtualMemoryRegions, null));
+        _scanResultItems.Clear();
+        _scanResultItems.AddRange(comparer.GetMatchingMemorySegments(virtualMemoryRegions, null).Select(x => new ScanResultItem(x)));
         selectedProcess.Dispose();
         await _virtualizedAgGridRef.ApplyDataAsync();
     }
@@ -58,13 +59,13 @@ public partial class Index : ComponentBase
         var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(pHandle);
         var scanConstraint = new ScanConstraint(ScanCompareType.ExactValue, ScanDataType.Integer, "1");
         var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-        NativeApi.UpdateAddresses(pHandle, _memorySegments);
+        NativeApi.UpdateAddresses(pHandle, _scanResultItems);
         var passedMemorySegments = new List<IMemorySegment>();
 
-        for (var i = 0; i < _memorySegments.Count; i++)
+        for (var i = 0; i < _scanResultItems.Count; i++)
         {
-            if (ValueComparer.MeetsTheScanConstraint(_memorySegments[i].Value, scanConstraint.UserInput, scanConstraint))
-                passedMemorySegments.Add(_memorySegments[i]);
+            if (ValueComparer.MeetsTheScanConstraint(_scanResultItems[i].Value, scanConstraint.UserInput, scanConstraint))
+                passedMemorySegments.Add(_scanResultItems[i]);
         }
 
         selectedProcess.Dispose();

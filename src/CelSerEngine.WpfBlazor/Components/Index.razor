@@ -5,9 +5,9 @@
     <div class="d-flex flex-column flex-grow-1 row-gap-2 m-2">
         <div class="d-flex flex-row h-100 gap-2">
             <VirtualizedAgGrid @ref="_virtualizedAgGridRef"
-                               Items="_memorySegments"
+                               Items="_scanResultItems"
                                GetRowId='(x) => x.Address.ToString("X")'
-                               SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value }'>
+                               SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
             </VirtualizedAgGrid>
 
             <div class="d-flex flex-column gap-2" style="width: 300px">
