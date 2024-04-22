@@ -11,13 +11,13 @@ namespace CelSerEngine.WpfBlazor.Components;
 public partial class Index : ComponentBase, IAsyncDisposable
 {
     [Inject]
-    public INativeApi NativeApi { get; set; } = default!;
+    private INativeApi NativeApi { get; set; } = default!;
 
     [Inject]
-    public EngineSession EngineSession { get; set; } = default!;
+    private EngineSession EngineSession { get; set; } = default!;
 
     [Inject]
-    private MainWindow? MainWindow { get; set; }
+    private MainWindow? MainWindow { get; set; } = default!;
 
     private VirtualizedAgGrid<ScanResultItem> _virtualizedAgGridRef = default!;
     private List<ScanResultItem> _scanResultItems { get; set; } = [];
@@ -93,7 +93,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
     {
         var visibleItems = _virtualizedAgGridRef.GetVisibleItems().ToList();
         NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, visibleItems);
-        await _virtualizedAgGridRef.ApplyDataAsync();
+
+        if (!_virtualizedAgGridRef.IsDisposed)
+            await _virtualizedAgGridRef.ApplyDataAsync();
     }
 
     /// <inheritdoc />

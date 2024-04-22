@@ -8,6 +8,7 @@ namespace CelSerEngine.WpfBlazor.Components;
 public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
 {
     public HashSet<string> SelectedItems { get; set; } = [];
+    public bool IsDisposed { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
@@ -142,5 +143,7 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
         {
             await _module.DisposeAsync();
         }
+
+        IsDisposed = true;
     }
 }
