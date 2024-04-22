@@ -17,7 +17,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private EngineSession EngineSession { get; set; } = default!;
 
     [Inject]
-    private MainWindow? MainWindow { get; set; } = default!;
+    private MainWindow MainWindow { get; set; } = default!;
 
     private VirtualizedAgGrid<ScanResultItem> _virtualizedAgGridRef = default!;
     private List<ScanResultItem> _scanResultItems { get; set; } = [];

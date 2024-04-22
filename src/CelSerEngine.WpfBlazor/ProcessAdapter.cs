@@ -11,12 +11,17 @@ namespace CelSerEngine.WpfBlazor;
 
 public class ProcessAdapter : IDisposable
 {
+    private SafeProcessHandle? _processHandle;
+
     public Process Process { get; private set; }
     public string DisplayString { get; private set; }
     public BitmapSource? IconSource { get; private set; }
     public string? IconBase64Source { get; private set; }
     public ProcessModule? MainModule { get; private set; }
-    public SafeProcessHandle ProcessHandle { get; set; }
+    public SafeProcessHandle ProcessHandle { 
+        get => _processHandle ?? throw new NullReferenceException("Process Handle was null"); 
+        set => _processHandle = value; 
+    }
 
     public ProcessAdapter(Process process)
     {
@@ -24,7 +29,6 @@ public class ProcessAdapter : IDisposable
         TryGetMainModule();
         DisplayString = MainModule != null ? $"0x{Process.Id:X8} - {MainModule.ModuleName}" : "MainModule not found!";
         GetIconImageSource();
-        ProcessHandle = new SafeProcessHandle();
     }
 
     private void TryGetMainModule()
