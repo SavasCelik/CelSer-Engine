@@ -17,7 +17,10 @@ public partial class SelectProcess : ComponentBase, IDisposable
     private EngineSession EngineSession { get; set; } = default!;
 
     [Inject]
-    private INativeApi NativeApi { get; set; } = default!;
+    private INativeApi NativeApi { get; set; } = default!; 
+    
+    [Inject]
+    private MainWindow MainWindow { get; set; } = default!;
 
     private DotNetObjectReference<SelectProcess>? _dotNetHelper;
 
@@ -51,6 +54,8 @@ public partial class SelectProcess : ComponentBase, IDisposable
         {
             ProcessHandle = NativeApi.OpenProcess(processId)
         };
+
+        MainWindow.CloseProcessSelector();
     }
 
     /// <inheritdoc />

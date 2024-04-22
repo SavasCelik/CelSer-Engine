@@ -16,6 +16,8 @@ public partial class MainWindow : Window
 {
     public IServiceProvider Services { get; set; }
 
+    private SelectProcess? _selectProcess;
+
     public MainWindow()
     {
 
@@ -58,11 +60,19 @@ public partial class MainWindow : Window
         blazorWebView.Focus();
         blazorWebView.WebView.Focus();
     }
-    private SelectProcess? _modalWindow;
 
     public void OpenProcessSelector()
     {
-        var selectProcess = new SelectProcess(this);
-        selectProcess.ShowModal(this);
+        _selectProcess = new SelectProcess(this);
+        _selectProcess.ShowModal(this);
+    }
+
+    public void CloseProcessSelector()
+    {
+        Dispatcher.BeginInvoke(() => 
+        {
+            _selectProcess?.Close();
+            _selectProcess = null;
+        });
     }
 }
