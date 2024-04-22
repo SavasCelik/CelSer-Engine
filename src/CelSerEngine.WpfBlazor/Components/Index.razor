@@ -19,7 +19,7 @@
                 @* buttons *@
                 <div class="mb-3">
                     <button @onclick="FirstScan" type="button" class="btn btn-primary">First Scan</button>
-                    <button type="button" class="btn btn-outline-primary" disabled>Next Scan</button>
+                    <button type="button" @onclick="NextScan" class="btn btn-outline-primary">Next Scan</button>
                 </div>
 
                 @* scan type & value type *@

@@ -53,22 +53,27 @@ public partial class Index : ComponentBase
 
     private async Task NextScan()
     {
-        var process = Process.GetProcessesByName("chrome").First();
+        await _virtualizedAgGridRef.ShowScanningOverlay();
+        var process = Process.GetProcessesByName("SmallGame").First();
         var selectedProcess = new ProcessAdapter(process);
         var pHandle = selectedProcess.GetProcessHandle(NativeApi);
-        var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(pHandle);
-        var scanConstraint = new ScanConstraint(ScanCompareType.ExactValue, ScanDataType.Integer, "1");
-        var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
+        var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
         NativeApi.UpdateAddresses(pHandle, _scanResultItems);
-        var passedMemorySegments = new List<IMemorySegment>();
+        var passedMemorySegments = new List<ScanResultItem>();
 
         for (var i = 0; i < _scanResultItems.Count; i++)
         {
             if (ValueComparer.MeetsTheScanConstraint(_scanResultItems[i].Value, scanConstraint.UserInput, scanConstraint))
+            {
+                _scanResultItems[i].PreviousValue = _scanResultItems[i].Value;
                 passedMemorySegments.Add(_scanResultItems[i]);
+        }
         }
 
         selectedProcess.Dispose();
-        //MainWindow.OpenProcessSelector();
+        _scanResultItems.Clear();
+        _scanResultItems.AddRange(passedMemorySegments);
+        await _virtualizedAgGridRef.ApplyDataAsync();
+    }
     }
 }
