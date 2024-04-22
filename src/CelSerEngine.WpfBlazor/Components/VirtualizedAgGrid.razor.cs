@@ -55,7 +55,7 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
     {
         var visibleItems = Items.Skip(startIndex).Take(amount);
 
-        return Task.FromResult(JsonSerializer.Serialize(visibleItems.Select(SerializableItem)));
+        return Task.FromResult(JsonSerializer.Serialize(visibleItems.Select(x => new { Item = SerializableItem(x), IsSelected = SelectedItems.Contains(GetRowId(x)) })));
     }
 
     [JSInvokable]

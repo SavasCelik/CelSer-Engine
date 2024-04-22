@@ -44,18 +44,31 @@ function initVirtualizedAgGrid(_dotNetHelper) {
         loadingOverlayComponentParams: {
             isScanning: false,
         },
-        getRowId: (params) => params.data.Address,
+        getRowId: (params) => params.data.Item.Address,
         // Column Definitions: Defines the columns to be displayed.
         columnDefs: [
             {
-                field: "Address",
+                field: "Item.Address",
                 headerName: "Address"
             },
             {
-                field: "Value",
+                field: "Item.Value",
                 headerName: "Value"
+            },
+            {
+                field: "Item.PreviousValue",
+                headerName: "Previous"
             }
-        ]
+        ],
+        onModelUpdated: (params) => {
+            const nodesToSelect = [];
+            params.api.forEachNode((node) => {
+                if (node.data && node.data.IsSelected) {
+                    nodesToSelect.push(node);
+                }
+            });
+            params.api.setNodesSelected({ nodes: nodesToSelect, newValue: true });
+        },
     };
 
     const myGridElement = document.querySelector('#scanResultsGrid');
@@ -95,7 +108,7 @@ function handleEvents() {
             if (e.shiftKey) {
                 e.preventDefault();
                 await dotNetHelper.invokeMethodAsync("SelectTillItemAsync", rowId);
-                gridApi.forEachNode(async (node) => node.selectThisNode(await dotNetHelper.invokeMethodAsync("IsItemSelectedAsync", node.data.Address)));
+                gridApi.forEachNode(async (node) => node.selectThisNode(await dotNetHelper.invokeMethodAsync("IsItemSelectedAsync", node.data.Item.Address)));
                 return;
             }
 
@@ -180,13 +193,6 @@ async function onScroll() {
 
     lastStartIndex = startIndex;
     const visibleItems = await loadItemsIntoGrid(startIndex, visibleRowCount);
-
-    for (var i = 0; i < visibleItems.length; i++) {
-        var isSelected = await dotNetHelper.invokeMethodAsync("IsItemSelectedAsync", visibleItems[i].Address.toString());
-        if (isSelected) {
-            gridApi.getDisplayedRowAtIndex(i).selectThisNode(true);
-        }
-    }
 }
 
 export { initVirtualizedAgGrid, itemsChanged, showScanningOverlay }
