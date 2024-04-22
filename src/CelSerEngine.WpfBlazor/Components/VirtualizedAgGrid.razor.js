@@ -69,6 +69,14 @@ function initVirtualizedAgGrid(_dotNetHelper) {
             });
             params.api.setNodesSelected({ nodes: nodesToSelect, newValue: true });
         },
+        getRowStyle: params => {
+            if (params.node.data && params.node.data.Item.PreviousValue != params.node.data.Item.Value) {
+                return { color: 'red' };
+            }
+            else {
+                return { color: 'inherit' };
+            }
+        },
     };
 
     const myGridElement = document.querySelector('#scanResultsGrid');
