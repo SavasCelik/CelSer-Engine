@@ -25,11 +25,21 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private string _searchValue { get; set; } = string.Empty;
     private ScanDataType _selectedScanDataType { get; set; } = ScanDataType.Integer;
     private ScanCompareType _selectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
-    private Timer _scanResultsUpdater;
+    private float _progressBarValue { get; set; }
+    private readonly Timer _scanResultsUpdater;
+    private readonly IProgress<float> _progressBarUpdater;
 
     public Index()
     {
         _scanResultsUpdater = new Timer((e) => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
+        _progressBarUpdater = new Progress<float>(newValue =>
+        {
+            if (newValue - _progressBarValue >= 10)
+            {
+                _progressBarValue = newValue;
+                StateHasChanged();
+            }
+        });
     }
 
     protected override void OnInitialized()
@@ -46,14 +56,20 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     private async Task FirstScan()
     {
-        await _virtualizedAgGridRef.ShowScanningOverlay();
-        var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(EngineSession.SelectedProcessHandle);
-        var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
-        var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
         _scanResultItems.Clear();
-        _scanResultItems.AddRange(comparer.GetMatchingMemorySegments(virtualMemoryRegions, null).Select(x => new ScanResultItem(x)));
+        await _virtualizedAgGridRef.ApplyDataAsync();
+        await _virtualizedAgGridRef.ShowScanningOverlay();
+        await Task.Run(() =>
+        {
+            var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(EngineSession.SelectedProcessHandle);
+            var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
+            var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
+            _scanResultItems.AddRange(comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater).Select(x => new ScanResultItem(x)));
+        });
+
         await _virtualizedAgGridRef.ApplyDataAsync();
         _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        _progressBarValue = 0;
     }
 
     public async Task Enter(KeyboardEventArgs e)
@@ -93,6 +109,10 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private async void UpdateVisibleScanResults()
     {
         var visibleItems = _virtualizedAgGridRef.GetVisibleItems().ToList();
+
+        if (visibleItems.Count == 0)
+            return;
+
         NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, visibleItems);
 
         if (!_virtualizedAgGridRef.IsDisposed)
