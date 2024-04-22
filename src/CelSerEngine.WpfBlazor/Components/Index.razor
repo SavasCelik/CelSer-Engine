@@ -28,7 +28,7 @@
                     <select id="scanCompareType" @bind="_selectedScanCompareType">
                         @foreach (var item in Enum.GetValues<ScanCompareType>())
                         {
-                            <option value="@item.ToString()">@item.GetDisplayName()</option>
+                            <option value="@item">@item.GetDisplayName()</option>
                         }
                     </select>
                 </div>
@@ -37,7 +37,7 @@
                     <select id="selectScanDataType" @bind="_selectedScanDataType">
                         @foreach (var item in Enum.GetValues<ScanDataType>())
                         {
-                            <option value="@item.ToString()">@item.GetDisplayName()</option>
+                            <option value="@item">@item.GetDisplayName()</option>
                         }
                     </select>
                 </div>
