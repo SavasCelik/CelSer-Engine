@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
-public partial class Index : ComponentBase
+public partial class Index : ComponentBase, IAsyncDisposable
 {
     [Inject]
     public INativeApi NativeApi { get; set; } = default!;
@@ -22,6 +22,12 @@ public partial class Index : ComponentBase
     private string _searchValue { get; set; } = string.Empty;
     private ScanDataType _selectedScanDataType { get; set; } = ScanDataType.Integer;
     private ScanCompareType _selectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+    private Timer _scanResultsUpdater;
+
+    public Index()
+    {
+        _scanResultsUpdater = new Timer((e) => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
+    }
 
     private async Task FirstScan()
     {
@@ -36,6 +42,7 @@ public partial class Index : ComponentBase
         _scanResultItems.AddRange(comparer.GetMatchingMemorySegments(virtualMemoryRegions, null).Select(x => new ScanResultItem(x)));
         selectedProcess.Dispose();
         await _virtualizedAgGridRef.ApplyDataAsync();
+        _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
     }
 
     public async Task Enter(KeyboardEventArgs e)
@@ -67,7 +74,7 @@ public partial class Index : ComponentBase
             {
                 _scanResultItems[i].PreviousValue = _scanResultItems[i].Value;
                 passedMemorySegments.Add(_scanResultItems[i]);
-        }
+            }
         }
 
         selectedProcess.Dispose();
@@ -75,5 +82,21 @@ public partial class Index : ComponentBase
         _scanResultItems.AddRange(passedMemorySegments);
         await _virtualizedAgGridRef.ApplyDataAsync();
     }
+
+    private async void UpdateVisibleScanResults()
+    {
+        var process = Process.GetProcessesByName("SmallGame").First();
+        var selectedProcess = new ProcessAdapter(process);
+        var pHandle = selectedProcess.GetProcessHandle(NativeApi);
+        var visibleItems = _virtualizedAgGridRef.GetVisibleItems().ToList();
+        NativeApi.UpdateAddresses(pHandle, visibleItems);
+        selectedProcess.Dispose();
+        await _virtualizedAgGridRef.ApplyDataAsync();
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        await _scanResultsUpdater.DisposeAsync();
     }
 }

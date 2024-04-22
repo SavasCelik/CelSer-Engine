@@ -150,8 +150,10 @@ function showScanningOverlay() {
 
 async function itemsChanged(totalCount) {
     totalItemCount = totalCount;
+    const visibleRowCount = getVisibleRowCount();
+    let startIndex = getStartIndex(visibleRowCount);
     document.querySelector(".ag-body-vertical-scroll-container").style.height = `${Math.min(totalItemCount * itemHeight, maxDivHeight)}px`;
-    await loadItemsIntoGrid(0, getVisibleRowCount());
+    await loadItemsIntoGrid(startIndex, visibleRowCount);
 }
 
 async function loadItemsIntoGrid(startIndex, rowCount) {

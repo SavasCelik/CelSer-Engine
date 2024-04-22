@@ -26,8 +26,9 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
 
     private CultureInfo _cultureInfo = new("en-US");
     private IJSObjectReference? _module;
-
     private DotNetObjectReference<VirtualizedAgGrid<TItem>>? _dotNetHelper;
+    private int _lastStartIndex = 0;
+    private int _lastItemCount = 0;
 
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -50,9 +51,16 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
         await _module!.InvokeVoidAsync("showScanningOverlay");
     }
 
+    public IEnumerable<TItem> GetVisibleItems()
+    {
+        return Items.Skip(_lastStartIndex).Take(_lastItemCount);
+    }
+
     [JSInvokable]
     public Task<string> GetItemsAsync(int startIndex, int amount)
     {
+        _lastStartIndex = startIndex;
+        _lastItemCount = amount;
         var visibleItems = Items.Skip(startIndex).Take(amount);
 
         return Task.FromResult(JsonSerializer.Serialize(visibleItems.Select(x => new { Item = SerializableItem(x), IsSelected = SelectedItems.Contains(GetRowId(x)) })));
