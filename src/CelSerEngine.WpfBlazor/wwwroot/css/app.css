@@ -107,6 +107,11 @@ a, .btn-link {
     width: 90px;
 }
 
+.btn-icon {
+    width: fit-content;
+    padding: 2px;
+}
+
 :root {
     --ce-close-button-img: url(../x-lg.svg);
 }

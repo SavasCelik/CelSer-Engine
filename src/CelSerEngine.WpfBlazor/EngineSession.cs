@@ -11,7 +11,11 @@ public class EngineSession
         {
             _selectedProcess?.Dispose();
             _selectedProcess = value;
+            NotifyStateChanged();
         } 
     }
     public SafeProcessHandle SelectedProcessHandle => _selectedProcess?.ProcessHandle ?? new SafeProcessHandle();
+
+    public event Action? OnChange;
+    private void NotifyStateChanged() => OnChange?.Invoke();
 }

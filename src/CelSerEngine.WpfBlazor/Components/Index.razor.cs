@@ -41,6 +41,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         };
 
         EngineSession.SelectedProcess = selectedProcess;
+        EngineSession.OnChange += StateHasChanged;
     }
 
     private async Task FirstScan()
@@ -63,7 +64,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task OpenSelectProcess()
+    private void OpenSelectProcess()
     {
         MainWindow.OpenProcessSelector();
     }
@@ -101,6 +102,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        EngineSession.OnChange -= StateHasChanged;
         await _scanResultsUpdater.DisposeAsync();
     }
 }

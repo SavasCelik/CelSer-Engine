@@ -3,6 +3,17 @@
 
 <div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-2 m-2">
+        <div class="d-flex flex-row gap-2">
+            <button @onclick="OpenSelectProcess" type="button" class="btn btn-icon btn-light border">
+                <img height="25" src="/SelectProcess.png" />
+            </button>
+            <div class="d-flex flex-column flex-grow-1 text-center">
+                <div class="lh-sm">@EngineSession.SelectedProcess?.DisplayString</div>
+                <div class="progress flex-grow-1">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
         <div class="d-flex flex-row h-100 gap-2">
             <VirtualizedAgGrid @ref="_virtualizedAgGridRef"
                                Items="_scanResultItems"
@@ -19,7 +30,7 @@
                 @* buttons *@
                 <div class="mb-3">
                     <button @onclick="FirstScan" type="button" class="btn btn-primary">First Scan</button>
-                    <button type="button" @onclick="NextScan" class="btn btn-outline-primary">Next Scan</button>
+                    <button @onclick="NextScan" type="button" class="btn btn-outline-primary">Next Scan</button>
                 </div>
 
                 @* scan type & value type *@
