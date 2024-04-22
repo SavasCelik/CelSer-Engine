@@ -21,7 +21,7 @@
                                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
             </VirtualizedAgGrid>
 
-            <div class="d-flex flex-column gap-2" style="width: 300px">
+            <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
                 <div class="form-group has-search">
                     <span class="bi bi-search form-control-feedback"></span>
                     <input @bind-value="_searchValue" @bind-value:event="oninput" @onkeydown="@Enter" id="filter-text-field" type="search" class="form-control" placeholder="Value">
