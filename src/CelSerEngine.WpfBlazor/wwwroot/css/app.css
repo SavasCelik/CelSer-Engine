@@ -54,7 +54,7 @@ a, .btn-link {
     }
 
 [data-bs-theme="dark"] body {
-/*    --bs-body-bg: #1c1e1f; Also good*/
+    /*    --bs-body-bg: #1c1e1f; Also good*/
 }
 
 .removeTableHead .ag-root .ag-header {
@@ -105,6 +105,7 @@ a, .btn-link {
 
 .btn {
     width: 90px;
+    cursor: default !important;
 }
 
 .btn-icon {
@@ -134,7 +135,7 @@ input[type="search"]::-webkit-search-cancel-button {
         border-radius: var(--bs-border-radius);
         background-color: var(--bs-light);
         margin-right: -1px;
-}
+    }
 
 .ss-main {
     --ss-main-height: 25px;
