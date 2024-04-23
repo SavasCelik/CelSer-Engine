@@ -59,14 +59,18 @@ public partial class Index : ComponentBase, IAsyncDisposable
         _scanResultItems.Clear();
         await _virtualizedAgGridRef.ApplyDataAsync();
         await _virtualizedAgGridRef.ShowScanningOverlay();
-        await Task.Run(() =>
+        var results = await Task.Run(() =>
         {
             var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(EngineSession.SelectedProcessHandle);
             var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-            _scanResultItems.AddRange(comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater).Select(x => new ScanResultItem(x)));
+
+            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater);
         });
 
+        _progressBarValue = 100;
+        StateHasChanged();
+         _scanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
         await _virtualizedAgGridRef.ApplyDataAsync();
         _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
         _progressBarValue = 0;
