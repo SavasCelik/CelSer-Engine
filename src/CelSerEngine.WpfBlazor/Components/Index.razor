@@ -28,8 +28,15 @@
                 </div>
 
                 @* buttons *@
-                <div class="mb-3">
-                    <button @onclick="FirstScan" type="button" class="btn btn-primary">First Scan</button>
+                <div class="d-flex gap-1 mb-3">
+                    @if (_isFirstScan)
+                    {
+                        <button @onclick="FirstScan" type="button" class="btn btn-primary">First Scan</button>
+                    }
+                    else
+                    {
+                        <button @onclick="FirstScan" type="button" class="btn btn-primary">New Scan</button>
+                    }
                     <button @onclick="NextScan" type="button" class="btn btn-outline-primary">Next Scan</button>
                 </div>
 

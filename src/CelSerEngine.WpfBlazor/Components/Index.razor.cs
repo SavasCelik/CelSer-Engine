@@ -26,6 +26,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private ScanDataType _selectedScanDataType { get; set; } = ScanDataType.Integer;
     private ScanCompareType _selectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
     private float _progressBarValue { get; set; }
+    private bool _isFirstScan { get; set; } = true;
     private readonly Timer _scanResultsUpdater;
     private readonly IProgress<float> _progressBarUpdater;
 
@@ -74,6 +75,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         await _virtualizedAgGridRef.ApplyDataAsync();
         _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
         _progressBarValue = 0;
+        _isFirstScan = false;
     }
 
     public async Task Enter(KeyboardEventArgs e)
