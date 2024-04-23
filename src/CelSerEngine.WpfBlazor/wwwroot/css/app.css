@@ -126,7 +126,14 @@ input[type="search"]::-webkit-search-cancel-button {
     background-repeat: no-repeat;
     height: 16px;
     width: 16px;
-    cursor: pointer;
+    margin: 0;
+}
+
+    input[type="search"]::-webkit-search-cancel-button:hover {
+        border: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        background-color: var(--bs-light);
+        margin-right: -1px;
 }
 
 .ss-main {
