@@ -34,6 +34,13 @@
         "slimselect.min.css",
         "slimselect.min.js"
       ]
+    },
+    {
+      "library": "split.js@1.6.5",
+      "destination": "wwwroot/lib/split/",
+      "files": [
+        "split.min.js"
+      ]
     }
   ]
 }
