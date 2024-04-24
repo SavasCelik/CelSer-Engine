@@ -77,6 +77,7 @@ function initVirtualizedAgGrid(_dotNetHelper) {
                 return { color: 'inherit' };
             }
         },
+        onRowDoubleClicked: onRowDoubleClicked
     };
 
     const myGridElement = document.querySelector('#scanResultsGrid');
@@ -149,6 +150,10 @@ async function onResize(entry) {
             entry[0].target.dataset.previousHeight = currentHeight;
         }
     }
+}
+
+async function onRowDoubleClicked(row) {
+    await dotNetHelper.invokeMethodAsync('OnRowDoubleClicked', row.data.Item.Address);
 }
 
 function showScanningOverlay() {

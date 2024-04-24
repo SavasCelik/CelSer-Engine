@@ -18,6 +18,7 @@
             <VirtualizedAgGrid @ref="_virtualizedAgGridRef"
                                Items="_scanResultItems"
                                GetRowId='(x) => x.Address.ToString("X")'
+                               OnRowDoubleClickedEvent="OnRowDoubleClicked"
                                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
             </VirtualizedAgGrid>
 
@@ -101,16 +102,26 @@
         // Column Definitions: Defines the columns to be displayed.
         columnDefs: [
             {
-                field: "Name",
-                headerName: "Process",
-                sortable: false,
-                resizable: false
-            }
+                field: "Frozen",
+                headerName: "Freeze",
+            },
+            {
+                field: "Description",
+                headerName: "Description",
+            },
+            {
+                field: "Address",
+                headerName: "Address",
+            },
+            {
+                field: "Value",
+                headerName: "Value",
+            },
         ]
     };
 
     let trackedItemsGridElement = document.querySelector('#trackedItemsGrid');
-    agGrid.createGrid(trackedItemsGridElement, gridOptions);
+    var tackedItems = agGrid.createGrid(trackedItemsGridElement, gridOptions);
 
     Split(['#split-0', '#split-1'], {
         direction: 'vertical',
@@ -128,5 +139,5 @@
                 'min-height': gutterSize + 'px',
             }
         },
-    })
+    });
 </script>

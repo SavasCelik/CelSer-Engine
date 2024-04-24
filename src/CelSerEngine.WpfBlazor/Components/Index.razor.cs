@@ -21,6 +21,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     private VirtualizedAgGrid<ScanResultItem> _virtualizedAgGridRef = default!;
     private List<ScanResultItem> _scanResultItems { get; set; } = [];
+    private List<TrackedItem> _trackedItems { get; set; } = [];
 
     private string _searchValue { get; set; } = string.Empty;
     private ScanDataType _selectedScanDataType { get; set; } = ScanDataType.Integer;
@@ -41,6 +42,11 @@ public partial class Index : ComponentBase, IAsyncDisposable
                 StateHasChanged();
             }
         });
+    }
+
+    public void OnRowDoubleClicked(ScanResultItem scanResultItem)
+    {
+        _trackedItems.Add(new TrackedItem(scanResultItem));
     }
 
     protected override void OnInitialized()

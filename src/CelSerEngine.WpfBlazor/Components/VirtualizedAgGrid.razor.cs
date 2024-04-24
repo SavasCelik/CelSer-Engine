@@ -25,6 +25,9 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
     [Parameter]
     public Func<TItem, object> SerializableItem { get; set; } = default!;
 
+    [Parameter]
+    public Action<TItem>? OnRowDoubleClickedEvent { get; set; }
+
     private CultureInfo _cultureInfo = new("en-US");
     private IJSObjectReference? _module;
     private DotNetObjectReference<VirtualizedAgGrid<TItem>>? _dotNetHelper;
@@ -55,6 +58,18 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
     public IEnumerable<TItem> GetVisibleItems()
     {
         return Items.Skip(_lastStartIndex).Take(_lastItemCount);
+    }
+
+    [JSInvokable]
+    public Task OnRowDoubleClicked(string rowId)
+    {
+        if (OnRowDoubleClickedEvent != null)
+        {
+            var doubleClickedRow = Items.Single(x => GetRowId(x) == rowId);
+            OnRowDoubleClickedEvent(doubleClickedRow);
+        }
+
+        return Task.CompletedTask;
     }
 
     [JSInvokable]
