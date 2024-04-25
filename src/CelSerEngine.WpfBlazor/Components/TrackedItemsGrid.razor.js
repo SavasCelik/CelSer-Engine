@@ -1,15 +1,12 @@
 let tackedItemsGridApi;
 
 export function initTackedItems() {
-    // Grid Options: Contains all of the grid configurations
-    let gridOptions = {
+    const gridOptions = {
         defaultColDef: {
             suppressMovable: true,
             flex: 1
         },
         rowSelection: 'multiple',
-        getRowId: (params) => params.data.Address,
-        // Column Definitions: Defines the columns to be displayed.
         columnDefs: [
             {
                 field: "IsFrozen",
