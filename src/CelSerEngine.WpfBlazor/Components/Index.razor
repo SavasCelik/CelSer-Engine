@@ -26,20 +26,20 @@
             <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
                 <div class="form-group has-search">
                     <span class="bi bi-search form-control-feedback"></span>
-                    <input @bind-value="_searchValue" @bind-value:event="oninput" @onkeydown="@Enter" id="filter-text-field" type="search" class="form-control" placeholder="Value">
+                    <input @bind-value="_searchValue" @bind-value:event="oninput" @onkeydown="@Enter" id="value-text-field" type="search" class="form-control" placeholder="Value">
                 </div>
 
                 @* buttons *@
                 <div class="d-flex gap-1 mb-3">
                     @if (_isFirstScan)
                     {
-                        <button @onclick="FirstScan" type="button" class="btn btn-primary">First Scan</button>
+                        <button @onclick="FirstScan" type="button" class="btn btn-ce-primary">First Scan</button>
                     }
                     else
                     {
-                        <button @onclick="FirstScan" type="button" class="btn btn-primary">New Scan</button>
+                        <button @onclick="FirstScan" type="button" class="btn btn-ce-primary">New Scan</button>
                     }
-                    <button @onclick="NextScan" type="button" class="btn btn-outline-primary">Next Scan</button>
+                    <button @onclick="NextScan" type="button" class="btn btn-ce-primary disabled">Next Scan</button>
                 </div>
 
                 @* scan type & value type *@

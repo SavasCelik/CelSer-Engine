@@ -23,6 +23,45 @@ a, .btn-link {
     border-color: #1861ac;
 }
 
+body {
+    --ce-primary-50: #F1FCFB;
+    --ce-primary-100: #CFF8F2;
+    --ce-primary-200: #9FF0E5;
+    --ce-primary-300: #67E1D5;
+    --ce-primary-400: #38C9C0;
+    --ce-primary-500: #1FAFA870;
+    --ce-primary-550: #1FAFA8;
+    --ce-primary-600: #168B88;
+    --ce-primary-700: #166F6D;
+    --ce-primary-800: #165959;
+    --ce-primary-900: #174A4A;
+    --ce-primary-950: #072B2C;
+}
+
+.btn-ce-primary {
+    /* #802dff , #6d9ba9, #1fafa870*/
+    --bs-btn-font-weight: 600;
+    --bs-btn-focus-shadow-rgb: 211, 212, 213;
+    --bs-btn-color: black;
+    --bs-btn-bg: var(--ce-primary-400);
+    --bs-btn-border-color: var(--ce-primary-500);
+    --bs-btn-hover-color: black;
+    --bs-btn-hover-bg: var(--ce-primary-500);
+    --bs-btn-hover-border-color: var(--ce-primary-600);
+    --bs-btn-active-color: black;
+    --bs-btn-active-bg: var(--ce-primary-550);
+    --bs-btn-active-border-color: var(--ce-primary-700);
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: var(--ce-primary-950);
+    --bs-btn-disabled-bg: var(--ce-primary-100);
+    --bs-btn-disabled-border-color: var(--ce-primary-100);
+}
+
+.form-check-input:checked {
+    background-color: var(--ce-primary-550);
+    border-color: var(--ce-primary-550);
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }
