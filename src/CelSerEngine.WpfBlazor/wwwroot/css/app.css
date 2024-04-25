@@ -8,6 +8,11 @@ h1:focus {
     outline: none;
 }
 
+img {
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
 a, .btn-link {
     color: #0071c1;
 }
