@@ -4,12 +4,16 @@ using CelSerEngine.Core.Native;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using System.Diagnostics;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
 public partial class Index : ComponentBase, IAsyncDisposable
 {
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+
     [Inject]
     private INativeApi NativeApi { get; set; } = default!;
 
@@ -20,6 +24,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private MainWindow MainWindow { get; set; } = default!;
 
     private VirtualizedAgGrid<ScanResultItem> _virtualizedAgGridRef = default!;
+    private TrackedItemsGrid _trackedItemsGridRef = default!;
     private List<ScanResultItem> _scanResultItems { get; set; } = [];
     private List<TrackedItem> _trackedItems { get; set; } = [];
 
@@ -30,6 +35,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private bool _isFirstScan { get; set; } = true;
     private readonly Timer _scanResultsUpdater;
     private readonly IProgress<float> _progressBarUpdater;
+    private IJSObjectReference? _module;
 
     public Index()
     {
@@ -44,9 +50,10 @@ public partial class Index : ComponentBase, IAsyncDisposable
         });
     }
 
-    public void OnRowDoubleClicked(ScanResultItem scanResultItem)
+    public async Task OnScanResultItemDoubleClicked(ScanResultItem scanResultItem)
     {
         _trackedItems.Add(new TrackedItem(scanResultItem));
+        await _trackedItemsGridRef.RefreshDataAsync();
     }
 
     protected override void OnInitialized()
@@ -59,6 +66,14 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
         EngineSession.SelectedProcess = selectedProcess;
         EngineSession.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Index.razor.js");
+        }
     }
 
     private async Task FirstScan()
@@ -136,5 +151,10 @@ public partial class Index : ComponentBase, IAsyncDisposable
     {
         EngineSession.OnChange -= StateHasChanged;
         await _scanResultsUpdater.DisposeAsync();
+
+        if (_module != null)
+        {
+            await _module.DisposeAsync();
+        }
     }
 }

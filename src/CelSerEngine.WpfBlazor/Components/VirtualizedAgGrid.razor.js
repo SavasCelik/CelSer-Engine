@@ -153,7 +153,7 @@ async function onResize(entry) {
 }
 
 async function onRowDoubleClicked(row) {
-    await dotNetHelper.invokeMethodAsync('OnRowDoubleClicked', row.data.Item.Address);
+    await dotNetHelper.invokeMethodAsync('OnRowDoubleClickedDispatcher', row.data.Item.Address);
 }
 
 function showScanningOverlay() {

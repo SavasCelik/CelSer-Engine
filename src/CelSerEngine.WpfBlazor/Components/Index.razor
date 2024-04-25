@@ -17,8 +17,9 @@
         <div id="split-0" class="d-flex flex-row gap-2">
             <VirtualizedAgGrid @ref="_virtualizedAgGridRef"
                                Items="_scanResultItems"
+                               TItem="Models.ScanResultItem"
                                GetRowId='(x) => x.Address.ToString("X")'
-                               OnRowDoubleClickedEvent="OnRowDoubleClicked"
+                               OnRowDoubleClicked="OnScanResultItemDoubleClicked"
                                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
             </VirtualizedAgGrid>
 
@@ -65,7 +66,7 @@
         </div>
 
         <div id="split-1" class="d-flex flex-grow-1">
-            <div id="trackedItemsGrid" class="ag-theme-quartz flex-grow-1"></div>
+            <TrackedItemsGrid @ref="_trackedItemsGridRef" TrackedItems="_trackedItems"></TrackedItemsGrid>
         </div>
     </div>
 </div>
@@ -77,67 +78,3 @@
 <button @onclick="NextScan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
     Next Scan
 </button>
-
-<script>
-    new SlimSelect({
-        select: '#selectScanDataType',
-        settings: {
-            showSearch: false,
-        }
-    });
-    new SlimSelect({
-        select: '#scanCompareType',
-        settings: {
-            showSearch: false,
-        }
-    });
-
-    // Grid Options: Contains all of the grid configurations
-    let gridOptions = {
-        defaultColDef: {
-            suppressMovable: true,
-            flex: 1
-        },
-        rowSelection: 'multiple',
-        // Column Definitions: Defines the columns to be displayed.
-        columnDefs: [
-            {
-                field: "Frozen",
-                headerName: "Freeze",
-            },
-            {
-                field: "Description",
-                headerName: "Description",
-            },
-            {
-                field: "Address",
-                headerName: "Address",
-            },
-            {
-                field: "Value",
-                headerName: "Value",
-            },
-        ]
-    };
-
-    let trackedItemsGridElement = document.querySelector('#trackedItemsGrid');
-    var tackedItems = agGrid.createGrid(trackedItemsGridElement, gridOptions);
-
-    Split(['#split-0', '#split-1'], {
-        direction: 'vertical',
-        snapOffset: 0,
-        minSize: [200, 100],
-        gutterSize: 3,
-        elementStyle: function (dimension, size, gutterSize) {
-            return {
-                'flex-basis': 'calc(' + size + '% - ' + gutterSize + 'px)',
-            }
-        },
-        gutterStyle: function (dimension, gutterSize) {
-            return {
-                'flex-basis': gutterSize + 'px',
-                'min-height': gutterSize + 'px',
-            }
-        },
-    });
-</script>
