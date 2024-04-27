@@ -39,7 +39,7 @@
                     {
                         <button @onclick="FirstScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
                     }
-                    <button @onclick="NextScan" type="button" class="btn btn-ce-primary @(_isFirstScan ? "disabled" : "")">Next Scan</button>
+                    <button @onclick="NextScan" type="button" class="btn btn-ce-primary" disabled="@_isFirstScan">Next Scan</button>
                 </div>
 
                 @* scan type & value type *@

@@ -231,3 +231,8 @@ input[type="search"]::-webkit-search-cancel-button {
     border-color: var(--ce-primary-700);
     box-shadow: rgba(var(--ce-primary-700-rgb), 0.25) 0px 3px 0px 0;
 }
+
+.progress {
+    --bs-progress-bar-bg: var(--ce-primary-700);
+    --bs-progress-bar-transition: width 0.2s ease;
+}
