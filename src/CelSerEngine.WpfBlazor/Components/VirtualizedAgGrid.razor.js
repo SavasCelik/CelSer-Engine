@@ -13,10 +13,7 @@ function initVirtualizedAgGrid(_dotNetHelper) {
             this.eGui = document.createElement('div');
 
             if (params.isScanning) {
-                this.eGui.innerHTML =
-                    `<div class="ag-overlay-loading-center">
-                    <div class="spinner-border m-auto" role="status"></div>
-                </div>`;
+                this.eGui.innerHTML = `<div class="spinner-border m-auto" role="status"></div>`;
             }
             else {
                 this.eGui.innerHTML = ``;

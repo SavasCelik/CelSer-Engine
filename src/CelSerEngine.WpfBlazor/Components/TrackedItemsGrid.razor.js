@@ -7,6 +7,7 @@ export function initTackedItems() {
             flex: 1
         },
         rowSelection: 'multiple',
+        overlayLoadingTemplate: '<div></div>',
         columnDefs: [
             {
                 field: "IsFrozen",
