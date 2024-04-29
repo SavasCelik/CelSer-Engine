@@ -32,3 +32,7 @@ Split(['#split-0', '#split-1'], {
 export function focusFirstInvalidInput() {
     setTimeout(() => document.querySelector(".invalid")?.focus(), 100);
 }
+
+export function focusSearchValueInput() {
+    document.querySelector("#value-text-field").focus();
+}
