@@ -23,7 +23,7 @@
                                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
             </VirtualizedAgGrid>
 
-            <EditForm Model="_searchSubmitModel" Context="formContext" disabled="true">
+            <EditForm Model="_searchSubmitModel" Context="formContext">
                 <DataAnnotationsValidator />
                 <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
                     <div class="form-group has-search">
@@ -40,9 +40,9 @@
                         }
                         else
                         {
+                            <button @onclick="() => NextScan(formContext)" type="submit" class="btn btn-ce-primary">Next Scan</button>
                             <button @onclick="NewScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
                         }
-                        <button @onclick="() => NextScan(formContext)" type="submit" class="btn btn-ce-primary" disabled="@_isFirstScan">Next Scan</button>
                     </div>
 
                     @* scan type & value type *@

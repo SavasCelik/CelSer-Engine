@@ -154,6 +154,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         _scanResultItems.Clear();
         await _virtualizedAgGridRef.ResetGrid();
         _isFirstScan = true;
+        await _module!.InvokeVoidAsync("focusSearchValueInput");
     }
 
     private async void UpdateVisibleScanResults()
