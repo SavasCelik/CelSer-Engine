@@ -4,7 +4,7 @@
 <div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-1 m-2">
         <div class="d-flex flex-row gap-2">
-            <button @onclick="OpenSelectProcess" type="button" class="btn btn-icon btn-light border">
+            <button @onclick="OpenSelectProcess" type="button" class="btn btn-icon btn-light border @(EngineSession.SelectedProcess?.DisplayString == null ? "blink-animation" : "")">
                 <img height="25" src="/SelectProcess.png" />
             </button>
             <div class="d-flex flex-column flex-grow-1 text-center">
@@ -25,47 +25,49 @@
 
             <EditForm Model="_searchSubmitModel" Context="formContext">
                 <DataAnnotationsValidator />
-                <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
-                    <div class="form-group has-search">
-                        <span class="bi bi-search form-control-feedback"></span>
-                        <InputText @bind-Value="_searchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
-                        <ValidationMessage For="() => _searchSubmitModel.SearchValue" />
-                    </div>
+                <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null)">
+                    <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
+                        <div class="form-group has-search">
+                            <span class="bi bi-search form-control-feedback"></span>
+                            <InputText @bind-Value="_searchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
+                            <ValidationMessage For="() => _searchSubmitModel.SearchValue" />
+                        </div>
 
-                    @* buttons *@
-                    <div class="d-flex gap-1 mb-3">
-                        @if (_isFirstScan)
-                        {
-                            <button @onclick="() => FirstScan(formContext)" type="submit" class="btn btn-ce-primary">First Scan</button>
-                        }
-                        else
-                        {
-                            <button @onclick="() => NextScan(formContext)" type="submit" class="btn btn-ce-primary">Next Scan</button>
-                            <button @onclick="NewScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
-                        }
-                    </div>
-
-                    @* scan type & value type *@
-                    <div class="d-inline-flex gap-2">
-                        <label for="scanCompareType" class="text-end align-self-center" style="width: 100px">Scan Type</label>
-                        <select id="scanCompareType" @bind="_searchSubmitModel.SelectedScanCompareType">
-                            @foreach (var item in Enum.GetValues<ScanCompareType>())
+                        @* buttons *@
+                        <div class="d-flex gap-1 mb-3">
+                            @if (_isFirstScan)
                             {
-                                <option value="@item">@item.GetDisplayName()</option>
+                                <button @onclick="() => FirstScan(formContext)" type="submit" class="btn btn-ce-primary">First Scan</button>
                             }
-                        </select>
-                    </div>
-                    <div class="d-inline-flex gap-2">
-                        <label for="selectScanDataType" class="text-end align-self-center" style="width: 100px">Value Type</label>
-                        <select id="selectScanDataType" @bind="_searchSubmitModel.SelectedScanDataType">
-                            @foreach (var item in Enum.GetValues<ScanDataType>())
+                            else
                             {
-                                <option value="@item">@item.GetDisplayName()</option>
+                                <button @onclick="() => NextScan(formContext)" type="submit" class="btn btn-ce-primary">Next Scan</button>
+                                <button @onclick="NewScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
                             }
-                        </select>
-                    </div>
+                        </div>
 
-                </div>
+                        @* scan type & value type *@
+                        <div class="d-inline-flex gap-2">
+                            <label for="scanCompareType" class="text-end align-self-center" style="width: 100px">Scan Type</label>
+                            <select id="scanCompareType" @bind="_searchSubmitModel.SelectedScanCompareType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null)">
+                                @foreach (var item in Enum.GetValues<ScanCompareType>())
+                                {
+                                    <option value="@item">@item.GetDisplayName()</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="d-inline-flex gap-2">
+                            <label for="selectScanDataType" class="text-end align-self-center" style="width: 100px">Value Type</label>
+                            <select id="selectScanDataType" @bind="_searchSubmitModel.SelectedScanDataType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null)">
+                                @foreach (var item in Enum.GetValues<ScanDataType>())
+                                {
+                                    <option value="@item">@item.GetDisplayName()</option>
+                                }
+                            </select>
+                        </div>
+
+                    </div>
+                </fieldset>
             </EditForm>
         </div>
 

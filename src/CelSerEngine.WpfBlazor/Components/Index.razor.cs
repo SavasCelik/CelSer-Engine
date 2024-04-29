@@ -64,13 +64,6 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        var process = Process.GetProcessesByName("SmallGame").First();
-        var selectedProcess = new ProcessAdapter(process)
-        {
-            ProcessHandle = NativeApi.OpenProcess(process.Id)
-        };
-
-        EngineSession.SelectedProcess = selectedProcess;
         EngineSession.OnChange += StateHasChanged;
     }
 
