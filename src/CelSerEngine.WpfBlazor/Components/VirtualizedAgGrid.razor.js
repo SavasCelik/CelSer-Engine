@@ -153,16 +153,21 @@ async function onRowDoubleClicked(row) {
     await dotNetHelper.invokeMethodAsync('OnRowDoubleClickedDispatcher', row.data.Item.Address);
 }
 
-function showScanningOverlay() {
-    gridApi.setGridOption("loadingOverlayComponentParams", { isScanning: true });
+function showLoadingOverlay(showSpinner = true) {
+    gridApi.setGridOption("loadingOverlayComponentParams", { isScanning: showSpinner });
     gridApi.showLoadingOverlay();
+}
+
+function resetGrid() {
+    gridApi.setGridOption("rowData", []);
+    showLoadingOverlay(false);
 }
 
 async function itemsChanged(totalCount) {
     totalItemCount = totalCount;
-    const visibleRowCount = getVisibleRowCount();
-    let startIndex = getStartIndex(visibleRowCount);
     document.querySelector(".ag-body-vertical-scroll-container").style.height = `${Math.min(totalItemCount * itemHeight, maxDivHeight)}px`;
+    const visibleRowCount = getVisibleRowCount();
+    const startIndex = getStartIndex(visibleRowCount);
     await loadItemsIntoGrid(startIndex, visibleRowCount);
 }
 
@@ -207,4 +212,4 @@ async function onScroll() {
     const visibleItems = await loadItemsIntoGrid(startIndex, visibleRowCount);
 }
 
-export { initVirtualizedAgGrid, itemsChanged, showScanningOverlay }
+export { initVirtualizedAgGrid, itemsChanged, showLoadingOverlay, resetGrid }

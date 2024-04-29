@@ -52,7 +52,12 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
 
     public async Task ShowScanningOverlay()
     {
-        await _module!.InvokeVoidAsync("showScanningOverlay");
+        await _module!.InvokeVoidAsync("showLoadingOverlay");
+    }
+
+    public async Task ResetGrid()
+    {
+        await _module!.InvokeVoidAsync("resetGrid");
     }
 
     public IEnumerable<TItem> GetVisibleItems()
