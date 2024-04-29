@@ -3,11 +3,20 @@ using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 
 namespace CelSerEngine.WpfBlazor.Components;
+
+public class SearchSubmitModel
+{
+    [Required(AllowEmptyStrings = false, ErrorMessage = "Provide a value to scan for")]
+    public string SearchValue { get; set; } = string.Empty;
+    public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
+    public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+}
 
 public partial class Index : ComponentBase, IAsyncDisposable
 {
@@ -27,10 +36,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private TrackedItemsGrid _trackedItemsGridRef = default!;
     private List<ScanResultItem> _scanResultItems { get; set; } = [];
     private List<TrackedItem> _trackedItems { get; set; } = [];
-
-    private string _searchValue { get; set; } = string.Empty;
-    private ScanDataType _selectedScanDataType { get; set; } = ScanDataType.Integer;
-    private ScanCompareType _selectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+    private SearchSubmitModel _searchSubmitModel { get; set; } = new();
     private float _progressBarValue { get; set; }
     private bool _isFirstScan { get; set; } = true;
     private readonly Timer _scanResultsUpdater;
@@ -76,15 +82,26 @@ public partial class Index : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task FirstScan()
+    private async Task SearchScanInvalidSubmit()
     {
+        await _module!.InvokeVoidAsync("focusFirstInvalidInput");
+    }
+
+    private async Task FirstScan(EditContext formContext)
+    {
+        if (!formContext.Validate())
+        {
+            await SearchScanInvalidSubmit();
+            return;
+        }
+
         _scanResultItems.Clear();
         await _virtualizedAgGridRef.ApplyDataAsync();
         await _virtualizedAgGridRef.ShowScanningOverlay();
         var results = await Task.Run(() =>
         {
             var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(EngineSession.SelectedProcessHandle);
-            var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
+            var scanConstraint = new ScanConstraint(_searchSubmitModel.SelectedScanCompareType, _searchSubmitModel.SelectedScanDataType, _searchSubmitModel.SearchValue);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
 
             return comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater);
@@ -99,23 +116,21 @@ public partial class Index : ComponentBase, IAsyncDisposable
         _isFirstScan = false;
     }
 
-    public async Task Enter(KeyboardEventArgs e)
-    {
-        if (e.Code == "Enter")
-        {
-            await FirstScan();
-        }
-    }
-
     private void OpenSelectProcess()
     {
         MainWindow.OpenProcessSelector();
     }
 
-    private async Task NextScan()
+    private async Task NextScan(EditContext formContext)
     {
+        if (!formContext.Validate())
+        {
+            await SearchScanInvalidSubmit();
+            return;
+        }
+
         await _virtualizedAgGridRef.ShowScanningOverlay();
-        var scanConstraint = new ScanConstraint(_selectedScanCompareType, _selectedScanDataType, _searchValue);
+        var scanConstraint = new ScanConstraint(_searchSubmitModel.SelectedScanCompareType, _searchSubmitModel.SelectedScanDataType, _searchSubmitModel.SearchValue);
         NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, _scanResultItems);
         var passedMemorySegments = new List<ScanResultItem>();
 
@@ -131,6 +146,14 @@ public partial class Index : ComponentBase, IAsyncDisposable
         _scanResultItems.Clear();
         _scanResultItems.AddRange(passedMemorySegments);
         await _virtualizedAgGridRef.ApplyDataAsync();
+    }
+
+    private async Task NewScan()
+    {
+        _scanResultsUpdater.Change(Timeout.Infinite, 0);
+        _scanResultItems.Clear();
+        await _virtualizedAgGridRef.ResetGrid();
+        _isFirstScan = true;
     }
 
     private async void UpdateVisibleScanResults()

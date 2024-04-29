@@ -79,12 +79,17 @@ img {
     border-color: var(--ce-primary-700);
 }
 
-.valid.modified:not([type=checkbox]) {
+/*.valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
-}
+}*/
 
 .invalid {
-    outline: 1px solid red;
+    border-color: red !important;
+}
+
+.invalid:focus {
+    border-color: red !important;
+    box-shadow: rgba(255, 0, 0, 0.25) 0px 3px 0px 0 !important;
 }
 
 .validation-message {

@@ -23,46 +23,50 @@
                                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
             </VirtualizedAgGrid>
 
-            <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
-                <div class="form-group has-search">
-                    <span class="bi bi-search form-control-feedback"></span>
-                    <input @bind-value="_searchValue" @bind-value:event="oninput" @onkeydown="@Enter" id="value-text-field" type="search" class="form-control" placeholder="Value">
-                </div>
+            <EditForm Model="_searchSubmitModel" Context="formContext" disabled="true">
+                <DataAnnotationsValidator />
+                <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
+                    <div class="form-group has-search">
+                        <span class="bi bi-search form-control-feedback"></span>
+                        <InputText @bind-Value="_searchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
+                        <ValidationMessage For="() => _searchSubmitModel.SearchValue" />
+                    </div>
 
-                @* buttons *@
-                <div class="d-flex gap-1 mb-3">
-                    @if (_isFirstScan)
-                    {
-                        <button @onclick="FirstScan" type="button" class="btn btn-ce-primary">First Scan</button>
-                    }
-                    else
-                    {
-                        <button @onclick="FirstScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
-                    }
-                    <button @onclick="NextScan" type="button" class="btn btn-ce-primary" disabled="@_isFirstScan">Next Scan</button>
-                </div>
-
-                @* scan type & value type *@
-                <div class="d-inline-flex gap-2">
-                    <label for="scanCompareType" class="text-end align-self-center" style="width: 100px">Scan Type</label>
-                    <select id="scanCompareType" @bind="_selectedScanCompareType">
-                        @foreach (var item in Enum.GetValues<ScanCompareType>())
+                    @* buttons *@
+                    <div class="d-flex gap-1 mb-3">
+                        @if (_isFirstScan)
                         {
-                            <option value="@item">@item.GetDisplayName()</option>
+                            <button @onclick="() => FirstScan(formContext)" type="submit" class="btn btn-ce-primary">First Scan</button>
                         }
-                    </select>
-                </div>
-                <div class="d-inline-flex gap-2">
-                    <label for="selectScanDataType" class="text-end align-self-center" style="width: 100px">Value Type</label>
-                    <select id="selectScanDataType" @bind="_selectedScanDataType">
-                        @foreach (var item in Enum.GetValues<ScanDataType>())
+                        else
                         {
-                            <option value="@item">@item.GetDisplayName()</option>
+                            <button @onclick="NewScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
                         }
-                    </select>
-                </div>
+                        <button @onclick="() => NextScan(formContext)" type="submit" class="btn btn-ce-primary" disabled="@_isFirstScan">Next Scan</button>
+                    </div>
 
-            </div>
+                    @* scan type & value type *@
+                    <div class="d-inline-flex gap-2">
+                        <label for="scanCompareType" class="text-end align-self-center" style="width: 100px">Scan Type</label>
+                        <select id="scanCompareType" @bind="_searchSubmitModel.SelectedScanCompareType">
+                            @foreach (var item in Enum.GetValues<ScanCompareType>())
+                            {
+                                <option value="@item">@item.GetDisplayName()</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="d-inline-flex gap-2">
+                        <label for="selectScanDataType" class="text-end align-self-center" style="width: 100px">Value Type</label>
+                        <select id="selectScanDataType" @bind="_searchSubmitModel.SelectedScanDataType">
+                            @foreach (var item in Enum.GetValues<ScanDataType>())
+                            {
+                                <option value="@item">@item.GetDisplayName()</option>
+                            }
+                        </select>
+                    </div>
+
+                </div>
+            </EditForm>
         </div>
 
         <div id="split-1" class="d-flex flex-grow-1">
@@ -70,11 +74,3 @@
         </div>
     </div>
 </div>
-
-<button @onclick="OpenSelectProcess" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-    Open Process Selector
-</button>
-
-<button @onclick="NextScan" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-    Next Scan
-</button>
