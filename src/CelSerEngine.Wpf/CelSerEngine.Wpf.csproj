@@ -6,13 +6,19 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <Configurations>Debug;Release;TestUI</Configurations>
+    <ApplicationIcon>Resources\Images\App.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Resources\CsharpSyntaxStyle.xshd" />
+    <None Remove="Resources\Images\App.ico" />
     <None Remove="Resources\Images\SearchProcessWatermark.png" />
     <None Remove="Resources\Images\SelectProcess.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Images\App.ico" />
   </ItemGroup>
 
   <ItemGroup>

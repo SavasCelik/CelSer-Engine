@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "bootstrap@5.3.3",
+      "destination": "wwwroot/lib/bootstrap/",
+      "files": [
+        "js/bootstrap.min.js",
+        "css/bootstrap.min.css"
+      ]
+    },
+    {
+      "library": "bootstrap-icons@1.11.3",
+      "destination": "wwwroot/lib/bootstrap-icons/",
+      "files": [
+        "font/bootstrap-icons.min.css",
+        "font/fonts/bootstrap-icons.woff",
+        "font/fonts/bootstrap-icons.woff2"
+      ]
+    },
+    {
+      "provider": "cdnjs",
+      "library": "ag-grid@31.2.1",
+      "destination": "wwwroot/lib/ag-grid/",
+      "files": [
+        "ag-grid-community.min.js"
+      ]
+    },
+    {
+      "library": "slim-select@2.8.2",
+      "destination": "wwwroot/lib/slim-select/",
+      "files": [
+        "slimselect.min.css",
+        "slimselect.min.js"
+      ]
+    },
+    {
+      "library": "split.js@1.6.5",
+      "destination": "wwwroot/lib/split/",
+      "files": [
+        "split.min.js"
+      ]
+    }
+  ]
+}

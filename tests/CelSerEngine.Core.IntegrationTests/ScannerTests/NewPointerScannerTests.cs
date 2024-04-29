@@ -39,7 +39,7 @@ public class NewPointerScannerTests
         var pointerScanner = new DefaultPointerScanner(stubNativeApi.Object, _scanOptions);
         var foundPointers = await pointerScanner.StartPointerScanAsync(_scanOptions.ProcessHandle);
         var expectedPointer = foundPointers.Where(x => x.OffsetsDisplayString == _expectedOffsets).ToList();
-
+        
         Assert.Single(expectedPointer);
 
         await RescanPointerTest(foundPointers);
@@ -81,13 +81,13 @@ public class NewPointerScannerTests
         var stubNativeApi = new Mock<INativeApi>();
         stubNativeApi
             .Setup(x => x.GetProcessModules(It.IsAny<SafeProcessHandle>()))
-            .Returns(modules);
+            .Returns(()=> modules.ToList());
         stubNativeApi
             .Setup(x => x.GetStackStart(It.IsAny<SafeProcessHandle>(), It.IsAny<int>(), It.IsAny<ModuleInfo>()))
             .Returns((SafeProcessHandle hProcess, int threadNr, ModuleInfo? mi) => stackStarts[threadNr]);
         stubNativeApi
             .Setup(x => x.EnumerateMemoryRegions(It.IsAny<SafeProcessHandle>()))
-            .Returns(mbis);
+            .Returns(() => mbis.ToList());
         stubNativeApi
             .Setup(x => x.TryReadVirtualMemory(It.IsAny<SafeProcessHandle>(), It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
             .Returns((SafeProcessHandle hProcess, IntPtr address, uint numberOfBytesToRead, byte[] buffer) =>

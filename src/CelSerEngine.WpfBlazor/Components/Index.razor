@@ -1,0 +1,76 @@
+﻿@using CelSerEngine.Core.Models
+@using CelSerEngine.Core.Extensions
+
+<div class="d-flex vh-100">
+    <div class="d-flex flex-column flex-grow-1 row-gap-1 m-2">
+        <div class="d-flex flex-row gap-2">
+            <button @onclick="OpenSelectProcess" type="button" class="btn btn-icon btn-light border">
+                <img height="25" src="/SelectProcess.png" />
+            </button>
+            <div class="d-flex flex-column flex-grow-1 text-center">
+                <div class="lh-sm">@(EngineSession.SelectedProcess?.DisplayString ?? "- No Process Selected -")</div>
+                <div class="progress flex-grow-1">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: @_progressBarValue%"></div>
+                </div>
+            </div>
+        </div>
+        <div id="split-0" class="d-flex flex-row gap-2">
+            <VirtualizedAgGrid @ref="_virtualizedAgGridRef"
+                               Items="_scanResultItems"
+                               TItem="Models.ScanResultItem"
+                               GetRowId='(x) => x.Address.ToString("X")'
+                               OnRowDoubleClicked="OnScanResultItemDoubleClicked"
+                               SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
+            </VirtualizedAgGrid>
+
+            <EditForm Model="_searchSubmitModel" Context="formContext" disabled="true">
+                <DataAnnotationsValidator />
+                <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
+                    <div class="form-group has-search">
+                        <span class="bi bi-search form-control-feedback"></span>
+                        <InputText @bind-Value="_searchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
+                        <ValidationMessage For="() => _searchSubmitModel.SearchValue" />
+                    </div>
+
+                    @* buttons *@
+                    <div class="d-flex gap-1 mb-3">
+                        @if (_isFirstScan)
+                        {
+                            <button @onclick="() => FirstScan(formContext)" type="submit" class="btn btn-ce-primary">First Scan</button>
+                        }
+                        else
+                        {
+                            <button @onclick="NewScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
+                        }
+                        <button @onclick="() => NextScan(formContext)" type="submit" class="btn btn-ce-primary" disabled="@_isFirstScan">Next Scan</button>
+                    </div>
+
+                    @* scan type & value type *@
+                    <div class="d-inline-flex gap-2">
+                        <label for="scanCompareType" class="text-end align-self-center" style="width: 100px">Scan Type</label>
+                        <select id="scanCompareType" @bind="_searchSubmitModel.SelectedScanCompareType">
+                            @foreach (var item in Enum.GetValues<ScanCompareType>())
+                            {
+                                <option value="@item">@item.GetDisplayName()</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="d-inline-flex gap-2">
+                        <label for="selectScanDataType" class="text-end align-self-center" style="width: 100px">Value Type</label>
+                        <select id="selectScanDataType" @bind="_searchSubmitModel.SelectedScanDataType">
+                            @foreach (var item in Enum.GetValues<ScanDataType>())
+                            {
+                                <option value="@item">@item.GetDisplayName()</option>
+                            }
+                        </select>
+                    </div>
+
+                </div>
+            </EditForm>
+        </div>
+
+        <div id="split-1" class="d-flex flex-grow-1">
+            <TrackedItemsGrid @ref="_trackedItemsGridRef" TrackedItems="_trackedItems"></TrackedItemsGrid>
+        </div>
+    </div>
+</div>

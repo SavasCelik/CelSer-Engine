@@ -163,11 +163,11 @@ public sealed class NativeApi : INativeApi
                 continue;
             }
 
-            UpdateMemorySegmennt(hProcess, address);
+            UpdateMemorySegment(hProcess, address);
         }
     }
 
-    public void UpdateMemorySegmennt(SafeProcessHandle hProcess, IMemorySegment memorySegment)
+    public void UpdateMemorySegment(SafeProcessHandle hProcess, IMemorySegment memorySegment)
     {
         if (memorySegment == null)
             return;

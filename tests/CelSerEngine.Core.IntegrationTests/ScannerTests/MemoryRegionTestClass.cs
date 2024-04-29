@@ -2,7 +2,7 @@
 
 namespace CelSerEngine.Core.IntegrationTests.ScannerTests;
 
-internal class MemoryRegionTestClass
+public class MemoryRegionTestClass
 {
     public ulong BaseAddress { get; set; }
     public ulong AllocationBase { get; set; }
