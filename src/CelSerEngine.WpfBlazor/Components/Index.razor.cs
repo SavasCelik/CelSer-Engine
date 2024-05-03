@@ -43,6 +43,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private readonly IProgress<float> _progressBarUpdater;
     private IJSObjectReference? _module;
 
+    private ICollection<ContextMenuItem> _contextMenuItems { get; set; }
+
     public Index()
     {
         _scanResultsUpdater = new Timer((e) => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
@@ -54,6 +56,14 @@ public partial class Index : ComponentBase, IAsyncDisposable
                 StateHasChanged();
             }
         });
+
+        _contextMenuItems =
+        [
+            new ContextMenuItem
+            {
+                Text = "Test"
+            },
+        ];
     }
 
     public async Task OnScanResultItemDoubleClicked(ScanResultItem scanResultItem)
