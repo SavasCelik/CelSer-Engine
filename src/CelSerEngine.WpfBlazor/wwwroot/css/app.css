@@ -215,9 +215,10 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .ss-main {
     --ss-main-height: 25px;
+    --ss-focus-color: transparent;
 }
 
-    .ss-main:hover:not(:focus) {
+    .ss-main:hover:not(:focus):not(.ss-disabled) {
         background: var(--ce-primary-50);
     }
 
