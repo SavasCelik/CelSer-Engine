@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
@@ -61,9 +60,17 @@ public partial class Index : ComponentBase, IAsyncDisposable
         [
             new ContextMenuItem
             {
-                Text = "Test"
+                Text = "Add selected addresses to the tracked addresses",
+                OnClick = EventCallback.Factory.Create(this, ContextMenuItemClickedAsync)
             },
         ];
+    }
+
+    public async Task ContextMenuItemClickedAsync()
+    {
+        var selectedScanResultItems = _scanResultItems.Where(x => _virtualizedAgGridRef.SelectedItems.Contains(x.Address.ToString("X")));
+        _trackedItems.AddRange(selectedScanResultItems.Select(x => new TrackedItem(x)));
+        await _trackedItemsGridRef.RefreshDataAsync();
     }
 
     public async Task OnScanResultItemDoubleClicked(ScanResultItem scanResultItem)
@@ -112,7 +119,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
         _progressBarValue = 100;
         StateHasChanged();
-         _scanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
+        _scanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
         await _virtualizedAgGridRef.ApplyDataAsync();
         _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
         _progressBarValue = 0;

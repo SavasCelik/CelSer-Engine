@@ -2,7 +2,7 @@
 using Microsoft.JSInterop;
 
 namespace CelSerEngine.WpfBlazor.Components;
-public partial class ContextMenu : ComponentBase
+public partial class ContextMenu : ComponentBase, IAsyncDisposable
 {
     [Parameter]
     public ICollection<ContextMenuItem> Items { get; set; } = default!;
@@ -22,7 +22,16 @@ public partial class ContextMenu : ComponentBase
         if (firstRender)
         {
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/ContextMenu.razor.js");
-            await _module.InvokeVoidAsync("init");
+            await _module.InvokeVoidAsync("init", Selector);
+        }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_module != null)
+        {
+            await _module.DisposeAsync();
         }
     }
 }
