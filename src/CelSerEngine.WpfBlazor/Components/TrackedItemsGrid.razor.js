@@ -1,6 +1,9 @@
 let tackedItemsGridApi;
+let dotNetHelper;
 
-export function initTackedItems() {
+export function initTackedItems(_dotNetHelper) {
+    dotNetHelper = _dotNetHelper;
+
     const gridOptions = {
         defaultColDef: {
             suppressMovable: true,
@@ -29,7 +32,8 @@ export function initTackedItems() {
                 field: "Value",
                 headerName: "Value",
             },
-        ]
+        ],
+        onCellDoubleClicked: onCellDoubleClicked,
     };
 
     const trackedItemsGridElement = document.querySelector('#trackedItemsGrid');
@@ -38,4 +42,8 @@ export function initTackedItems() {
 
 export function applyTrackedItems(items) {
     tackedItemsGridApi.setGridOption("rowData", JSON.parse(items));
+}
+
+async function onCellDoubleClicked(params) {
+    await dotNetHelper.invokeMethodAsync("OnCellDoubleClickedAsync", params.rowIndex, params.colDef.field);
 }
