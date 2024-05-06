@@ -26,9 +26,13 @@
                                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
             </VirtualizedAgGrid>
 
-            <EditForm Model="_searchSubmitModel" Context="formContext">
+            <EditForm Model="_searchSubmitModel" Context="formContext" class="position-relative">
                 <DataAnnotationsValidator />
-                <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null)">
+                @if (_scanCancellationTokenSource != null)
+                {
+                    <button @onclick="CancelScan" type="submit" class="btn btn-light position-absolute z-3" style="top: 53px;" disabled="@(_scanCancellationTokenSource.IsCancellationRequested)">Cancel</button>
+                }
+                <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null || _scanCancellationTokenSource != null)">
                     <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
                         <div class="form-group has-search">
                             <span class="bi bi-search form-control-feedback"></span>
@@ -37,7 +41,7 @@
                         </div>
 
                         @* buttons *@
-                        <div class="d-flex gap-1 mb-3">
+                        <div class="d-flex gap-1 mb-3 @(_scanCancellationTokenSource != null ? "invisible" : "")">
                             @if (_isFirstScan)
                             {
                                 <button @onclick="() => FirstScan(formContext)" type="submit" class="btn btn-ce-primary">First Scan</button>
@@ -46,13 +50,13 @@
                             {
                                 <button @onclick="() => NextScan(formContext)" type="submit" class="btn btn-ce-primary">Next Scan</button>
                                 <button @onclick="NewScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
-                            }
+                            }                            
                         </div>
 
                         @* scan type & value type *@
                         <div class="d-inline-flex gap-2">
                             <label for="scanCompareType" class="text-end align-self-center" style="width: 100px">Scan Type</label>
-                            <select id="scanCompareType" @bind="_searchSubmitModel.SelectedScanCompareType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null)">
+                            <select id="scanCompareType" @bind="_searchSubmitModel.SelectedScanCompareType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || _scanCancellationTokenSource != null)">
                                 @foreach (var item in Enum.GetValues<ScanCompareType>())
                                 {
                                     <option value="@item">@item.GetDisplayName()</option>
@@ -61,7 +65,7 @@
                         </div>
                         <div class="d-inline-flex gap-2">
                             <label for="selectScanDataType" class="text-end align-self-center" style="width: 100px">Value Type</label>
-                            <select id="selectScanDataType" @bind="_searchSubmitModel.SelectedScanDataType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null)">
+                            <select id="selectScanDataType" @bind="_searchSubmitModel.SelectedScanDataType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !_isFirstScan || _scanCancellationTokenSource != null)">
                                 @foreach (var item in Enum.GetValues<ScanDataType>())
                                 {
                                     <option value="@item">@item.GetDisplayName()</option>

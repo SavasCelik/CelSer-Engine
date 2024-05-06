@@ -38,6 +38,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private SearchSubmitModel _searchSubmitModel { get; set; } = new();
     private float _progressBarValue { get; set; }
     private bool _isFirstScan { get; set; } = true;
+    private CancellationTokenSource? _scanCancellationTokenSource;
     private readonly Timer _scanResultsUpdater;
     private readonly IProgress<float> _progressBarUpdater;
     private IJSObjectReference? _module;
@@ -105,6 +106,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
             return;
         }
 
+        _scanCancellationTokenSource = new CancellationTokenSource();
+        var token = _scanCancellationTokenSource.Token;
         _scanResultItems.Clear();
         await _virtualizedAgGridRef.ApplyDataAsync();
         await _virtualizedAgGridRef.ShowScanningOverlay();
@@ -114,15 +117,16 @@ public partial class Index : ComponentBase, IAsyncDisposable
             var scanConstraint = new ScanConstraint(_searchSubmitModel.SelectedScanCompareType, _searchSubmitModel.SelectedScanDataType, _searchSubmitModel.SearchValue);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
 
-            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater);
-        });
+            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater, token);
+        }, token);
 
         _progressBarValue = 100;
         StateHasChanged();
         _scanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
         await _virtualizedAgGridRef.ApplyDataAsync();
-        _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        StartScanResultValueUpdater();
         _progressBarValue = 0;
+        _scanCancellationTokenSource = null;
         _isFirstScan = false;
     }
 
@@ -139,32 +143,67 @@ public partial class Index : ComponentBase, IAsyncDisposable
             return;
         }
 
+        _scanCancellationTokenSource = new CancellationTokenSource();
+        var token = _scanCancellationTokenSource.Token;
+        StopScanResultValueUpdater();
         await _virtualizedAgGridRef.ShowScanningOverlay();
-        var scanConstraint = new ScanConstraint(_searchSubmitModel.SelectedScanCompareType, _searchSubmitModel.SelectedScanDataType, _searchSubmitModel.SearchValue);
-        NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, _scanResultItems);
-        var passedMemorySegments = new List<ScanResultItem>();
 
-        for (var i = 0; i < _scanResultItems.Count; i++)
-        {
-            if (ValueComparer.MeetsTheScanConstraint(_scanResultItems[i].Value, scanConstraint.UserInput, scanConstraint))
+        var result = await Task.Run(() => {
+            var scanConstraint = new ScanConstraint(_searchSubmitModel.SelectedScanCompareType, _searchSubmitModel.SelectedScanDataType, _searchSubmitModel.SearchValue);
+            NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, _scanResultItems, token);
+            var passedMemorySegments = new List<ScanResultItem>();
+
+            for (var i = 0; i < _scanResultItems.Count; i++)
             {
-                _scanResultItems[i].PreviousValue = _scanResultItems[i].Value;
-                passedMemorySegments.Add(_scanResultItems[i]);
+                if (token.IsCancellationRequested)
+                    break;
+
+                if (ValueComparer.MeetsTheScanConstraint(_scanResultItems[i].Value, scanConstraint.UserInput, scanConstraint))
+                {
+                    _scanResultItems[i].PreviousValue = _scanResultItems[i].Value;
+                    passedMemorySegments.Add(_scanResultItems[i]);
+                }
             }
+
+            return passedMemorySegments;
+        }, token);
+
+        if (result.Count > 0)
+        {
+            StartScanResultValueUpdater();
         }
 
         _scanResultItems.Clear();
-        _scanResultItems.AddRange(passedMemorySegments);
+        _scanResultItems.AddRange(result);
         await _virtualizedAgGridRef.ApplyDataAsync();
+        _scanCancellationTokenSource = null;
     }
 
     private async Task NewScan()
     {
-        _scanResultsUpdater.Change(Timeout.Infinite, 0);
+        StopScanResultValueUpdater();
         _scanResultItems.Clear();
         await _virtualizedAgGridRef.ResetGrid();
         _isFirstScan = true;
         await _module!.InvokeVoidAsync("focusSearchValueInput");
+    }
+
+    private async Task CancelScan()
+    {
+        if (_scanCancellationTokenSource != null)
+        {
+            await _scanCancellationTokenSource.CancelAsync();
+        }
+    }
+
+    private void StartScanResultValueUpdater()
+    {
+        _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private void StopScanResultValueUpdater()
+    {
+        _scanResultsUpdater.Change(Timeout.Infinite, 0);
     }
 
     private async void UpdateVisibleScanResults()
