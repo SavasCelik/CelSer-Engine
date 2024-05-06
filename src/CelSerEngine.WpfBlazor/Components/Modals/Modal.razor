@@ -5,18 +5,11 @@
                 <h1 class="modal-title fs-5">@Title</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            @if (ContentComponentRenderFragment != null)
-            {
+            <CascadingValue Value="this">
                 <div @key="ContentComponentRenderFragment">
-                    @(ContentComponentRenderFragment)
+                    @ContentComponentRenderFragment
                 </div>
-            }
-            else
-            {
-                <div class="spinner-border m-auto" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            }
+            </CascadingValue>
         </div>
     </div>
 </div>

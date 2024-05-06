@@ -12,3 +12,7 @@ export function initModal(modalId) {
 export function showModal() {
     modalApi.show();
 }
+
+export function hideModal() {
+    modalApi.hide();
+}

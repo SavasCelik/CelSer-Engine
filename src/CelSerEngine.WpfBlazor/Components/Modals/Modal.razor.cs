@@ -43,6 +43,11 @@ public partial class Modal : ComponentBase, IAsyncDisposable
         await _module!.InvokeVoidAsync("showModal");
     }
 
+    public async Task HideModal()
+    {
+        await _module!.InvokeVoidAsync("hideModal");
+    }
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {

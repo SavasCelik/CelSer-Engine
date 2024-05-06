@@ -17,6 +17,9 @@ internal class ValueChangeSubmitModel
 
 public partial class ModalValueChange : ComponentBase
 {
+    [CascadingParameter]
+    protected Modal ModalContainer { get; set; } = default!;
+
     [Parameter]
     public string CurrentValue { get; set; } = string.Empty;
 
@@ -36,6 +39,8 @@ public partial class ModalValueChange : ComponentBase
         {
             return;
         }
+
+        await ModalContainer.HideModal();
 
         if (ValueChanged.HasDelegate)
         {
