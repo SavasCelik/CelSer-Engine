@@ -1,4 +1,5 @@
-﻿using CelSerEngine.WpfBlazor.Components.Modals;
+﻿using CelSerEngine.Core.Native;
+using CelSerEngine.WpfBlazor.Components.Modals;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -12,6 +13,12 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
+
+    [Inject]
+    private INativeApi NativeApi { get; set; } = default!;
+
+    [Inject]
+    private EngineSession EngineSession { get; set; } = default!;
 
     private Modal ModalRef { get; set; } = default!;
 
@@ -57,7 +64,12 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     {
         foreach (var trackedItem in trackedItems)
         {
+            if (trackedItem.IsFrozen)
+            {
+                trackedItem.SetValue = desiredValue;
+            }
             trackedItem.Item.Value = desiredValue;
+            NativeApi.WriteMemory(EngineSession.SelectedProcessHandle, trackedItem.Item, desiredValue);
         }
 
         await RefreshDataAsync();
