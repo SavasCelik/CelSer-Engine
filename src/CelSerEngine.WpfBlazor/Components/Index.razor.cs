@@ -50,7 +50,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         _scanResultsUpdater = new Timer((e) => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
         _progressBarUpdater = new Progress<float>(newValue =>
         {
-            if (newValue - _progressBarValue >= 10)
+            if (newValue - _progressBarValue >= 1)
             {
                 _progressBarValue = newValue;
                 StateHasChanged();
