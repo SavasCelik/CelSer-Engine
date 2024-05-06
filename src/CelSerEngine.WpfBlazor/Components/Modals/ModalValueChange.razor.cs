@@ -21,7 +21,7 @@ public partial class ModalValueChange : ComponentBase
     protected Modal ModalContainer { get; set; } = default!;
 
     [Parameter]
-    public string CurrentValue { get; set; } = string.Empty;
+    public string Value { get; set; } = default!;
 
     [Parameter]
     public EventCallback<string> ValueChanged { get; set; } = default!;
@@ -30,17 +30,17 @@ public partial class ModalValueChange : ComponentBase
 
     protected override void OnInitialized()
     {
-        ValueChangeSubmitModel = new(CurrentValue);
+        ValueChangeSubmitModel = new(Value);
     }
 
-    private async Task OnSubmit(EditContext formContext)
+    private async Task OnSubmitAsync(EditContext formContext)
     {
         if (!formContext.Validate())
         {
             return;
         }
 
-        await ModalContainer.HideModal();
+        await ModalContainer.HideModalAsync();
 
         if (ValueChanged.HasDelegate)
         {

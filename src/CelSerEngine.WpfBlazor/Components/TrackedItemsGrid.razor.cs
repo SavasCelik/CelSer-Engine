@@ -52,11 +52,21 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         {
             var parameters = new Dictionary<string, object>
             {
-                { nameof(ModalValueChange.CurrentValue), selectedTrackedItem.Item.Value },
+                { nameof(ModalValueChange.Value), selectedTrackedItem.Item.Value },
                 { nameof(ModalValueChange.ValueChanged), EventCallback.Factory.Create<string>(this, (desiredValue) => OnValueChangeRequested(desiredValue, selectedTrackedItem)) },
             };
 
-            await ModalRef.ShowAsync<ModalValueChange>("Value Change", parameters);
+            await ModalRef.ShowAsync<ModalValueChange>("Change Value", parameters);
+        }
+        else if (columnName == nameof(TrackedItem.Description))
+        {
+            var parameters = new Dictionary<string, object>
+            {
+                { nameof(ModalDescriptionChange.Description), selectedTrackedItem.Description },
+                { nameof(ModalDescriptionChange.DescriptionChanged1), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItem)) },
+            };
+
+            await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
         }
     }
 
@@ -70,6 +80,16 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
             }
             trackedItem.Item.Value = desiredValue;
             NativeApi.WriteMemory(EngineSession.SelectedProcessHandle, trackedItem.Item, desiredValue);
+        }
+
+        await RefreshDataAsync();
+    }
+
+    private async Task OnDescriptionChangeRequested(string desiredDescription, params TrackedItem[] trackedItems)
+    {
+        foreach (var trackedItem in trackedItems)
+        {
+            trackedItem.Description = desiredDescription;
         }
 
         await RefreshDataAsync();

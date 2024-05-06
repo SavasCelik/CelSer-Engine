@@ -7,7 +7,7 @@
         <ValidationMessage For="() => ValueChangeSubmitModel.DesiredValue" />
     </div>
     <div class="modal-footer border-top-0 pt-0">
-        <button @onclick="() => OnSubmit(formContext)" type="submit" class="btn btn-ce-primary">OK</button>
+        <button @onclick="() => OnSubmitAsync(formContext)" type="submit" class="btn btn-ce-primary">OK</button>
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
     </div>
 </EditForm>
