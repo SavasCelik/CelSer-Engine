@@ -1,12 +1,27 @@
 ﻿@using CelSerEngine.Core.Models
 @using CelSerEngine.Core.Extensions
 
+<ThemeSetter />
+
 <div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-1 m-2">
         <div class="d-flex flex-row gap-2">
             <button @onclick="OpenSelectProcess" type="button" class="btn btn-icon btn-light border @(EngineSession.SelectedProcess?.DisplayString == null ? "blink-animation" : "")">
                 <img height="25" src="/SelectProcess.png" />
             </button>
+            @if (ThemeManager.IsDark) 
+            {
+                <button @onclick="ChangeTheme" style="right: 5px; top: 1px; height: 18px;" class="btn btn-icon btn-secondary lh-1 position-absolute">
+                    <i class="bi bi-sun"></i>
+                </button>
+            }
+            else
+            {
+                <button @onclick="ChangeTheme" style="right: 5px; top: 1px; height: 18px;" class="btn btn-icon btn-light lh-1 position-absolute">
+                    <i class="bi bi-moon-stars-fill"></i>
+                </button>
+            }
+
             <div class="d-flex flex-column flex-grow-1 text-center">
                 <div class="lh-sm">@(EngineSession.SelectedProcess?.DisplayString ?? "- No Process Selected -")</div>
                 <div class="progress flex-grow-1">

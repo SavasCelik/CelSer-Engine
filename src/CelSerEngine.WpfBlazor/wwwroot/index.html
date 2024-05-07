@@ -39,6 +39,34 @@
                 e.preventDefault();
             }
         });
+
+        applyTheme();
+
+        function applyTheme() {
+            const theme = localStorage.getItem("theme") ?? "light";
+
+            if (theme === "dark") {
+                document.documentElement.setAttribute('data-bs-theme', "dark");
+                const datagrids = document.querySelectorAll(".ag-theme-quartz");
+                datagrids.forEach(x => {
+                    x.classList.remove("ag-theme-quartz");
+                    x.classList.add("ag-theme-quartz-dark");
+                });
+            }
+            else {
+                document.documentElement.setAttribute('data-bs-theme', "light");
+                const datagrids = document.querySelectorAll(".ag-theme-quartz-dark");
+                datagrids.forEach(x => {
+                    x.classList.remove("ag-theme-quartz-dark");
+                    x.classList.add("ag-theme-quartz");
+                });
+            }
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem("theme", theme);
+            applyTheme();
+        }
     </script>
 </body>
 

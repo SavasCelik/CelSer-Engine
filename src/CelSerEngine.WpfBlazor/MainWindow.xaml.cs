@@ -28,6 +28,7 @@ public partial class MainWindow : Window
 #endif
         serviceCollection.AddSingleton(this);
         serviceCollection.AddSingleton<EngineSession>();
+        serviceCollection.AddSingleton<ThemeManager>();
         serviceCollection.AddSingleton<INativeApi, NativeApi>();
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);
