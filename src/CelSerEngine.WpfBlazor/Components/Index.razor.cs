@@ -96,9 +96,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task ChangeTheme()
+    private void ChangeTheme()
     {
-        await ThemeManager.ToggleThemeAsync();
+        ThemeManager.ToggleTheme();
     }
 
     private async Task SearchScanInvalidSubmit()

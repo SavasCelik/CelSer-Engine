@@ -11,20 +11,18 @@ public partial class ThemeSetter : ComponentBase, IDisposable
     [Inject]
     public ThemeManager ThemeManager { get; set; } = default!;
 
-    public bool IsDark { get; set; } = false;
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        IsDark = await JSRuntime.InvokeAsync<bool>("isDarkTheme");
+        ThemeManager.OnThemeChanged += ApplyTheme;
     }
 
-    public async Task SetTheme(bool isDark)
+    private async void ApplyTheme()
     {
-        await JSRuntime.InvokeVoidAsync("setTheme", isDark ? "dark" : "light");
+        await JSRuntime.InvokeVoidAsync("applyTheme", ThemeManager.IsDark ? "dark" : "light");
     }
 
     public void Dispose()
     {
-
+        ThemeManager.OnThemeChanged -= ApplyTheme;
     }
 }

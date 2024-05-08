@@ -1,6 +1,8 @@
 ﻿@using CelSerEngine.Core.Models
 @using CelSerEngine.Core.Extensions
 
+<ThemeSetter />
+
 <div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-1 m-2">
         <div class="d-flex flex-row gap-2">
@@ -64,7 +66,7 @@
                             {
                                 <button @onclick="() => NextScan(formContext)" type="submit" class="btn btn-ce-primary">Next Scan</button>
                                 <button @onclick="NewScan" type="button" class="btn btn-ce-outline-primary">New Scan</button>
-                            }                            
+                            }
                         </div>
 
                         @* scan type & value type *@

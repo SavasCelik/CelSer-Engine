@@ -20,12 +20,16 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     [Inject]
     private EngineSession EngineSession { get; set; } = default!;
 
+    [Inject]
+    private ThemeManager ThemeManager { get; set; } = default!;
+
     private Modal ModalRef { get; set; } = default!;
 
     private IJSObjectReference? _module;
     private DotNetObjectReference<TrackedItemsGrid>? _dotNetHelper;
+    private bool _shouldRender = false;
 
-    protected override bool ShouldRender() => false;
+    protected override bool ShouldRender() => _shouldRender;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -34,6 +38,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
             _dotNetHelper = DotNetObjectReference.Create(this);
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/TrackedItemsGrid.razor.js");
             await _module!.InvokeVoidAsync("initTackedItems", _dotNetHelper);
+            ThemeManager.OnThemeChanged += UpdateComponent;
         }
     }
 
@@ -95,8 +100,17 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         await RefreshDataAsync();
     }
 
+    private void UpdateComponent()
+    {
+        _shouldRender = true;
+        StateHasChanged();
+        _shouldRender = false;
+    }
+
     public async ValueTask DisposeAsync()
     {
+        ThemeManager.OnThemeChanged -= UpdateComponent;
+
         if (_module != null)
         {
             await _module.DisposeAsync();

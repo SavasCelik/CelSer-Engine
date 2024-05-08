@@ -16,6 +16,7 @@ public class ThemeManager
             if (_isDark != value)
             {
                 _isDark = value;
+                UpdateSettings();
                 NotifyStateChanged();
             }
         }
@@ -23,8 +24,19 @@ public class ThemeManager
     public event Action? OnThemeChanged;
     private void NotifyStateChanged() => OnThemeChanged?.Invoke();
 
+    public ThemeManager()
+    {
+        _isDark = Properties.Settings.Default.Theme == "dark";
+    }
+
     public void ToggleTheme()
     {
         IsDark = !IsDark;
+    }
+
+    private void UpdateSettings()
+    {
+        Properties.Settings.Default.Theme = _isDark ? "dark" : "light";
+        Properties.Settings.Default.Save();
     }
 }
