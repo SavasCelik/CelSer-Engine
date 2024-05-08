@@ -17,6 +17,9 @@ public partial class SelectProcess : ComponentBase, IDisposable
     private EngineSession EngineSession { get; set; } = default!;
 
     [Inject]
+    private ThemeManager ThemeManager { get; set; } = default!;
+
+    [Inject]
     private INativeApi NativeApi { get; set; } = default!; 
     
     [Inject]

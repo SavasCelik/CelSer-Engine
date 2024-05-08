@@ -13,6 +13,9 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
 
+    [Inject]
+    private ThemeManager ThemeManager { get; set; } = default!;
+
     /// <summary>
     /// Gets or sets the fixed item source.
     /// </summary>

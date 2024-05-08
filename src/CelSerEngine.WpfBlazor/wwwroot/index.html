@@ -39,6 +39,21 @@
                 e.preventDefault();
             }
         });
+
+        (function initTheme() {
+            applyTheme(localStorage.getItem("theme"));
+        })();
+
+        function applyTheme(theme) {
+            if (theme === "dark") {
+                document.documentElement.setAttribute('data-bs-theme', "dark");
+            }
+            else {
+                document.documentElement.setAttribute('data-bs-theme', "light");
+            }
+
+            localStorage.setItem("theme", theme);
+        }
     </script>
 </body>
 

@@ -29,6 +29,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private EngineSession EngineSession { get; set; } = default!;
 
     [Inject]
+    private ThemeManager ThemeManager { get; set; } = default!;
+
+    [Inject]
     private MainWindow MainWindow { get; set; } = default!;
 
     private VirtualizedAgGrid<ScanResultItem> _virtualizedAgGridRef = default!;
@@ -91,6 +94,11 @@ public partial class Index : ComponentBase, IAsyncDisposable
         {
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Index.razor.js");
         }
+    }
+
+    private void ChangeTheme()
+    {
+        ThemeManager.ToggleTheme();
     }
 
     private async Task SearchScanInvalidSubmit()

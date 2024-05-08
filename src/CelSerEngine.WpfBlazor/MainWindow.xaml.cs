@@ -4,6 +4,8 @@ using CelSerEngine.WpfBlazor.Views;
 using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.AspNetCore.Components.WebView.Wpf;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
+using System;
 using System.Diagnostics;
 using System.Media;
 using System.Windows;
@@ -20,7 +22,6 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddWpfBlazorWebView();
 #if DEBUG
@@ -28,6 +29,8 @@ public partial class MainWindow : Window
 #endif
         serviceCollection.AddSingleton(this);
         serviceCollection.AddSingleton<EngineSession>();
+        serviceCollection.AddSingleton<ThemeManager>();
+        
         serviceCollection.AddSingleton<INativeApi, NativeApi>();
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);
