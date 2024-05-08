@@ -98,7 +98,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     private async Task ChangeTheme()
     {
-        ThemeManager.IsDark = !ThemeManager.IsDark;
+        await ThemeManager.ToggleThemeAsync();
     }
 
     private async Task SearchScanInvalidSubmit()

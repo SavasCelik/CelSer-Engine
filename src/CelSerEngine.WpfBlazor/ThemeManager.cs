@@ -23,4 +23,8 @@ public class ThemeManager
     public event Action? OnThemeChanged;
     private void NotifyStateChanged() => OnThemeChanged?.Invoke();
 
+    public void ToggleTheme()
+    {
+        IsDark = !IsDark;
+    }
 }

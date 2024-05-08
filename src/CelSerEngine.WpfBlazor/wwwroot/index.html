@@ -67,6 +67,10 @@
             localStorage.setItem("theme", theme);
             applyTheme();
         }
+
+        function isDarkTheme() {
+            return localStorage.getItem("theme") === "dark";
+        }
     </script>
 </body>
 
