@@ -28,6 +28,14 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     private IJSObjectReference? _module;
     private DotNetObjectReference<TrackedItemsGrid>? _dotNetHelper;
     private bool _shouldRender = false;
+    private bool _startedUpdater = false;
+
+    private readonly Timer _trackedItemsUpdater;
+
+    public TrackedItemsGrid()
+    {
+        _trackedItemsUpdater = new Timer((e) => UpdateTrackedItems(), null, Timeout.Infinite, 0);
+    }
 
     protected override bool ShouldRender() => _shouldRender;
 
@@ -51,8 +59,42 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     public async Task RefreshDataAsync()
     {
+        if (!_startedUpdater && TrackedItems.Count > 0)
+        {
+            StartTrackedItemsUpdater();
+            _startedUpdater = true;
+        }
+        else if (_startedUpdater && TrackedItems.Count == 0)
+        {
+            StopTrackedItemValueUpdater();
+            _startedUpdater = false;
+        }
+
         var jsonData = JsonSerializer.Serialize(TrackedItems.Select(x => new { x.IsFrozen, x.Description, Address = x.Item.Address.ToString("X"), x.Item.Value }));
         await _module!.InvokeVoidAsync("applyTrackedItems", jsonData);
+    }
+
+    private async void UpdateTrackedItems()
+    {
+        NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, TrackedItems.Select(x => x.Item));
+
+        foreach (var trackedItem in TrackedItems.Where(x => x.IsFrozen))
+        {
+            NativeApi.WriteMemory(EngineSession.SelectedProcessHandle, trackedItem.Item, trackedItem.SetValue);
+        }
+
+        var jsonData = JsonSerializer.Serialize(TrackedItems.Select(x => new { x.IsFrozen, x.Description, Address = x.Item.Address.ToString("X"), x.Item.Value }));
+        await _module!.InvokeVoidAsync("applyTrackedItems", jsonData);
+    }
+
+    private void StartTrackedItemsUpdater()
+    {
+        _trackedItemsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(0.1));
+    }
+
+    private void StopTrackedItemValueUpdater()
+    {
+        _trackedItemsUpdater.Change(Timeout.Infinite, 0);
     }
 
     [JSInvokable]
@@ -60,6 +102,11 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     {
         var trackedItem = TrackedItems[rowIndex];
         trackedItem.IsFrozen = isFrozen;
+
+        if (isFrozen)
+        {
+            trackedItem.SetValue = trackedItem.Item.Value;
+        }
     }
 
     [JSInvokable]
@@ -116,6 +163,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _trackedItemsUpdater.Dispose();
         ThemeManager.OnThemeChanged -= UpdateComponent;
 
         if (_module != null)
