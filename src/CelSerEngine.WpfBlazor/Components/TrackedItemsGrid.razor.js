@@ -17,7 +17,7 @@ export function initTackedItems(_dotNetHelper) {
                 headerName: "Freeze",
                 cellRenderer: (params) => `
                     <div class="form-check form-switch fs-5">
-                        <input class="form-check-input" type="checkbox">
+                        <input class="form-check-input freezeInput" type="checkbox" ${params.data.IsFrozen ? 'checked' : ''}>
                     </div>`,
             },
             {
@@ -34,6 +34,7 @@ export function initTackedItems(_dotNetHelper) {
             },
         ],
         onCellDoubleClicked: onCellDoubleClicked,
+        onCellClicked: onCellClicked,
     };
 
     const trackedItemsGridElement = document.querySelector('#trackedItemsGrid');
@@ -46,4 +47,12 @@ export function applyTrackedItems(items) {
 
 async function onCellDoubleClicked(params) {
     await dotNetHelper.invokeMethodAsync("OnCellDoubleClickedAsync", params.rowIndex, params.colDef.field);
+}
+
+async function onCellClicked(params) {
+    const targetElement = params.event.target;
+
+    if (targetElement.classList.contains("freezeInput")) {
+        await dotNetHelper.invokeMethodAsync("UpdateFreezeStateByRowIndex", params.rowIndex, targetElement.checked);
+    }
 }

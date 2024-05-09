@@ -42,10 +42,24 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         }
     }
 
+    private void UpdateComponent()
+    {
+        _shouldRender = true;
+        StateHasChanged();
+        _shouldRender = false;
+    }
+
     public async Task RefreshDataAsync()
     {
         var jsonData = JsonSerializer.Serialize(TrackedItems.Select(x => new { x.IsFrozen, x.Description, Address = x.Item.Address.ToString("X"), x.Item.Value }));
         await _module!.InvokeVoidAsync("applyTrackedItems", jsonData);
+    }
+
+    [JSInvokable]
+    public void UpdateFreezeStateByRowIndex(int rowIndex, bool isFrozen)
+    {
+        var trackedItem = TrackedItems[rowIndex];
+        trackedItem.IsFrozen = isFrozen;
     }
 
     [JSInvokable]
@@ -98,13 +112,6 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         }
 
         await RefreshDataAsync();
-    }
-
-    private void UpdateComponent()
-    {
-        _shouldRender = true;
-        StateHasChanged();
-        _shouldRender = false;
     }
 
     public async ValueTask DisposeAsync()
