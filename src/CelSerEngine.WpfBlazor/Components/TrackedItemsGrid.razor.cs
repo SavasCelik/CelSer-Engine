@@ -29,7 +29,6 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     private DotNetObjectReference<TrackedItemsGrid>? _dotNetHelper;
     private bool _shouldRender = false;
     private bool _startedUpdater = false;
-
     private readonly Timer _trackedItemsUpdater;
 
     public TrackedItemsGrid()
