@@ -45,6 +45,18 @@ export function applyTrackedItems(items) {
     tackedItemsGridApi.setGridOption("rowData", JSON.parse(items));
 }
 
+export function updateTrackedItemValues(items) {
+    const allData = JSON.parse(items);
+
+    for (let i = 0; i < allData.length; i++) {
+        tackedItemsGridApi.forEachNode(x => {
+            if (x.data.Address === allData[i].Address) {
+                x.setDataValue("Value", allData[i].Value);
+            }
+        });
+    }
+}
+
 async function onCellDoubleClicked(params) {
     await dotNetHelper.invokeMethodAsync("OnCellDoubleClickedAsync", params.rowIndex, params.colDef.field);
 }

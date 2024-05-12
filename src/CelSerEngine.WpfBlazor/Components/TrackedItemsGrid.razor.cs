@@ -84,7 +84,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         }
 
         var jsonData = JsonSerializer.Serialize(TrackedItems.Select(x => new { x.IsFrozen, x.Description, Address = x.Item.Address.ToString("X"), x.Item.Value }));
-        await _module!.InvokeVoidAsync("applyTrackedItems", jsonData);
+        await _module!.InvokeVoidAsync("updateTrackedItemValues", jsonData);
     }
 
     private void StartTrackedItemsUpdater()
