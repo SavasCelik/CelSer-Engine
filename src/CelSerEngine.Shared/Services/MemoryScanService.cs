@@ -1,11 +1,8 @@
 ﻿using CelSerEngine.Core.Comparators;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using CelSerEngine.Shared.Services;
 using Microsoft.Win32.SafeHandles;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CelSerEngine.Wpf.Services;
 public class MemoryScanService : IMemoryScanService

@@ -7,8 +7,8 @@ using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows;
 using CelSerEngine.Core.Models;
-using CelSerEngine.Wpf.Services;
 using System.Threading;
+using CelSerEngine.Shared.Services;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
