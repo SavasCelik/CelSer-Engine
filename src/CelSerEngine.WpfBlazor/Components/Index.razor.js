@@ -11,6 +11,34 @@ new SlimSelect({
     }
 });
 
+new SlimSelect({
+    select: '#writable',
+    settings: {
+        showSearch: false,
+    }
+});
+
+new SlimSelect({
+    select: '#executable',
+    settings: {
+        showSearch: false,
+    }
+});
+
+new SlimSelect({
+    select: '#copyOnWrite',
+    settings: {
+        showSearch: false,
+    }
+});
+
+new SlimSelect({
+    select: '#memoryTypes',
+    settings: {
+        showSearch: false,
+    }
+});
+
 Split(['#split-0', '#split-1'], {
     direction: 'vertical',
     snapOffset: 0,

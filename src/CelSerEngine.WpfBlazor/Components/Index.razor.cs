@@ -15,6 +15,27 @@ internal class SearchSubmitModel
     public string SearchValue { get; set; } = string.Empty;
     public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
     public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+    public string StartAddress { get; set; } = IntPtr.Zero.ToString("X");
+    public string StopAddress { get; set; } = IntPtr.MaxValue.ToString("X");
+    public MemoryScanFilterOptions Writable { get; set; } = MemoryScanFilterOptions.Yes;
+    public MemoryScanFilterOptions Executable { get; set; } = MemoryScanFilterOptions.Dont_Care;
+    public MemoryScanFilterOptions CopyOnWrite { get; set; } = MemoryScanFilterOptions.No;
+    public MemoryType[] MemoryTypes { get; set; } = { MemoryType.Image, MemoryType.Private };
+}
+
+internal enum MemoryScanFilterOptions
+{
+    Yes,
+    No,
+    [Display(Name = "Don't Care")]
+    Dont_Care
+}
+
+internal enum MemoryType
+{
+    Image,
+    Private,
+    Mapped
 }
 
 public partial class Index : ComponentBase, IAsyncDisposable
