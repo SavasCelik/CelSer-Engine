@@ -1,11 +1,12 @@
-﻿using CelSerEngine.Core.Comparators;
-using CelSerEngine.Core.Models;
+﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
+using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
@@ -45,6 +46,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     [Inject]
     private INativeApi NativeApi { get; set; } = default!;
+
+    [Inject]
+    private IMemoryScanService MemoryScanService { get; set; } = default!;
 
     [Inject]
     private EngineSession EngineSession { get; set; } = default!;
@@ -141,17 +145,52 @@ public partial class Index : ComponentBase, IAsyncDisposable
         ScanResultItems.Clear();
         await VirtualizedAgGridRef.ApplyDataAsync();
         await VirtualizedAgGridRef.ShowScanningOverlay();
-        var results = await Task.Run(() =>
+        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
+
+        foreach (var memoryType in SearchSubmitModel.MemoryTypes)
         {
-            var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(EngineSession.SelectedProcessHandle);
-            var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
-            var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
+            switch (memoryType)
+            {
+                case MemoryType.Private:
+                    scanConstraint.AllowedMemoryTypes.Add(MEMORY_TYPE.MEM_PRIVATE);
+                    break;
+                case MemoryType.Image:
+                    scanConstraint.AllowedMemoryTypes.Add(MEMORY_TYPE.MEM_IMAGE);
+                    break;
+                case MemoryType.Mapped:
+                    scanConstraint.AllowedMemoryTypes.Add(MEMORY_TYPE.MEM_MAPPED);
+                    break;
+            }
+        }
 
-            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater, token);
-        }, token);
+        if (SearchSubmitModel.Writable == MemoryScanFilterOptions.Yes)
+        {
+            scanConstraint.IncludedProtections |= MemoryProtections.Writable;
+        }
+        if (SearchSubmitModel.Executable == MemoryScanFilterOptions.Yes)
+        {
+            scanConstraint.IncludedProtections |= MemoryProtections.Executable;
+        }
+        if (SearchSubmitModel.CopyOnWrite == MemoryScanFilterOptions.Yes)
+        {
+            scanConstraint.IncludedProtections |= MemoryProtections.CopyOnWrite;
+        }
 
-        ProgressBarValue = 100;
-        StateHasChanged();
+        if (SearchSubmitModel.Writable == MemoryScanFilterOptions.No)
+        {
+            scanConstraint.ExcludedProtections |= MemoryProtections.Writable;
+        }
+        if (SearchSubmitModel.Executable == MemoryScanFilterOptions.No)
+        {
+            scanConstraint.ExcludedProtections |= MemoryProtections.Executable;
+        }
+        if (SearchSubmitModel.CopyOnWrite == MemoryScanFilterOptions.No)
+        {
+            scanConstraint.ExcludedProtections |= MemoryProtections.CopyOnWrite;
+        }
+
+        var results = await MemoryScanService.ScanProcessMemoryAsync(scanConstraint, EngineSession.SelectedProcessHandle, _progressBarUpdater, token);
+        _progressBarUpdater.Report(100);
         ScanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
         await VirtualizedAgGridRef.ApplyDataAsync();
         StartScanResultValueUpdater();
@@ -177,26 +216,14 @@ public partial class Index : ComponentBase, IAsyncDisposable
         var token = ScanCancellationTokenSource.Token;
         StopScanResultValueUpdater();
         await VirtualizedAgGridRef.ShowScanningOverlay();
-
-        var result = await Task.Run(() => {
-            var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
-            NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, ScanResultItems, token);
-            var passedMemorySegments = new List<ScanResultItem>();
-
-            for (var i = 0; i < ScanResultItems.Count; i++)
-            {
-                if (token.IsCancellationRequested)
-                    break;
-
-                if (ValueComparer.MeetsTheScanConstraint(ScanResultItems[i].Value, scanConstraint.UserInput, scanConstraint))
-                {
-                    ScanResultItems[i].PreviousValue = ScanResultItems[i].Value;
-                    passedMemorySegments.Add(ScanResultItems[i]);
-                }
-            }
-
-            return passedMemorySegments;
-        }, token);
+        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
+        var result = await MemoryScanService.FilterMemorySegmentsByScanConstraintAsync(
+            ScanResultItems.Cast<IMemorySegment>().ToList(),
+            scanConstraint,
+            EngineSession.SelectedProcessHandle,
+            _progressBarUpdater,
+            token);
+        _progressBarUpdater.Report(100);
 
         if (result.Count > 0)
         {
@@ -204,8 +231,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
         }
 
         ScanResultItems.Clear();
-        ScanResultItems.AddRange(result);
+        ScanResultItems.AddRange(result.Select(x => new ScanResultItem(x)));
         await VirtualizedAgGridRef.ApplyDataAsync();
+        ProgressBarValue = 0;
         ScanCancellationTokenSource = null;
     }
 

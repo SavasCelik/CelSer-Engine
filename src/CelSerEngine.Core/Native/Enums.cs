@@ -77,6 +77,13 @@ public static class Enums
         MEM_LARGE_PAGES = 0x20000000
     }
 
+    public enum MEMORY_TYPE : uint
+    {
+        MEM_IMAGE = 0x1000000,
+        MEM_MAPPED = 0x40000,
+        MEM_PRIVATE = 0x20000,
+    }
+
     /// <summary>
     /// https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-createtoolhelp32snapshot
     /// </summary>
