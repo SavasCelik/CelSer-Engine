@@ -2,7 +2,7 @@
 using CelSerEngine.Core.Database.Repositories;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scripting;
-using CelSerEngine.Shared.Services;
+using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.Wpf.Services;
 using CelSerEngine.Wpf.ViewModels;
 using Microsoft.EntityFrameworkCore;

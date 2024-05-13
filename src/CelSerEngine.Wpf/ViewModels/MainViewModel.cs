@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using CelSerEngine.Core.Models;
 using System.Threading;
-using CelSerEngine.Shared.Services;
+using CelSerEngine.Shared.Services.MemoryScan;
+using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.Wpf.ViewModels;
 
@@ -87,6 +88,9 @@ public partial class MainViewModel : ObservableRecipient
         _scanCts = new CancellationTokenSource();
         CancelScanVisibility = Visibility.Visible;
         var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
+        scanConstraint.IncludedProtections |= MemoryProtections.Writable;
+        scanConstraint.ExcludedProtections |= MemoryProtections.CopyOnWrite;
+        scanConstraint.AllowedMemoryTypes = [ MEMORY_TYPE.MEM_PRIVATE, MEMORY_TYPE.MEM_IMAGE ];
         var processHandle = SelectProcessViewModel.GetSelectedProcessHandle();
         var foundItems = await _memoryScanService.ScanProcessMemoryAsync(scanConstraint, processHandle, _progressBarUpdater, _scanCts.Token);
         AddFoundItems(foundItems);

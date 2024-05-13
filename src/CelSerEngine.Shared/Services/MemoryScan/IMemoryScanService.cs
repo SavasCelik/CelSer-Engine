@@ -1,7 +1,7 @@
 ﻿using CelSerEngine.Core.Models;
 using Microsoft.Win32.SafeHandles;
 
-namespace CelSerEngine.Shared.Services;
+namespace CelSerEngine.Shared.Services.MemoryScan;
 public interface IMemoryScanService
 {
     public Task<IList<IMemorySegment>> ScanProcessMemoryAsync(

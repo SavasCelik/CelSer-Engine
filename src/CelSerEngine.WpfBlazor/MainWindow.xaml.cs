@@ -1,5 +1,5 @@
 ﻿using CelSerEngine.Core.Native;
-using CelSerEngine.Shared.Services;
+using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfBlazor.Extensions;
 using CelSerEngine.WpfBlazor.Views;
 using Microsoft.AspNetCore.Components.WebView;

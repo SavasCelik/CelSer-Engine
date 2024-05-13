@@ -1,7 +1,7 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
-using CelSerEngine.Shared.Services;
+using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.Wpf.Models;
 using CelSerEngine.Wpf.Views;
 using CommunityToolkit.Mvvm.ComponentModel;

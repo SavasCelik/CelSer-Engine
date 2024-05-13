@@ -1,11 +1,12 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
-using CelSerEngine.Shared.Services;
+using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
+using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
@@ -145,6 +146,49 @@ public partial class Index : ComponentBase, IAsyncDisposable
         await VirtualizedAgGridRef.ApplyDataAsync();
         await VirtualizedAgGridRef.ShowScanningOverlay();
         var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
+
+        foreach (var memoryType in SearchSubmitModel.MemoryTypes)
+        {
+            switch (memoryType)
+            {
+                case MemoryType.Private:
+                    scanConstraint.AllowedMemoryTypes.Add(MEMORY_TYPE.MEM_PRIVATE);
+                    break;
+                case MemoryType.Image:
+                    scanConstraint.AllowedMemoryTypes.Add(MEMORY_TYPE.MEM_IMAGE);
+                    break;
+                case MemoryType.Mapped:
+                    scanConstraint.AllowedMemoryTypes.Add(MEMORY_TYPE.MEM_MAPPED);
+                    break;
+            }
+        }
+
+        if (SearchSubmitModel.Writable == MemoryScanFilterOptions.Yes)
+        {
+            scanConstraint.IncludedProtections |= MemoryProtections.Writable;
+        }
+        if (SearchSubmitModel.Executable == MemoryScanFilterOptions.Yes)
+        {
+            scanConstraint.IncludedProtections |= MemoryProtections.Executable;
+        }
+        if (SearchSubmitModel.CopyOnWrite == MemoryScanFilterOptions.Yes)
+        {
+            scanConstraint.IncludedProtections |= MemoryProtections.CopyOnWrite;
+        }
+
+        if (SearchSubmitModel.Writable == MemoryScanFilterOptions.No)
+        {
+            scanConstraint.ExcludedProtections |= MemoryProtections.Writable;
+        }
+        if (SearchSubmitModel.Executable == MemoryScanFilterOptions.No)
+        {
+            scanConstraint.ExcludedProtections |= MemoryProtections.Executable;
+        }
+        if (SearchSubmitModel.CopyOnWrite == MemoryScanFilterOptions.No)
+        {
+            scanConstraint.ExcludedProtections |= MemoryProtections.CopyOnWrite;
+        }
+
         var results = await MemoryScanService.ScanProcessMemoryAsync(scanConstraint, EngineSession.SelectedProcessHandle, _progressBarUpdater, token);
         _progressBarUpdater.Report(100);
         ScanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
