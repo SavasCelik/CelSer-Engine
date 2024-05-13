@@ -62,9 +62,10 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private SearchSubmitModel SearchSubmitModel { get; set; } = new();
     private float ProgressBarValue { get; set; }
     private bool IsFirstScan { get; set; } = true;
+    private bool IsScanning => ScanCancellationTokenSource != null;
     private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
+    private CancellationTokenSource? ScanCancellationTokenSource { get; set; }
 
-    private CancellationTokenSource? _scanCancellationTokenSource;
     private IJSObjectReference? _module;
     private readonly Timer _scanResultsUpdater;
     private readonly IProgress<float> _progressBarUpdater;
@@ -135,8 +136,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
             return;
         }
 
-        _scanCancellationTokenSource = new CancellationTokenSource();
-        var token = _scanCancellationTokenSource.Token;
+        ScanCancellationTokenSource = new CancellationTokenSource();
+        var token = ScanCancellationTokenSource.Token;
         ScanResultItems.Clear();
         await VirtualizedAgGridRef.ApplyDataAsync();
         await VirtualizedAgGridRef.ShowScanningOverlay();
@@ -155,7 +156,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         await VirtualizedAgGridRef.ApplyDataAsync();
         StartScanResultValueUpdater();
         ProgressBarValue = 0;
-        _scanCancellationTokenSource = null;
+        ScanCancellationTokenSource = null;
         IsFirstScan = false;
     }
 
@@ -172,8 +173,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
             return;
         }
 
-        _scanCancellationTokenSource = new CancellationTokenSource();
-        var token = _scanCancellationTokenSource.Token;
+        ScanCancellationTokenSource = new CancellationTokenSource();
+        var token = ScanCancellationTokenSource.Token;
         StopScanResultValueUpdater();
         await VirtualizedAgGridRef.ShowScanningOverlay();
 
@@ -205,7 +206,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         ScanResultItems.Clear();
         ScanResultItems.AddRange(result);
         await VirtualizedAgGridRef.ApplyDataAsync();
-        _scanCancellationTokenSource = null;
+        ScanCancellationTokenSource = null;
     }
 
     private async Task NewScan()
@@ -219,9 +220,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     private async Task CancelScan()
     {
-        if (_scanCancellationTokenSource != null)
+        if (ScanCancellationTokenSource != null)
         {
-            await _scanCancellationTokenSource.CancelAsync();
+            await ScanCancellationTokenSource.CancelAsync();
         }
     }
 
