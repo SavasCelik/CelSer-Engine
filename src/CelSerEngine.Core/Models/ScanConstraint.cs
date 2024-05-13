@@ -8,6 +8,8 @@ public class ScanConstraint
     public MemoryProtections IncludedProtections { get; set; }
     public MemoryProtections ExcludedProtections { get; set; }
     public ICollection<Native.Enums.MEMORY_TYPE> AllowedMemoryTypes { get; set; }
+    public IntPtr StartAddress { get; set; }
+    public IntPtr StopAddress { get; set; }
 
     public ScanConstraint(ScanCompareType scanCompareType, ScanDataType dataType, string userInput)
     {
