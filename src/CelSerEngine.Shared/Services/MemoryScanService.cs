@@ -1,10 +1,9 @@
 ﻿using CelSerEngine.Core.Comparators;
 using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
-using CelSerEngine.Shared.Services;
 using Microsoft.Win32.SafeHandles;
 
-namespace CelSerEngine.Wpf.Services;
+namespace CelSerEngine.Shared.Services;
 public class MemoryScanService : IMemoryScanService
 {
     private readonly INativeApi _nativeApi;
