@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CelSerEngine.Core\CelSerEngine.Core.csproj" />
+    <ProjectReference Include="..\CelSerEngine.Shared\CelSerEngine.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

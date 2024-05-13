@@ -1,13 +1,10 @@
 ﻿using CelSerEngine.Core.Native;
+using CelSerEngine.Shared.Services;
 using CelSerEngine.WpfBlazor.Extensions;
 using CelSerEngine.WpfBlazor.Views;
 using Microsoft.AspNetCore.Components.WebView;
-using Microsoft.AspNetCore.Components.WebView.Wpf;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.JSInterop;
-using System;
 using System.Diagnostics;
-using System.Media;
 using System.Windows;
 
 namespace CelSerEngine.WpfBlazor;
@@ -31,6 +28,7 @@ public partial class MainWindow : Window
         serviceCollection.AddSingleton<EngineSession>();
         serviceCollection.AddSingleton<ThemeManager>();
         
+        serviceCollection.AddSingleton<IMemoryScanService, MemoryScanService>();
         serviceCollection.AddSingleton<INativeApi, NativeApi>();
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);

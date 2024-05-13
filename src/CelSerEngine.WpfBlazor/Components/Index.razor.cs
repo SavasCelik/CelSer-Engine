@@ -1,6 +1,6 @@
-﻿using CelSerEngine.Core.Comparators;
-using CelSerEngine.Core.Models;
+﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using CelSerEngine.Shared.Services;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -45,6 +45,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     [Inject]
     private INativeApi NativeApi { get; set; } = default!;
+
+    [Inject]
+    private IMemoryScanService MemoryScanService { get; set; } = default!;
 
     [Inject]
     private EngineSession EngineSession { get; set; } = default!;
@@ -141,17 +144,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
         ScanResultItems.Clear();
         await VirtualizedAgGridRef.ApplyDataAsync();
         await VirtualizedAgGridRef.ShowScanningOverlay();
-        var results = await Task.Run(() =>
-        {
-            var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(EngineSession.SelectedProcessHandle);
-            var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
-            var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-
-            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater, token);
-        }, token);
-
-        ProgressBarValue = 100;
-        StateHasChanged();
+        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
+        var results = await MemoryScanService.ScanProcessMemoryAsync(scanConstraint, EngineSession.SelectedProcessHandle, _progressBarUpdater, token);
+        _progressBarUpdater.Report(100);
         ScanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
         await VirtualizedAgGridRef.ApplyDataAsync();
         StartScanResultValueUpdater();
@@ -177,26 +172,14 @@ public partial class Index : ComponentBase, IAsyncDisposable
         var token = ScanCancellationTokenSource.Token;
         StopScanResultValueUpdater();
         await VirtualizedAgGridRef.ShowScanningOverlay();
-
-        var result = await Task.Run(() => {
-            var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
-            NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, ScanResultItems, token);
-            var passedMemorySegments = new List<ScanResultItem>();
-
-            for (var i = 0; i < ScanResultItems.Count; i++)
-            {
-                if (token.IsCancellationRequested)
-                    break;
-
-                if (ValueComparer.MeetsTheScanConstraint(ScanResultItems[i].Value, scanConstraint.UserInput, scanConstraint))
-                {
-                    ScanResultItems[i].PreviousValue = ScanResultItems[i].Value;
-                    passedMemorySegments.Add(ScanResultItems[i]);
-                }
-            }
-
-            return passedMemorySegments;
-        }, token);
+        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
+        var result = await MemoryScanService.FilterMemorySegmentsByScanConstraintAsync(
+            ScanResultItems.Cast<IMemorySegment>().ToList(),
+            scanConstraint,
+            EngineSession.SelectedProcessHandle,
+            _progressBarUpdater,
+            token);
+        _progressBarUpdater.Report(100);
 
         if (result.Count > 0)
         {
@@ -204,8 +187,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
         }
 
         ScanResultItems.Clear();
-        ScanResultItems.AddRange(result);
+        ScanResultItems.AddRange(result.Select(x => new ScanResultItem(x)));
         await VirtualizedAgGridRef.ApplyDataAsync();
+        ProgressBarValue = 0;
         ScanCancellationTokenSource = null;
     }
 
