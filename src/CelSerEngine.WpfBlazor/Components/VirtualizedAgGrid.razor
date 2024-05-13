@@ -1,0 +1,6 @@
+﻿@typeparam TItem
+
+<div class="d-flex flex-column flex-grow-1">
+    <div class="text-center">Found: <span>@Items.Count.ToString("n0", _cultureInfo)</span></div>
+    <div id="scanResultsGrid" class="@(ThemeManager.IsDark ? "ag-theme-quartz-dark" : "ag-theme-quartz") flex-grow-1 h-100" style="min-height: 200px"></div>
+</div>

@@ -15,4 +15,8 @@ public class MemorySegment : IMemorySegment
         Value = value;
         ScanDataType = scanDataType;
     }
+
+    public MemorySegment(IMemorySegment memorySegment)
+        : this(memorySegment.BaseAddress, memorySegment.BaseOffset, memorySegment.Value, memorySegment.ScanDataType)
+    {}
 }
