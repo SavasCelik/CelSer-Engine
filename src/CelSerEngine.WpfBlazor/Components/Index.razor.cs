@@ -9,12 +9,33 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
-public class SearchSubmitModel
+internal class SearchSubmitModel
 {
     [Required(AllowEmptyStrings = false, ErrorMessage = "Provide a value to scan for")]
     public string SearchValue { get; set; } = string.Empty;
     public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
     public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+    public string StartAddress { get; set; } = IntPtr.Zero.ToString("X");
+    public string StopAddress { get; set; } = IntPtr.MaxValue.ToString("X");
+    public MemoryScanFilterOptions Writable { get; set; } = MemoryScanFilterOptions.Yes;
+    public MemoryScanFilterOptions Executable { get; set; } = MemoryScanFilterOptions.Dont_Care;
+    public MemoryScanFilterOptions CopyOnWrite { get; set; } = MemoryScanFilterOptions.No;
+    public MemoryType[] MemoryTypes { get; set; } = { MemoryType.Image, MemoryType.Private };
+}
+
+internal enum MemoryScanFilterOptions
+{
+    Yes,
+    No,
+    [Display(Name = "Don't Care")]
+    Dont_Care
+}
+
+internal enum MemoryType
+{
+    Image,
+    Private,
+    Mapped
 }
 
 public partial class Index : ComponentBase, IAsyncDisposable
@@ -34,33 +55,34 @@ public partial class Index : ComponentBase, IAsyncDisposable
     [Inject]
     private MainWindow MainWindow { get; set; } = default!;
 
-    private VirtualizedAgGrid<ScanResultItem> _virtualizedAgGridRef = default!;
-    private TrackedItemsGrid _trackedItemsGridRef = default!;
-    private List<ScanResultItem> _scanResultItems { get; set; } = [];
-    private List<TrackedItem> _trackedItems { get; set; } = [];
-    private SearchSubmitModel _searchSubmitModel { get; set; } = new();
-    private float _progressBarValue { get; set; }
-    private bool _isFirstScan { get; set; } = true;
-    private CancellationTokenSource? _scanCancellationTokenSource;
+    private VirtualizedAgGrid<ScanResultItem> VirtualizedAgGridRef { get; set; } = default!;
+    private TrackedItemsGrid TrackedItemsGridRef { get; set; } = default!;
+    private List<ScanResultItem> ScanResultItems { get; set; } = [];
+    private List<TrackedItem> TrackedItems { get; set; } = [];
+    private SearchSubmitModel SearchSubmitModel { get; set; } = new();
+    private float ProgressBarValue { get; set; }
+    private bool IsFirstScan { get; set; } = true;
+    private bool IsScanning => ScanCancellationTokenSource != null;
+    private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
+    private CancellationTokenSource? ScanCancellationTokenSource { get; set; }
+
+    private IJSObjectReference? _module;
     private readonly Timer _scanResultsUpdater;
     private readonly IProgress<float> _progressBarUpdater;
-    private IJSObjectReference? _module;
-
-    private ICollection<ContextMenuItem> _contextMenuItems { get; set; }
 
     public Index()
     {
         _scanResultsUpdater = new Timer((e) => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
         _progressBarUpdater = new Progress<float>(newValue =>
         {
-            if (newValue - _progressBarValue >= 1)
+            if (newValue - ProgressBarValue >= 1)
             {
-                _progressBarValue = newValue;
+                ProgressBarValue = newValue;
                 StateHasChanged();
             }
         });
 
-        _contextMenuItems =
+        ContextMenuItems =
         [
             new ContextMenuItem
             {
@@ -72,15 +94,15 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     public async Task ContextMenuItemClickedAsync()
     {
-        var selectedScanResultItems = _scanResultItems.Where(x => _virtualizedAgGridRef.SelectedItems.Contains(x.Address.ToString("X")));
-        _trackedItems.AddRange(selectedScanResultItems.Select(x => new TrackedItem(x)));
-        await _trackedItemsGridRef.RefreshDataAsync();
+        var selectedScanResultItems = ScanResultItems.Where(x => VirtualizedAgGridRef.SelectedItems.Contains(x.Address.ToString("X")));
+        TrackedItems.AddRange(selectedScanResultItems.Select(x => new TrackedItem(x)));
+        await TrackedItemsGridRef.RefreshDataAsync();
     }
 
     public async Task OnScanResultItemDoubleClicked(ScanResultItem scanResultItem)
     {
-        _trackedItems.Add(new TrackedItem(scanResultItem));
-        await _trackedItemsGridRef.RefreshDataAsync();
+        TrackedItems.Add(new TrackedItem(scanResultItem));
+        await TrackedItemsGridRef.RefreshDataAsync();
     }
 
     protected override void OnInitialized()
@@ -114,28 +136,28 @@ public partial class Index : ComponentBase, IAsyncDisposable
             return;
         }
 
-        _scanCancellationTokenSource = new CancellationTokenSource();
-        var token = _scanCancellationTokenSource.Token;
-        _scanResultItems.Clear();
-        await _virtualizedAgGridRef.ApplyDataAsync();
-        await _virtualizedAgGridRef.ShowScanningOverlay();
+        ScanCancellationTokenSource = new CancellationTokenSource();
+        var token = ScanCancellationTokenSource.Token;
+        ScanResultItems.Clear();
+        await VirtualizedAgGridRef.ApplyDataAsync();
+        await VirtualizedAgGridRef.ShowScanningOverlay();
         var results = await Task.Run(() =>
         {
             var virtualMemoryRegions = NativeApi.GatherVirtualMemoryRegions(EngineSession.SelectedProcessHandle);
-            var scanConstraint = new ScanConstraint(_searchSubmitModel.SelectedScanCompareType, _searchSubmitModel.SelectedScanDataType, _searchSubmitModel.SearchValue);
+            var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
 
             return comparer.GetMatchingMemorySegments(virtualMemoryRegions, _progressBarUpdater, token);
         }, token);
 
-        _progressBarValue = 100;
+        ProgressBarValue = 100;
         StateHasChanged();
-        _scanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
-        await _virtualizedAgGridRef.ApplyDataAsync();
+        ScanResultItems.AddRange(results.Select(x => new ScanResultItem(x)));
+        await VirtualizedAgGridRef.ApplyDataAsync();
         StartScanResultValueUpdater();
-        _progressBarValue = 0;
-        _scanCancellationTokenSource = null;
-        _isFirstScan = false;
+        ProgressBarValue = 0;
+        ScanCancellationTokenSource = null;
+        IsFirstScan = false;
     }
 
     private void OpenSelectProcess()
@@ -151,25 +173,25 @@ public partial class Index : ComponentBase, IAsyncDisposable
             return;
         }
 
-        _scanCancellationTokenSource = new CancellationTokenSource();
-        var token = _scanCancellationTokenSource.Token;
+        ScanCancellationTokenSource = new CancellationTokenSource();
+        var token = ScanCancellationTokenSource.Token;
         StopScanResultValueUpdater();
-        await _virtualizedAgGridRef.ShowScanningOverlay();
+        await VirtualizedAgGridRef.ShowScanningOverlay();
 
         var result = await Task.Run(() => {
-            var scanConstraint = new ScanConstraint(_searchSubmitModel.SelectedScanCompareType, _searchSubmitModel.SelectedScanDataType, _searchSubmitModel.SearchValue);
-            NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, _scanResultItems, token);
+            var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
+            NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, ScanResultItems, token);
             var passedMemorySegments = new List<ScanResultItem>();
 
-            for (var i = 0; i < _scanResultItems.Count; i++)
+            for (var i = 0; i < ScanResultItems.Count; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
 
-                if (ValueComparer.MeetsTheScanConstraint(_scanResultItems[i].Value, scanConstraint.UserInput, scanConstraint))
+                if (ValueComparer.MeetsTheScanConstraint(ScanResultItems[i].Value, scanConstraint.UserInput, scanConstraint))
                 {
-                    _scanResultItems[i].PreviousValue = _scanResultItems[i].Value;
-                    passedMemorySegments.Add(_scanResultItems[i]);
+                    ScanResultItems[i].PreviousValue = ScanResultItems[i].Value;
+                    passedMemorySegments.Add(ScanResultItems[i]);
                 }
             }
 
@@ -181,26 +203,26 @@ public partial class Index : ComponentBase, IAsyncDisposable
             StartScanResultValueUpdater();
         }
 
-        _scanResultItems.Clear();
-        _scanResultItems.AddRange(result);
-        await _virtualizedAgGridRef.ApplyDataAsync();
-        _scanCancellationTokenSource = null;
+        ScanResultItems.Clear();
+        ScanResultItems.AddRange(result);
+        await VirtualizedAgGridRef.ApplyDataAsync();
+        ScanCancellationTokenSource = null;
     }
 
     private async Task NewScan()
     {
         StopScanResultValueUpdater();
-        _scanResultItems.Clear();
-        await _virtualizedAgGridRef.ResetGrid();
-        _isFirstScan = true;
+        ScanResultItems.Clear();
+        await VirtualizedAgGridRef.ResetGrid();
+        IsFirstScan = true;
         await _module!.InvokeVoidAsync("focusSearchValueInput");
     }
 
     private async Task CancelScan()
     {
-        if (_scanCancellationTokenSource != null)
+        if (ScanCancellationTokenSource != null)
         {
-            await _scanCancellationTokenSource.CancelAsync();
+            await ScanCancellationTokenSource.CancelAsync();
         }
     }
 
@@ -216,15 +238,15 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     private async void UpdateVisibleScanResults()
     {
-        var visibleItems = _virtualizedAgGridRef.GetVisibleItems().ToList();
+        var visibleItems = VirtualizedAgGridRef.GetVisibleItems().ToList();
 
         if (visibleItems.Count == 0)
             return;
 
         NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, visibleItems);
 
-        if (!_virtualizedAgGridRef.IsDisposed)
-            await _virtualizedAgGridRef.ApplyDataAsync();
+        if (!VirtualizedAgGridRef.IsDisposed)
+            await VirtualizedAgGridRef.ApplyDataAsync();
     }
 
     /// <inheritdoc />

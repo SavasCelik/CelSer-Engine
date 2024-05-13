@@ -27,6 +27,7 @@ img {
     --ss-main-height: 25px;
     --ss-focus-color: transparent;
     --ss-primary-color: var(--ce-primary-700);
+    --ss-disabled-color: var(--bs-secondary-bg);
 }
 
 [data-bs-theme=dark] {
@@ -36,7 +37,6 @@ img {
     --ss-bg-color: var(--bs-body-bg);
     --ss-font-color: var(--bs-body-color);
     --ss-border-color: var(--bs-border-color);
-    --ss-disabled-color: var(--bs-body-bg);
 }
 
 @keyframes blink {
@@ -275,6 +275,10 @@ input[type="search"]::-webkit-search-cancel-button {
 .form-control:focus {
     border-color: var(--ce-primary-700);
     box-shadow: rgba(var(--ce-primary-700-rgb), 0.25) 0px 3px 0px 0;
+}
+
+.form-control:disabled {
+    color: var(--bs-gray-600);
 }
 
 .progress {

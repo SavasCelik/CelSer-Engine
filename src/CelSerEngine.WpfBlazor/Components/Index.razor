@@ -26,39 +26,39 @@
             <div class="d-flex flex-column flex-grow-1 text-center">
                 <div class="lh-sm">@(EngineSession.SelectedProcess?.DisplayString ?? "- No Process Selected -")</div>
                 <div class="progress flex-grow-1">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: @_progressBarValue%"></div>
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: @ProgressBarValue%"></div>
                 </div>
             </div>
         </div>
 
-        <ContextMenu Items="_contextMenuItems" Selector="#scanResultsGrid .ag-row"></ContextMenu>
+        <ContextMenu Items="ContextMenuItems" Selector="#scanResultsGrid .ag-row"></ContextMenu>
 
         <div id="split-0" class="d-flex flex-row gap-2">
-            <VirtualizedAgGrid @ref="_virtualizedAgGridRef"
-                               Items="_scanResultItems"
+            <VirtualizedAgGrid @ref="VirtualizedAgGridRef"
+                               Items="ScanResultItems"
                                TItem="Models.ScanResultItem"
                                GetRowId='(x) => x.Address.ToString("X")'
                                OnRowDoubleClicked="OnScanResultItemDoubleClicked"
                                SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
             </VirtualizedAgGrid>
 
-            <EditForm Model="_searchSubmitModel" Context="formContext" class="position-relative">
+            <EditForm Model="SearchSubmitModel" Context="formContext" class="position-relative" style="width: 325px;">
                 <DataAnnotationsValidator />
-                @if (_scanCancellationTokenSource != null)
+                @if (ScanCancellationTokenSource != null)
                 {
-                    <button @onclick="CancelScan" type="submit" class="btn btn-light position-absolute z-3" style="top: 53px;" disabled="@(_scanCancellationTokenSource.IsCancellationRequested)">Cancel</button>
+                    <button @onclick="CancelScan" type="submit" class="btn btn-light position-absolute z-3" style="top: 53px;" disabled="@(ScanCancellationTokenSource.IsCancellationRequested)">Cancel</button>
                 }
-                <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null || _scanCancellationTokenSource != null)">
-                    <div class="d-flex flex-column gap-2 mt-4" style="width: 300px">
+                <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)">
+                    <div class="d-flex flex-column gap-2 mt-4">
                         <div class="form-group has-search">
                             <span class="bi bi-search form-control-feedback"></span>
-                            <InputText @bind-Value="_searchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
-                            <ValidationMessage For="() => _searchSubmitModel.SearchValue" />
+                            <InputText @bind-Value="SearchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
+                            <ValidationMessage For="() => SearchSubmitModel.SearchValue" />
                         </div>
 
                         @* buttons *@
-                        <div class="d-flex gap-1 mb-3 @(_scanCancellationTokenSource != null ? "invisible" : "")">
-                            @if (_isFirstScan)
+                        <div class="d-flex gap-1 mb-3 @(IsScanning ? "invisible" : "")">
+                            @if (IsFirstScan)
                             {
                                 <button @onclick="() => FirstScan(formContext)" type="submit" class="btn btn-ce-primary">First Scan</button>
                             }
@@ -70,18 +70,18 @@
                         </div>
 
                         @* scan type & value type *@
-                        <div class="d-inline-flex gap-2">
-                            <label for="scanCompareType" class="text-end align-self-center" style="width: 100px">Scan Type</label>
-                            <select id="scanCompareType" @bind="_searchSubmitModel.SelectedScanCompareType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || _scanCancellationTokenSource != null)">
+                        <div class="d-flex gap-2">
+                            <label for="scanCompareType" class="text-nowrap align-self-center" style="width: 72px">Scan Type</label>
+                            <select id="scanCompareType" @bind="SearchSubmitModel.SelectedScanCompareType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)">
                                 @foreach (var item in Enum.GetValues<ScanCompareType>())
                                 {
                                     <option value="@item">@item.GetDisplayName()</option>
                                 }
                             </select>
                         </div>
-                        <div class="d-inline-flex gap-2">
-                            <label for="selectScanDataType" class="text-end align-self-center" style="width: 100px">Value Type</label>
-                            <select id="selectScanDataType" @bind="_searchSubmitModel.SelectedScanDataType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !_isFirstScan || _scanCancellationTokenSource != null)">
+                        <div class="d-flex gap-2">
+                            <label for="selectScanDataType" class="text-nowrap align-self-center" style="width: 72px">Value Type</label>
+                            <select id="selectScanDataType" @bind="SearchSubmitModel.SelectedScanDataType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
                                 @foreach (var item in Enum.GetValues<ScanDataType>())
                                 {
                                     <option value="@item">@item.GetDisplayName()</option>
@@ -91,11 +91,66 @@
 
                     </div>
                 </fieldset>
+
+                @* memory scan options *@
+                <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)" class="mt-4">
+                    <div class="d-flex flex-column gap-2">
+                        <div>Memory Scan Options:</div>
+                        <div class="d-flex gap-2">
+                            <label class="align-self-center">Start</label>
+                            <InputText @bind-Value="SearchSubmitModel.StartAddress" class="form-control" placeholder="Start Address" />
+                        </div>
+                        <div class="d-flex gap-2">
+                            <label class="align-self-center">Stop</label>
+                            <InputText @bind-Value="SearchSubmitModel.StopAddress" class="form-control" placeholder="Stop Address" />
+                        </div>
+                        <div class="d-flex gap-2">
+                            <div style="width: calc(325px / 3);">
+                                <label for="writable" class="text-nowrap align-self-center">Writable</label>
+                                <select id="writable" @bind="SearchSubmitModel.Writable" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
+                                    @foreach (var item in Enum.GetValues<MemoryScanFilterOptions>())
+                                    {
+                                        <option value="@item">@item.GetDisplayName()</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div style="width: calc(325px / 3);">
+                                <label for="executable" class="text-nowrap align-self-center">Executable</label>
+                                <select id="executable" @bind="SearchSubmitModel.Executable" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
+                                    @foreach (var item in Enum.GetValues<MemoryScanFilterOptions>())
+                                    {
+                                        <option value="@item">@item.GetDisplayName()</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div style="width: calc(325px / 3);">
+                                <label for="copyOnWrite" class="text-nowrap align-self-center">Copy on Write</label>
+                                <select id="copyOnWrite" @bind="SearchSubmitModel.CopyOnWrite" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
+                                    @foreach (var item in Enum.GetValues<MemoryScanFilterOptions>())
+                                    {
+                                        <option value="@item">@item.GetDisplayName()</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <label for="memoryTypes" class="text-nowrap align-self-center">Memory Types</label>
+                            <select multiple id="memoryTypes" @bind="SearchSubmitModel.MemoryTypes" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
+                                @foreach (var item in Enum.GetValues<MemoryType>())
+                                {
+                                    <option value="@item">@item.GetDisplayName()</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
             </EditForm>
         </div>
 
         <div id="split-1" class="d-flex flex-grow-1">
-            <TrackedItemsGrid @ref="_trackedItemsGridRef" TrackedItems="_trackedItems"></TrackedItemsGrid>
+            <TrackedItemsGrid @ref="TrackedItemsGridRef" TrackedItems="TrackedItems"></TrackedItemsGrid>
         </div>
     </div>
 </div>
