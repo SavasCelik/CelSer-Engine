@@ -100,10 +100,12 @@
                             <label class="align-self-center">Start</label>
                             <InputText @bind-Value="SearchSubmitModel.StartAddress" class="form-control" placeholder="Start Address" />
                         </div>
+                        <ValidationMessage For="() => SearchSubmitModel.StartAddress" class="validation-message ms-5" />
                         <div class="d-flex gap-2">
                             <label class="align-self-center">Stop</label>
                             <InputText @bind-Value="SearchSubmitModel.StopAddress" class="form-control" placeholder="Stop Address" />
                         </div>
+                        <ValidationMessage For="() => SearchSubmitModel.StopAddress" class="validation-message ms-5" />
                         <div class="d-flex gap-2">
                             <div style="width: calc(325px / 3);">
                                 <label for="writable" class="text-nowrap align-self-center">Writable</label>

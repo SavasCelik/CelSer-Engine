@@ -87,10 +87,14 @@ public partial class MainViewModel : ObservableRecipient
         Scanning = true;
         _scanCts = new CancellationTokenSource();
         CancelScanVisibility = Visibility.Visible;
-        var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput);
+        var scanConstraint = new ScanConstraint(SelectedScanCompareType, SelectedScanDataType, userInput)
+        {
+            AllowedMemoryTypes = [MEMORY_TYPE.MEM_PRIVATE, MEMORY_TYPE.MEM_IMAGE],
+            StartAddress = IntPtr.Zero,
+            StopAddress = IntPtr.MaxValue
+        };
         scanConstraint.IncludedProtections |= MemoryProtections.Writable;
         scanConstraint.ExcludedProtections |= MemoryProtections.CopyOnWrite;
-        scanConstraint.AllowedMemoryTypes = [ MEMORY_TYPE.MEM_PRIVATE, MEMORY_TYPE.MEM_IMAGE ];
         var processHandle = SelectProcessViewModel.GetSelectedProcessHandle();
         var foundItems = await _memoryScanService.ScanProcessMemoryAsync(scanConstraint, processHandle, _progressBarUpdater, _scanCts.Token);
         AddFoundItems(foundItems);

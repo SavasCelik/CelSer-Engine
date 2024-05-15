@@ -16,7 +16,9 @@ internal class SearchSubmitModel
     public string SearchValue { get; set; } = string.Empty;
     public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
     public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+    [IsIntPtr(MaxValuePropertyName = nameof(StopAddress))]
     public string StartAddress { get; set; } = IntPtr.Zero.ToString("X");
+    [IsIntPtr(MinValuePropertyName = nameof(StartAddress))]
     public string StopAddress { get; set; } = IntPtr.MaxValue.ToString("X");
     public MemoryScanFilterOptions Writable { get; set; } = MemoryScanFilterOptions.Yes;
     public MemoryScanFilterOptions Executable { get; set; } = MemoryScanFilterOptions.Dont_Care;
@@ -145,7 +147,11 @@ public partial class Index : ComponentBase, IAsyncDisposable
         ScanResultItems.Clear();
         await VirtualizedAgGridRef.ApplyDataAsync();
         await VirtualizedAgGridRef.ShowScanningOverlay();
-        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
+        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue)
+        {
+            StartAddress = IntPtr.Parse(SearchSubmitModel.StartAddress, System.Globalization.NumberStyles.HexNumber),
+            StopAddress = IntPtr.Parse(SearchSubmitModel.StopAddress, System.Globalization.NumberStyles.HexNumber)
+        };
 
         foreach (var memoryType in SearchSubmitModel.MemoryTypes)
         {
