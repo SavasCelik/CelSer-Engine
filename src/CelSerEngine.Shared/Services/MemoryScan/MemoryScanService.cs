@@ -22,8 +22,7 @@ public class MemoryScanService : IMemoryScanService
     {
         var matchingMemories = await Task.Run(() =>
         {
-            var virtualMemoryRegions = _nativeApi.GatherVirtualMemoryRegions(processHandle);
-            var virtualMemoryRegions2 = new List<VirtualMemoryRegion>();
+            var virtualMemoryRegions = new List<VirtualMemoryRegion>();
 
             foreach (var memoryRegion in _nativeApi.EnumerateMemoryRegions(processHandle))
             {
@@ -73,11 +72,11 @@ public class MemoryScanService : IMemoryScanService
                 if (_nativeApi.TryReadVirtualMemory(processHandle, (nint)memoryRegion.BaseAddress, (uint)memoryRegion.RegionSize, out var memoryBytes))
                 {
                     var virtualMemoryRegion = new VirtualMemoryRegion((nint)memoryRegion.BaseAddress, memoryRegion.RegionSize, memoryBytes);
-                    virtualMemoryRegions2.Add(virtualMemoryRegion);
+                    virtualMemoryRegions.Add(virtualMemoryRegion);
                 }
             }
             var comparer = ComparerFactory.CreateVectorComparer(scanConstraint);
-            return comparer.GetMatchingMemorySegments(virtualMemoryRegions2, progressUpdater, token);
+            return comparer.GetMatchingMemorySegments(virtualMemoryRegions, progressUpdater, token);
         }).ConfigureAwait(false);
 
         return matchingMemories;
