@@ -16,8 +16,10 @@ internal class SearchSubmitModel
     public string SearchValue { get; set; } = string.Empty;
     public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
     public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+
     [IsIntPtr(MaxValuePropertyName = nameof(StopAddress))]
     public string StartAddress { get; set; } = IntPtr.Zero.ToString("X");
+
     [IsIntPtr(MinValuePropertyName = nameof(StartAddress))]
     public string StopAddress { get; set; } = IntPtr.MaxValue.ToString("X");
     public MemoryScanFilterOptions Writable { get; set; } = MemoryScanFilterOptions.Yes;

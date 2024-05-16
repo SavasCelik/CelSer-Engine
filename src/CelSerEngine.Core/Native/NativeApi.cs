@@ -306,10 +306,10 @@ public sealed class NativeApi : INativeApi
         return virtualMemoryRegions;
     }
 
-    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(SafeProcessHandle hProcess)
+    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(SafeProcessHandle hProcess, IntPtr? startAddress = null, IntPtr? stopAddress = null)
     {
-        ulong currentAddress = 0x0;
-        ulong stopAddress = 0x7FFFFFFFFFFFFFFF;
+        var currentAddress = (ulong)(startAddress?.ToInt64() ?? IntPtr.Zero.ToInt64());
+        var lastAddress = (ulong)(stopAddress?.ToInt64() ?? IntPtr.MaxValue.ToInt64());
         // or
         //GetSystemInfo(out var systemInfo);
         //IntPtr proc_min_address = systemInfo.minimumApplicationAddress;
@@ -318,7 +318,7 @@ public sealed class NativeApi : INativeApi
         var mbi = new MEMORY_BASIC_INFORMATION64();
 
         while (NtQueryVirtualMemory(hProcess, (IntPtr)currentAddress, memInfoClass, ref mbi, Marshal.SizeOf(mbi), out _) == NTSTATUS.Success
-            && currentAddress < stopAddress && (currentAddress + mbi.RegionSize) > currentAddress)
+            && currentAddress < lastAddress && (currentAddress + mbi.RegionSize) > currentAddress)
         {
             yield return mbi;
             currentAddress = mbi.BaseAddress + mbi.RegionSize;

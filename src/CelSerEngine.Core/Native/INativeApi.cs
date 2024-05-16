@@ -15,7 +15,7 @@ public interface INativeApi
     public void WriteMemory<T>(SafeProcessHandle hProcess, IntPtr memoryAddress, T newValue) where T : struct;
     public IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(SafeProcessHandle hProcess);
     public void UpdateAddresses(SafeProcessHandle hProcess, IEnumerable<IMemorySegment> virtualAddresses, CancellationToken token = default);
-    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(SafeProcessHandle hProcess);
+    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(SafeProcessHandle hProcess, IntPtr? startAddress = null, IntPtr? stopAddress = null);
     public IList<ModuleInfo> GetProcessModules(SafeProcessHandle hProcess);
     public IntPtr GetStackStart(SafeProcessHandle hProcess, int threadNr, ModuleInfo? kernel32Module = null);
 }

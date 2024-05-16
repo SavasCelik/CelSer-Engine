@@ -24,7 +24,7 @@ public class MemoryScanService : IMemoryScanService
         {
             var virtualMemoryRegions = new List<VirtualMemoryRegion>();
 
-            foreach (var memoryRegion in _nativeApi.EnumerateMemoryRegions(processHandle))
+            foreach (var memoryRegion in _nativeApi.EnumerateMemoryRegions(processHandle, scanConstraint.StartAddress, scanConstraint.StopAddress))
             {
                 if (memoryRegion.State != MEMORY_STATE.MEM_COMMIT
                 || memoryRegion.Protect.HasFlag(MEMORY_PROTECTION.PAGE_GUARD)
