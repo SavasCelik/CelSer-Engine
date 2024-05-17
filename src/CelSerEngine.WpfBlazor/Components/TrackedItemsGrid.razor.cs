@@ -8,9 +8,6 @@ using System.Text.Json;
 namespace CelSerEngine.WpfBlazor.Components;
 public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 {
-    [Parameter]
-    public List<TrackedItem> TrackedItems { get; set; } = default!;
-
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
 
@@ -25,6 +22,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     private Modal ModalRef { get; set; } = default!;
 
+    private List<TrackedItem> _trackedItems;
     private IJSObjectReference? _module;
     private DotNetObjectReference<TrackedItemsGrid>? _dotNetHelper;
     private bool _shouldRender = false;
@@ -34,6 +32,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     public TrackedItemsGrid()
     {
         _trackedItemsUpdater = new Timer((e) => UpdateTrackedItems(), null, Timeout.Infinite, 0);
+        _trackedItems = [];
     }
 
     protected override bool ShouldRender() => _shouldRender;
@@ -56,33 +55,45 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         _shouldRender = false;
     }
 
-    public async Task RefreshDataAsync()
+    public async Task AddTrackedItem(TrackedItem trackedItem)
     {
-        if (!_startedUpdater && TrackedItems.Count > 0)
+        _trackedItems.Add(trackedItem);
+        await RefreshDataAsync();
+    }
+
+    public async Task AddTrackedItems(IEnumerable<TrackedItem> trackedItems)
+    {
+        _trackedItems.AddRange(trackedItems);
+        await RefreshDataAsync();
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        if (!_startedUpdater && _trackedItems.Count > 0)
         {
             StartTrackedItemsUpdater();
             _startedUpdater = true;
         }
-        else if (_startedUpdater && TrackedItems.Count == 0)
+        else if (_startedUpdater && _trackedItems.Count == 0)
         {
             StopTrackedItemValueUpdater();
             _startedUpdater = false;
         }
 
-        var jsonData = JsonSerializer.Serialize(TrackedItems.Select(x => new { x.IsFrozen, x.Description, Address = x.Item.Address.ToString("X"), x.Item.Value }));
+        var jsonData = JsonSerializer.Serialize(_trackedItems.Select(x => new { x.IsFrozen, x.Description, Address = x.Item.Address.ToString("X"), x.Item.Value }));
         await _module!.InvokeVoidAsync("applyTrackedItems", jsonData);
     }
 
     private async void UpdateTrackedItems()
     {
-        NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, TrackedItems.Select(x => x.Item));
+        NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, _trackedItems.Select(x => x.Item));
 
-        foreach (var trackedItem in TrackedItems.Where(x => x.IsFrozen))
+        foreach (var trackedItem in _trackedItems.Where(x => x.IsFrozen))
         {
             NativeApi.WriteMemory(EngineSession.SelectedProcessHandle, trackedItem.Item, trackedItem.SetValue);
         }
 
-        var jsonData = JsonSerializer.Serialize(TrackedItems.Select(x => new { x.IsFrozen, x.Description, Address = x.Item.Address.ToString("X"), x.Item.Value }));
+        var jsonData = JsonSerializer.Serialize(_trackedItems.Select(x => new { x.IsFrozen, x.Description, Address = x.Item.Address.ToString("X"), x.Item.Value }));
         await _module!.InvokeVoidAsync("updateTrackedItemValues", jsonData);
     }
 
@@ -99,7 +110,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     [JSInvokable]
     public void UpdateFreezeStateByRowIndex(int rowIndex, bool isFrozen)
     {
-        var trackedItem = TrackedItems[rowIndex];
+        var trackedItem = _trackedItems[rowIndex];
         trackedItem.IsFrozen = isFrozen;
 
         if (isFrozen)
@@ -111,7 +122,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     [JSInvokable]
     public async Task OnCellDoubleClickedAsync(int rowIndex, string columnName)
     {
-        var selectedTrackedItem = TrackedItems[rowIndex];
+        var selectedTrackedItem = _trackedItems[rowIndex];
 
         if (columnName == nameof(TrackedItem.Item.Value))
         {

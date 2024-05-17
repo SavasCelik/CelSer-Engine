@@ -16,14 +16,16 @@ internal class SearchSubmitModel
     public string SearchValue { get; set; } = string.Empty;
     public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
     public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+
     [IsIntPtr(MaxValuePropertyName = nameof(StopAddress))]
     public string StartAddress { get; set; } = IntPtr.Zero.ToString("X");
+
     [IsIntPtr(MinValuePropertyName = nameof(StartAddress))]
     public string StopAddress { get; set; } = IntPtr.MaxValue.ToString("X");
     public MemoryScanFilterOptions Writable { get; set; } = MemoryScanFilterOptions.Yes;
     public MemoryScanFilterOptions Executable { get; set; } = MemoryScanFilterOptions.Dont_Care;
     public MemoryScanFilterOptions CopyOnWrite { get; set; } = MemoryScanFilterOptions.No;
-    public MemoryType[] MemoryTypes { get; set; } = { MemoryType.Image, MemoryType.Private };
+    public MemoryType[] MemoryTypes { get; set; } = [MemoryType.Image, MemoryType.Private];
 }
 
 internal enum MemoryScanFilterOptions
@@ -64,7 +66,6 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private VirtualizedAgGrid<ScanResultItem> VirtualizedAgGridRef { get; set; } = default!;
     private TrackedItemsGrid TrackedItemsGridRef { get; set; } = default!;
     private List<ScanResultItem> ScanResultItems { get; set; } = [];
-    private List<TrackedItem> TrackedItems { get; set; } = [];
     private SearchSubmitModel SearchSubmitModel { get; set; } = new();
     private float ProgressBarValue { get; set; }
     private bool IsFirstScan { get; set; } = true;
@@ -101,14 +102,12 @@ public partial class Index : ComponentBase, IAsyncDisposable
     public async Task ContextMenuItemClickedAsync()
     {
         var selectedScanResultItems = ScanResultItems.Where(x => VirtualizedAgGridRef.SelectedItems.Contains(x.Address.ToString("X")));
-        TrackedItems.AddRange(selectedScanResultItems.Select(x => new TrackedItem(x)));
-        await TrackedItemsGridRef.RefreshDataAsync();
+        await TrackedItemsGridRef.AddTrackedItems(selectedScanResultItems.Select(x => new TrackedItem(x)));
     }
 
     public async Task OnScanResultItemDoubleClicked(ScanResultItem scanResultItem)
     {
-        TrackedItems.Add(new TrackedItem(scanResultItem));
-        await TrackedItemsGridRef.RefreshDataAsync();
+        await TrackedItemsGridRef.AddTrackedItem(new TrackedItem(scanResultItem));
     }
 
     protected override void OnInitialized()
