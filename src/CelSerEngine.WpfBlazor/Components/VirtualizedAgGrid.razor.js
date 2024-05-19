@@ -150,7 +150,7 @@ async function onResize(entry) {
 }
 
 async function onRowDoubleClicked(row) {
-    await dotNetHelper.invokeMethodAsync('OnRowDoubleClickedDispatcher', row.data.Item.Address);
+    await dotNetHelper.invokeMethodAsync('OnRowDoubleClickedDispatcherAsync', row.data.Item.Address);
 }
 
 function showLoadingOverlay(showSpinner = true) {

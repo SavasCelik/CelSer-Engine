@@ -1,0 +1,9 @@
+﻿<ContextMenu Items="ContextMenuItems" Selector="#scanResultsGrid .ag-row"></ContextMenu>
+
+<VirtualizedAgGrid @ref="VirtualizedAgGridRef"
+                   Items="ScanResultItems"
+                   TItem="Models.ScanResultItem"
+                   GetRowId='(x) => x.Address.ToString("X")'
+                   OnRowDoubleClicked="OnScanResultItemDoubleClicked"
+                   SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
+</VirtualizedAgGrid>

@@ -8,7 +8,6 @@ namespace CelSerEngine.WpfBlazor.Components;
 public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
 {
     public HashSet<string> SelectedItems { get; set; } = [];
-    public bool IsDisposed { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
@@ -53,12 +52,12 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
         await _module!.InvokeVoidAsync("itemsChanged", Items.Count);
     }
 
-    public async Task ShowScanningOverlay()
+    public async Task ShowScanningOverlayAsync()
     {
         await _module!.InvokeVoidAsync("showLoadingOverlay");
     }
 
-    public async Task ResetGrid()
+    public async Task ResetGridAsync()
     {
         await _module!.InvokeVoidAsync("resetGrid");
     }
@@ -69,7 +68,7 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
     }
 
     [JSInvokable]
-    public Task OnRowDoubleClickedDispatcher(string rowId)
+    public Task OnRowDoubleClickedDispatcherAsync(string rowId)
     {
         if (OnRowDoubleClicked.HasDelegate)
         {
@@ -166,7 +165,5 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
         {
             await _module.DisposeAsync();
         }
-
-        IsDisposed = true;
     }
 }
