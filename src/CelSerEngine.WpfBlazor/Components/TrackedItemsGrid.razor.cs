@@ -173,6 +173,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        StopTrackedItemValueUpdater();
         _trackedItemsUpdater.Dispose();
         ThemeManager.OnThemeChanged -= UpdateComponent;
 

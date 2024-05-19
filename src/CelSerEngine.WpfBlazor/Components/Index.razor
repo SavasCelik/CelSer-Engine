@@ -1,7 +1,4 @@
-﻿@using CelSerEngine.Core.Models
-@using CelSerEngine.Core.Extensions
-
-<ThemeSetter />
+﻿<ThemeSetter />
 
 <div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-1 m-2">
@@ -31,16 +28,8 @@
             </div>
         </div>
 
-        <ContextMenu Items="ContextMenuItems" Selector="#scanResultsGrid .ag-row"></ContextMenu>
-
         <div id="split-0" class="d-flex flex-row gap-2">
-            <VirtualizedAgGrid @ref="VirtualizedAgGridRef"
-                               Items="ScanResultItems"
-                               TItem="Models.ScanResultItem"
-                               GetRowId='(x) => x.Address.ToString("X")'
-                               OnRowDoubleClicked="OnScanResultItemDoubleClicked"
-                               SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, x.PreviousValue }'>
-            </VirtualizedAgGrid>
+            <ScanResultItemsGrid @ref="ScanResultItemsGridRef" TrackedItemsGridRef="TrackedItemsGridRef" />
 
             <EditForm Model="SearchSubmitModel" Context="formContext" class="position-relative" style="width: 325px;">
                 <DataAnnotationsValidator />
