@@ -21,6 +21,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     private ThemeManager ThemeManager { get; set; } = default!;
 
     private Modal ModalRef { get; set; } = default!;
+    private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
 
     private List<TrackedItem> _trackedItems;
     private IJSObjectReference? _module;
@@ -33,6 +34,14 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     {
         _trackedItemsUpdater = new Timer((e) => UpdateTrackedItems(), null, Timeout.Infinite, 0);
         _trackedItems = [];
+        ContextMenuItems =
+        [
+            new ContextMenuItem
+            {
+                Text = "Change Value",
+                OnClick = EventCallback.Factory.Create(this, OnChangeValueContextMenuClicked)
+            },
+        ];
     }
 
     protected override bool ShouldRender() => _shouldRender;
@@ -105,6 +114,28 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     private void StopTrackedItemValueUpdater()
     {
         _trackedItemsUpdater.Change(Timeout.Infinite, 0);
+    }
+
+    private async Task OnChangeValueContextMenuClicked()
+    {
+        var selectedIndexes = await _module!.InvokeAsync<int[]>("getSelectedRowIndexes");
+        var selectedTrackedItems = new TrackedItem[selectedIndexes.Length];
+
+        if (selectedIndexes.Length == 0)
+            return;
+
+        for (var i = 0; i < selectedIndexes.Length; i++)
+        {
+            selectedTrackedItems[i] = _trackedItems[selectedIndexes[i]];
+        }
+
+        var parameters = new Dictionary<string, object>
+        {
+            { nameof(ModalValueChange.Value), selectedTrackedItems[0].Item.Value },
+            { nameof(ModalValueChange.ValueChanged), EventCallback.Factory.Create<string>(this, (desiredValue) => OnValueChangeRequested(desiredValue, selectedTrackedItems)) },
+        };
+
+        await ModalRef.ShowAsync<ModalValueChange>("Change Value", parameters);
     }
 
     [JSInvokable]
