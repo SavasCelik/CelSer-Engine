@@ -170,7 +170,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
             var parameters = new Dictionary<string, object>
             {
                 { nameof(ModalDescriptionChange.Description), selectedTrackedItem.Description },
-                { nameof(ModalDescriptionChange.DescriptionChanged1), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItem)) },
+                { nameof(ModalDescriptionChange.DescriptionChanged), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItem)) },
             };
 
             await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);

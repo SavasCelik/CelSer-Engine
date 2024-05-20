@@ -12,7 +12,7 @@ public partial class ModalDescriptionChange : ComponentBase
     public string Description { get; set; } = default!;
 
     [Parameter]
-    public EventCallback<string> DescriptionChanged1 { get; set; } = default!;
+    public EventCallback<string> DescriptionChanged { get; set; } = default!;
 
     private EditContext EditContext { get; set; } = default!; // this is needed! without it the form is only submitted when double clicking submit button
                                                               // (this can be removed once we have a form model)
@@ -26,9 +26,9 @@ public partial class ModalDescriptionChange : ComponentBase
     {
         await ModalContainer.HideModalAsync();
 
-        if (DescriptionChanged1.HasDelegate)
+        if (DescriptionChanged.HasDelegate)
         {
-            await DescriptionChanged1.InvokeAsync(Description);
+            await DescriptionChanged.InvokeAsync(Description);
         }
     }
 }
