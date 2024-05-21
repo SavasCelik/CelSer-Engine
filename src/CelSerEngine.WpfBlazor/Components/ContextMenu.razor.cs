@@ -13,16 +13,16 @@ public partial class ContextMenu : ComponentBase, IAsyncDisposable
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
 
+    private Guid Id { get; set; } = Guid.NewGuid();
+
     private IJSObjectReference? _module;
-
-
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/ContextMenu.razor.js");
-            await _module.InvokeVoidAsync("init", Selector);
+            await _module.InvokeVoidAsync("init", Selector, Id);
         }
     }
 
