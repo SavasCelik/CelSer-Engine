@@ -35,9 +35,11 @@ export function init(selector, ctxMenuId) {
         isContextMenuOpen = true;
     });
 
-    document.addEventListener("click", () => {
-        hideContextMenu();
-    });
+    if (contextMenuById.size === 1) {
+        document.addEventListener("click", () => {
+            hideContextMenu();
+        });
+    }
 }
 
 function hideContextMenu() {
