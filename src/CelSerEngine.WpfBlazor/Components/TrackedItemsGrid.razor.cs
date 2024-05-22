@@ -209,6 +209,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
         if (_module != null)
         {
+            await _module.InvokeVoidAsync("dispose");
             await _module.DisposeAsync();
         }
     }
