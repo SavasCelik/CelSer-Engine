@@ -129,13 +129,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
             selectedTrackedItems[i] = _trackedItems[selectedIndexes[i]];
         }
 
-        var parameters = new Dictionary<string, object>
-        {
-            { nameof(ModalValueChange.Value), selectedTrackedItems[0].Item.Value },
-            { nameof(ModalValueChange.ValueChanged), EventCallback.Factory.Create<string>(this, (desiredValue) => OnValueChangeRequested(desiredValue, selectedTrackedItems)) },
-        };
-
-        await ModalRef.ShowAsync<ModalValueChange>("Change Value", parameters);
+        await ShowChangeValueModal(selectedTrackedItems);
     }
 
     [JSInvokable]
@@ -157,13 +151,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
         if (columnName == nameof(TrackedItem.Item.Value))
         {
-            var parameters = new Dictionary<string, object>
-            {
-                { nameof(ModalValueChange.Value), selectedTrackedItem.Item.Value },
-                { nameof(ModalValueChange.ValueChanged), EventCallback.Factory.Create<string>(this, (desiredValue) => OnValueChangeRequested(desiredValue, selectedTrackedItem)) },
-            };
-
-            await ModalRef.ShowAsync<ModalValueChange>("Change Value", parameters);
+            await ShowChangeValueModal(selectedTrackedItem);
         }
         else if (columnName == nameof(TrackedItem.Description))
         {
@@ -175,6 +163,17 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
             await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
         }
+    }
+
+    private async Task ShowChangeValueModal(params TrackedItem[] selectedTrackedItems)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            { nameof(ModalValueChange.Value), selectedTrackedItems[0].Item.Value },
+            { nameof(ModalValueChange.ValueChanged), EventCallback.Factory.Create<string>(this, (desiredValue) => OnValueChangeRequested(desiredValue, selectedTrackedItems)) },
+        };
+
+        await ModalRef.ShowAsync<ModalValueChange>("Change Value", parameters);
     }
 
     private async Task OnValueChangeRequested(string desiredValue, params TrackedItem[] trackedItems)
