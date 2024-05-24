@@ -1,10 +1,12 @@
 ﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.WpfBlazor.Components;
@@ -15,6 +17,7 @@ internal class SearchSubmitModel
     public string SearchValue { get; set; } = string.Empty;
     public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
     public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
+    public string SelectedModule { get; set; } = "All";
 
     [IsIntPtr(MaxValuePropertyName = nameof(StopAddress))]
     public string StartAddress { get; set; } = IntPtr.Zero.ToString("X");
@@ -57,11 +60,15 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private ThemeManager ThemeManager { get; set; } = default!;
 
     [Inject]
+    private INativeApi NativeApi { get; set; } = default!;
+
+    [Inject]
     private MainWindow MainWindow { get; set; } = default!;
 
     private ScanResultItemsGrid ScanResultItemsGridRef { get; set; } = default!;
     private TrackedItemsGrid TrackedItemsGridRef { get; set; } = default!;
     private SearchSubmitModel SearchSubmitModel { get; set; } = new();
+    private List<string> Modules { get; set; } = [];
     private float ProgressBarValue { get; set; }
     private bool IsFirstScan { get; set; } = true;
     private bool IsScanning => ScanCancellationTokenSource != null;
@@ -84,7 +91,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        EngineSession.OnChange += StateHasChanged;
+        EngineSession.OnChange += UpdateModules;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -92,6 +99,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         if (firstRender)
         {
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Index.razor.js");
+            await _module.InvokeVoidAsync("initIndex");
         }
     }
 
@@ -217,10 +225,18 @@ public partial class Index : ComponentBase, IAsyncDisposable
         }
     }
 
+    private async void UpdateModules()
+    {
+        var modules = NativeApi.GetProcessModules(EngineSession.SelectedProcessHandle);
+        Modules = modules.Select(x => Path.GetFileName(x.Name)).Prepend("All").ToList();
+        await _module!.InvokeVoidAsync("applyData", Modules);
+        StateHasChanged();
+    }
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        EngineSession.OnChange -= StateHasChanged;
+        EngineSession.OnChange -= UpdateModules;
 
         if (_module != null)
         {
