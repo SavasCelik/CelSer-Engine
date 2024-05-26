@@ -1,6 +1,5 @@
 let tackedItemsGridApi;
 let dotNetHelper;
-let controller = new AbortController();
 
 export function initTackedItems(_dotNetHelper) {
     dotNetHelper = _dotNetHelper;
@@ -50,10 +49,6 @@ export function updateTrackedItemValues(items) {
     const allData = JSON.parse(items);
 
     for (let i = 0; i < allData.length; i++) {
-        if (controller.signal.aborted) {
-            return;
-        }
-
         tackedItemsGridApi.forEachNode(x => {
             if (x.data.Address === allData[i].Address) {
                 x.setDataValue("Value", allData[i].Value);
@@ -64,10 +59,6 @@ export function updateTrackedItemValues(items) {
 
 export function getSelectedRowIndexes() {
     return tackedItemsGridApi.getSelectedNodes().map(x => x.rowIndex);
-}
-
-export function dispose() {
-    controller.abort();
 }
 
 async function onCellDoubleClicked(params) {
