@@ -72,14 +72,11 @@ export function focusSearchValueInput() {
 }
 
 export function updateModules(data) {
-    var modulesSelectEl = document.getElementById("modulesSelect");
+    const modulesSelectEl = document.getElementById("modulesSelect");
+    modulesSelectEl.innerHTML = "";
 
-    while (modulesSelectEl.length > 0) {
-        modulesSelectEl.remove(0);
-    }
-
-    for (var i = 0; i < data.length; i++) {
-        var option = document.createElement("option");
+    for (let i = 0; i < data.length; i++) {
+        const option = document.createElement("option");
         option.text = data[i];
         option.value = data[i];
         modulesSelectEl.add(option);
