@@ -21,6 +21,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     private ThemeManager ThemeManager { get; set; } = default!;
 
     private Modal ModalRef { get; set; } = default!;
+    private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
 
     private List<TrackedItem> _trackedItems;
     private IJSObjectReference? _module;
@@ -33,6 +34,14 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     {
         _trackedItemsUpdater = new Timer((e) => UpdateTrackedItems(), null, Timeout.Infinite, 0);
         _trackedItems = [];
+        ContextMenuItems =
+        [
+            new ContextMenuItem
+            {
+                Text = "Change Value",
+                OnClick = EventCallback.Factory.Create(this, OnChangeValueContextMenuClicked)
+            },
+        ];
     }
 
     protected override bool ShouldRender() => _shouldRender;
@@ -107,6 +116,22 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         _trackedItemsUpdater.Change(Timeout.Infinite, 0);
     }
 
+    private async Task OnChangeValueContextMenuClicked()
+    {
+        var selectedIndexes = await _module!.InvokeAsync<int[]>("getSelectedRowIndexes");
+        var selectedTrackedItems = new TrackedItem[selectedIndexes.Length];
+
+        if (selectedIndexes.Length == 0)
+            return;
+
+        for (var i = 0; i < selectedIndexes.Length; i++)
+        {
+            selectedTrackedItems[i] = _trackedItems[selectedIndexes[i]];
+        }
+
+        await ShowChangeValueModal(selectedTrackedItems);
+    }
+
     [JSInvokable]
     public void UpdateFreezeStateByRowIndex(int rowIndex, bool isFrozen)
     {
@@ -126,24 +151,29 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
         if (columnName == nameof(TrackedItem.Item.Value))
         {
-            var parameters = new Dictionary<string, object>
-            {
-                { nameof(ModalValueChange.Value), selectedTrackedItem.Item.Value },
-                { nameof(ModalValueChange.ValueChanged), EventCallback.Factory.Create<string>(this, (desiredValue) => OnValueChangeRequested(desiredValue, selectedTrackedItem)) },
-            };
-
-            await ModalRef.ShowAsync<ModalValueChange>("Change Value", parameters);
+            await ShowChangeValueModal(selectedTrackedItem);
         }
         else if (columnName == nameof(TrackedItem.Description))
         {
             var parameters = new Dictionary<string, object>
             {
                 { nameof(ModalDescriptionChange.Description), selectedTrackedItem.Description },
-                { nameof(ModalDescriptionChange.DescriptionChanged1), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItem)) },
+                { nameof(ModalDescriptionChange.DescriptionChanged), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItem)) },
             };
 
             await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
         }
+    }
+
+    private async Task ShowChangeValueModal(params TrackedItem[] selectedTrackedItems)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            { nameof(ModalValueChange.Value), selectedTrackedItems[0].Item.Value },
+            { nameof(ModalValueChange.ValueChanged), EventCallback.Factory.Create<string>(this, (desiredValue) => OnValueChangeRequested(desiredValue, selectedTrackedItems)) },
+        };
+
+        await ModalRef.ShowAsync<ModalValueChange>("Change Value", parameters);
     }
 
     private async Task OnValueChangeRequested(string desiredValue, params TrackedItem[] trackedItems)
@@ -179,6 +209,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
         if (_module != null)
         {
+            await JSRuntime.InvokeVoidAsync("console.log", $"Disposing {nameof(TrackedItemsGrid)} js");
             await _module.DisposeAsync();
         }
     }

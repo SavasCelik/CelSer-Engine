@@ -57,6 +57,10 @@ export function updateTrackedItemValues(items) {
     }
 }
 
+export function getSelectedRowIndexes() {
+    return tackedItemsGridApi.getSelectedNodes().map(x => x.rowIndex);
+}
+
 async function onCellDoubleClicked(params) {
     await dotNetHelper.invokeMethodAsync("OnCellDoubleClickedAsync", params.rowIndex, params.colDef.field);
 }

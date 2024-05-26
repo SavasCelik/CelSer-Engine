@@ -1,8 +1,12 @@
-﻿const contextMenu = document.querySelector("#cmenu");
+﻿let contextMenuById = new Map();
 const appWidth = document.querySelector("#app").clientWidth - 10;
 const appHeight = document.querySelector("#app").clientHeight - 10;
+let isContextMenuOpen = false;
 
-export function init(selector) {
+export function init(selector, ctxMenuId) {
+    const contextMenu = document.getElementById(ctxMenuId);
+    contextMenuById.set(ctxMenuId, contextMenu);
+
     document.addEventListener("contextmenu", (event) => {
         const selectedRow = event.target.closest(selector);
 
@@ -11,6 +15,7 @@ export function init(selector) {
         }
 
         event.preventDefault();
+        hideContextMenu();
 
         if (event.pageX + contextMenu.clientWidth > appWidth) {
             contextMenu.style.left = appWidth - contextMenu.clientWidth + "px";
@@ -27,13 +32,24 @@ export function init(selector) {
         }
 
         contextMenu.style.display = "block";
+        isContextMenuOpen = true;
     });
 
-    document.addEventListener("click", () => {
-        hideContextMenu();
-    });
+    if (contextMenuById.size === 1) {
+        document.addEventListener("click", () => {
+            hideContextMenu();
+        });
+    }
 }
 
 function hideContextMenu() {
-    contextMenu.style.display = "none";
+    if (!isContextMenuOpen) {
+        return;
+    }
+
+    for (let [, contextMenu] of contextMenuById) {
+        contextMenu.style.display = "none";
+    }
+
+    isContextMenuOpen = false;
 }

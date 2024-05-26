@@ -1,10 +1,12 @@
 ﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.WpfBlazor.Components;
@@ -57,11 +59,15 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private ThemeManager ThemeManager { get; set; } = default!;
 
     [Inject]
+    private INativeApi NativeApi { get; set; } = default!;
+
+    [Inject]
     private MainWindow MainWindow { get; set; } = default!;
 
     private ScanResultItemsGrid ScanResultItemsGridRef { get; set; } = default!;
     private TrackedItemsGrid TrackedItemsGridRef { get; set; } = default!;
     private SearchSubmitModel SearchSubmitModel { get; set; } = new();
+    private IList<ModuleInfo> Modules { get; set; } = [];
     private float ProgressBarValue { get; set; }
     private bool IsFirstScan { get; set; } = true;
     private bool IsScanning => ScanCancellationTokenSource != null;
@@ -84,7 +90,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        EngineSession.OnChange += StateHasChanged;
+        EngineSession.OnChange += UpdateModules;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -92,6 +98,12 @@ public partial class Index : ComponentBase, IAsyncDisposable
         if (firstRender)
         {
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Index.razor.js");
+            await _module.InvokeVoidAsync("initIndex");
+
+            if (EngineSession.SelectedProcess != null)
+            {
+                UpdateModules();
+            }
         }
     }
 
@@ -217,10 +229,35 @@ public partial class Index : ComponentBase, IAsyncDisposable
         }
     }
 
+    private async void UpdateModules()
+    {
+        Modules = NativeApi.GetProcessModules(EngineSession.SelectedProcessHandle);
+        var moduleNames = Modules.Select(x => Path.GetFileName(x.Name)).Prepend("All").ToList();
+        await _module!.InvokeVoidAsync("updateModules", moduleNames);
+        StateHasChanged();
+    }
+
+    private void OnSelectedModuleChanged(ChangeEventArgs e)
+    {
+        var selectedModuleName = e.Value as string;
+
+        if (selectedModuleName == "All")
+        {
+            SearchSubmitModel.StartAddress = IntPtr.Zero.ToString("X");
+            SearchSubmitModel.StopAddress = IntPtr.MaxValue.ToString("X");
+
+            return;
+        }
+
+        var selectedModuleInfo = Modules.First(x => Path.GetFileName(x.Name) == selectedModuleName);
+        SearchSubmitModel.StartAddress = selectedModuleInfo.BaseAddress.ToString("X");
+        SearchSubmitModel.StopAddress = (selectedModuleInfo.BaseAddress + selectedModuleInfo.Size).ToString("X");
+    }
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-        EngineSession.OnChange -= StateHasChanged;
+        EngineSession.OnChange -= UpdateModules;
 
         if (_module != null)
         {

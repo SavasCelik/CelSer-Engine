@@ -85,6 +85,13 @@
                 <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)" class="mt-4">
                     <div class="d-flex flex-column gap-2">
                         <div>Memory Scan Options:</div>
+
+                        @* modules select *@
+                        <div class="d-flex gap-2">
+                            <select @onchange="OnSelectedModuleChanged" id="modulesSelect" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
                         <div class="d-flex gap-2">
                             <label class="align-self-center">Start</label>
                             <InputText @bind-Value="SearchSubmitModel.StartAddress" class="form-control" placeholder="Start Address" />

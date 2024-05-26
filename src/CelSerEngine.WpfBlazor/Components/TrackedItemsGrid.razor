@@ -1,4 +1,6 @@
 ﻿@using CelSerEngine.WpfBlazor.Components.Modals
 
+<ContextMenu Items="ContextMenuItems" Selector="#trackedItemsGrid .ag-row"></ContextMenu>
+
 <div id="trackedItemsGrid" class="@(ThemeManager.IsDark ? "ag-theme-quartz-dark" : "ag-theme-quartz") flex-grow-1"></div>
 <Modal @ref="ModalRef" />
