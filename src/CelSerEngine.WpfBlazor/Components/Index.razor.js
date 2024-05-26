@@ -71,18 +71,18 @@ export function focusSearchValueInput() {
     document.querySelector("#value-text-field").focus();
 }
 
-export function applyData(data) {
-    var x = document.getElementById("modulesSelect");
+export function updateModules(data) {
+    var modulesSelectEl = document.getElementById("modulesSelect");
 
-    while (x.length > 0) {
-        x.remove(0);
+    while (modulesSelectEl.length > 0) {
+        modulesSelectEl.remove(0);
     }
 
     for (var i = 0; i < data.length; i++) {
         var option = document.createElement("option");
         option.text = data[i];
         option.value = data[i];
-        x.add(option);
+        modulesSelectEl.add(option);
     }
     destroyModulesSelect();
     initModulesSelect();
@@ -90,7 +90,6 @@ export function applyData(data) {
 
 function destroyModulesSelect() {
     modulesSelect.destroy();
-    //document.querySelectorAll("#modulesSelect option").forEach(x => x.removeAttribute("id"));
 }
 
 function initModulesSelect() {

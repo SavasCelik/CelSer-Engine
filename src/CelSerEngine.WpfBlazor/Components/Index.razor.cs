@@ -229,7 +229,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     {
         var modules = NativeApi.GetProcessModules(EngineSession.SelectedProcessHandle);
         Modules = modules.Select(x => Path.GetFileName(x.Name)).Prepend("All").ToList();
-        await _module!.InvokeVoidAsync("applyData", Modules);
+        await _module!.InvokeVoidAsync("updateModules", Modules);
         StateHasChanged();
     }
 
