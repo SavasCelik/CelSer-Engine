@@ -17,7 +17,6 @@ internal class SearchSubmitModel
     public string SearchValue { get; set; } = string.Empty;
     public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
     public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
-    public string SelectedModule { get; set; } = "All";
 
     [IsIntPtr(MaxValuePropertyName = nameof(StopAddress))]
     public string StartAddress { get; set; } = IntPtr.Zero.ToString("X");
@@ -68,7 +67,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private ScanResultItemsGrid ScanResultItemsGridRef { get; set; } = default!;
     private TrackedItemsGrid TrackedItemsGridRef { get; set; } = default!;
     private SearchSubmitModel SearchSubmitModel { get; set; } = new();
-    private List<string> Modules { get; set; } = [];
+    private IList<ModuleInfo> Modules { get; set; } = [];
     private float ProgressBarValue { get; set; }
     private bool IsFirstScan { get; set; } = true;
     private bool IsScanning => ScanCancellationTokenSource != null;
@@ -232,10 +231,27 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     private async void UpdateModules()
     {
-        var modules = NativeApi.GetProcessModules(EngineSession.SelectedProcessHandle);
-        Modules = modules.Select(x => Path.GetFileName(x.Name)).Prepend("All").ToList();
-        await _module!.InvokeVoidAsync("updateModules", Modules);
+        Modules = NativeApi.GetProcessModules(EngineSession.SelectedProcessHandle);
+        var moduleNames = Modules.Select(x => Path.GetFileName(x.Name)).Prepend("All").ToList();
+        await _module!.InvokeVoidAsync("updateModules", moduleNames);
         StateHasChanged();
+    }
+
+    private void OnSelectedModuleChanged(ChangeEventArgs e)
+    {
+        var selectedModuleName = e.Value as string;
+
+        if (selectedModuleName == "All")
+        {
+            SearchSubmitModel.StartAddress = IntPtr.Zero.ToString("X");
+            SearchSubmitModel.StopAddress = IntPtr.MaxValue.ToString("X");
+
+            return;
+        }
+
+        var selectedModuleInfo = Modules.First(x => Path.GetFileName(x.Name) == selectedModuleName);
+        SearchSubmitModel.StartAddress = selectedModuleInfo.BaseAddress.ToString("X");
+        SearchSubmitModel.StopAddress = (selectedModuleInfo.BaseAddress + selectedModuleInfo.Size).ToString("X");
     }
 
     /// <inheritdoc />

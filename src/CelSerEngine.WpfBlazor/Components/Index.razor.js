@@ -81,8 +81,11 @@ export function updateModules(data) {
         option.value = data[i];
         modulesSelectEl.add(option);
     }
+
     destroyModulesSelect();
     initModulesSelect();
+    const event = new Event('change');
+    modulesSelectEl.dispatchEvent(event);
 }
 
 function destroyModulesSelect() {

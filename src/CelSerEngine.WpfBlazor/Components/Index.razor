@@ -87,7 +87,7 @@
                         <div>Memory Scan Options:</div>
                         <div class="d-flex gap-2">
                             <label for="modulesSelect" class="text-nowrap align-self-center" style="width: 72px">Module</label>
-                            <select id="modulesSelect" @bind="SearchSubmitModel.SelectedModule" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
+                            <select @onchange="OnSelectedModuleChanged" id="modulesSelect" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
                                 <option value="all">All</option>
                             </select>
                         </div>
