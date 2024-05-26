@@ -85,8 +85,9 @@
                 <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)" class="mt-4">
                     <div class="d-flex flex-column gap-2">
                         <div>Memory Scan Options:</div>
+
+                        @* modules select *@
                         <div class="d-flex gap-2">
-                            <label for="modulesSelect" class="text-nowrap align-self-center" style="width: 72px">Module</label>
                             <select @onchange="OnSelectedModuleChanged" id="modulesSelect" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || !IsFirstScan || IsScanning)">
                                 <option value="all">All</option>
                             </select>
