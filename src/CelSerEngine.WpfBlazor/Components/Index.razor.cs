@@ -100,6 +100,11 @@ public partial class Index : ComponentBase, IAsyncDisposable
         {
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Index.razor.js");
             await _module.InvokeVoidAsync("initIndex");
+
+            if (EngineSession.SelectedProcess != null)
+            {
+                UpdateModules();
+            }
         }
     }
 
