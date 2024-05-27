@@ -41,6 +41,11 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
                 Text = "Change Value",
                 OnClick = EventCallback.Factory.Create(this, OnChangeValueContextMenuClicked)
             },
+            new ContextMenuItem
+            {
+                Text = "Change Description",
+                OnClick = EventCallback.Factory.Create(this, OnChangeDescriptionContextMenuClicked)
+            },
         ];
     }
 
@@ -118,18 +123,21 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     private async Task OnChangeValueContextMenuClicked()
     {
-        var selectedIndexes = await _module!.InvokeAsync<int[]>("getSelectedRowIndexes");
-        var selectedTrackedItems = new TrackedItem[selectedIndexes.Length];
-
-        if (selectedIndexes.Length == 0)
-            return;
-
-        for (var i = 0; i < selectedIndexes.Length; i++)
-        {
-            selectedTrackedItems[i] = _trackedItems[selectedIndexes[i]];
-        }
-
+        var selectedTrackedItems = await GetSelectedTrackedItems();
         await ShowChangeValueModal(selectedTrackedItems);
+    }
+
+    private async Task OnChangeDescriptionContextMenuClicked()
+    {
+        var selectedTrackedItems = await GetSelectedTrackedItems();
+        await ShowChangeDescriptionModal(selectedTrackedItems);
+    }
+
+    private async Task<TrackedItem[]> GetSelectedTrackedItems()
+    {
+        var selectedIndexes = await _module!.InvokeAsync<int[]>("getSelectedRowIndexes");
+
+        return selectedIndexes.Select(x => _trackedItems[x]).ToArray();
     }
 
     [JSInvokable]
@@ -155,18 +163,15 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         }
         else if (columnName == nameof(TrackedItem.Description))
         {
-            var parameters = new Dictionary<string, object>
-            {
-                { nameof(ModalDescriptionChange.Description), selectedTrackedItem.Description },
-                { nameof(ModalDescriptionChange.DescriptionChanged), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItem)) },
-            };
-
-            await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
+            await ShowChangeDescriptionModal(selectedTrackedItem);
         }
     }
 
     private async Task ShowChangeValueModal(params TrackedItem[] selectedTrackedItems)
     {
+        if (selectedTrackedItems.Length == 0)
+            return;
+
         var parameters = new Dictionary<string, object>
         {
             { nameof(ModalValueChange.Value), selectedTrackedItems[0].Item.Value },
@@ -174,6 +179,20 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         };
 
         await ModalRef.ShowAsync<ModalValueChange>("Change Value", parameters);
+    }
+
+    private async Task ShowChangeDescriptionModal(params TrackedItem[] selectedTrackedItems)
+    {
+        if (selectedTrackedItems.Length == 0)
+            return;
+
+        var parameters = new Dictionary<string, object>
+        {
+            { nameof(ModalDescriptionChange.Description), selectedTrackedItems[0].Description },
+            { nameof(ModalDescriptionChange.DescriptionChanged), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItems)) },
+        };
+
+        await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
     }
 
     private async Task OnValueChangeRequested(string desiredValue, params TrackedItem[] trackedItems)
