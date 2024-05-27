@@ -46,6 +46,11 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
                 Text = "Change Description",
                 OnClick = EventCallback.Factory.Create(this, OnChangeDescriptionContextMenuClicked)
             },
+            new ContextMenuItem
+            {
+                Text = "Remove selected items",
+                OnClick = EventCallback.Factory.Create(this, OnRemoveSelectedItemsContextMenuClicked)
+            },
         ];
     }
 
@@ -215,6 +220,18 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         foreach (var trackedItem in trackedItems)
         {
             trackedItem.Description = desiredDescription;
+        }
+
+        await RefreshDataAsync();
+    }
+
+    private async Task OnRemoveSelectedItemsContextMenuClicked()
+    {
+        var selectedIndexes = await _module!.InvokeAsync<int[]>("getSelectedRowIndexes");
+        
+        foreach (var index in selectedIndexes)
+        {
+            _trackedItems.RemoveAt(index);
         }
 
         await RefreshDataAsync();
