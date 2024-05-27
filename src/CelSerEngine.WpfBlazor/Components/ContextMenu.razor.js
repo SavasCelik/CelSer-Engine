@@ -1,7 +1,6 @@
 ﻿let contextMenuById = new Map();
-const appWidth = document.querySelector("#app").clientWidth - 10;
-const appHeight = document.querySelector("#app").clientHeight - 10;
 let isContextMenuOpen = false;
+const appContainer = document.querySelector("#app");
 
 export function init(selector, ctxMenuId) {
     const contextMenu = document.getElementById(ctxMenuId);
@@ -14,8 +13,11 @@ export function init(selector, ctxMenuId) {
             return;
         }
 
+        const appWidth = appContainer.clientWidth - 10;
+        const appHeight = appContainer.clientHeight - 10;
         event.preventDefault();
         hideContextMenu();
+        contextMenu.style.display = "block";
 
         if (event.pageX + contextMenu.clientWidth > appWidth) {
             contextMenu.style.left = appWidth - contextMenu.clientWidth + "px";
@@ -30,8 +32,6 @@ export function init(selector, ctxMenuId) {
         else {
             contextMenu.style.top = event.pageY + "px";
         }
-
-        contextMenu.style.display = "block";
         isContextMenuOpen = true;
     });
 
