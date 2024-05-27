@@ -51,6 +51,11 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
                 Text = "Remove selected items",
                 OnClick = EventCallback.Factory.Create(this, OnRemoveSelectedItemsContextMenuClicked)
             },
+            new ContextMenuItem
+            {
+                Text = "Toggle selected items",
+                OnClick = EventCallback.Factory.Create(this, OnToggleFreezeSelectedItemsContextMenuClicked)
+            },
         ];
     }
 
@@ -232,6 +237,19 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         foreach (var index in selectedIndexes)
         {
             _trackedItems.RemoveAt(index);
+        }
+
+        await RefreshDataAsync();
+    }
+
+    private async Task OnToggleFreezeSelectedItemsContextMenuClicked()
+    {
+        var selectedTrackedItems = await GetSelectedTrackedItems();
+        var areAllFrozen = selectedTrackedItems.All(x => x.IsFrozen);
+
+        foreach (var item in selectedTrackedItems)
+        {
+            item.IsFrozen = !areAllFrozen;
         }
 
         await RefreshDataAsync();
