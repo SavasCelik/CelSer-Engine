@@ -1,6 +1,8 @@
 ﻿<ul class="dropdown-menu" id="@Id" style="box-shadow: 4px 4px 3px -1px rgba(0, 0, 0, 0.5);">
     @foreach (var item in Items)
     {
-        <li><a class="dropdown-item" href="#" @onclick="item.OnClick">@item.Text</a></li>
+        <li>
+            <button class="dropdown-item" @onclick="item.OnClick">@item.Text</button>
+        </li>
     }
 </ul>

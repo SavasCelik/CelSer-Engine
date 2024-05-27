@@ -196,9 +196,12 @@ fieldset:disabled {
     min-width: 17px !important;
 }
 
+button {
+    cursor: default !important;
+}
+
 .btn {
     width: 90px;
-    cursor: default !important;
 }
 
 .btn-icon {
