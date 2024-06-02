@@ -2,9 +2,14 @@
 
 <div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-2 m-2">
-        <div class="form-group has-search" style="width: 200px;">
-            <span class="bi bi-search form-control-feedback"></span>
-            <input id="filter-text-field" type="search" class="form-control" placeholder="Search Process">
+        <div class="d-flex gap-2 justify-content-between">
+            <div class="form-group has-search" style="width: 200px;">
+                <span class="bi bi-search form-control-feedback"></span>
+                <input id="filter-text-field" type="search" class="form-control" placeholder="Search Process">
+            </div>
+            <button @onclick="RefreshProcessList" class="btn btn-icon btn-dark" title="Refresh" style="width: 29px;">
+                <i class="bi bi-arrow-clockwise" style="font-size: 15px;"></i>
+            </button>
         </div>
         <div id="myGrid" class="@(ThemeManager.IsDark ? "ag-theme-quartz-dark" : "ag-theme-quartz") flex-grow-1" style="height: 200px"></div>
     </div>

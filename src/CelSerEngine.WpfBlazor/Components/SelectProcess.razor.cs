@@ -49,6 +49,15 @@ public partial class SelectProcess : ComponentBase, IDisposable
         }
     }
 
+    private void RefreshProcessList()
+    {
+        _processes = Process.GetProcesses()
+            .OrderBy(p => p.ProcessName)
+            .Select(p => new ProcessAdapter(p))
+            .Where(pa => pa.MainModule != null)
+            .ToList();
+    }
+
     [JSInvokable]
     public void SetSelectedProcessById(int processId)
     {
