@@ -13,7 +13,7 @@ namespace CelSerEngine.WpfBlazor.Components;
 
 internal class SearchSubmitModel
 {
-    [RequiredIf(nameof(SelectedScanCompareType), ScanCompareType.ValueBetween, negate: true, ErrorMessage = "Provide a value to scan for")]
+    [RequiredIf(nameof(IsSimpleScan), true, ErrorMessage = "Provide a value to scan for")]
     public string SearchValue { get; set; } = string.Empty;
 
     [RequiredIf(nameof(SelectedScanCompareType), ScanCompareType.ValueBetween, ErrorMessage = "Provide the start value of the range")]
@@ -34,6 +34,7 @@ internal class SearchSubmitModel
     public MemoryScanFilterOptions Executable { get; set; } = MemoryScanFilterOptions.Dont_Care;
     public MemoryScanFilterOptions CopyOnWrite { get; set; } = MemoryScanFilterOptions.No;
     public MemoryType[] MemoryTypes { get; set; } = [MemoryType.Image, MemoryType.Private];
+    public bool IsSimpleScan => SelectedScanCompareType != ScanCompareType.ValueBetween;
 }
 
 internal enum MemoryScanFilterOptions

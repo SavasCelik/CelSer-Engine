@@ -6,7 +6,7 @@ namespace CelSerEngine.WpfBlazor.Models;
 /// Provides conditional validation based on related property value.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-public class RequiredIfAttribute(string otherProperty, object targetValue, bool negate = false) : ValidationAttribute
+public class RequiredIfAttribute(string otherProperty, object targetValue) : ValidationAttribute
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
@@ -14,7 +14,7 @@ public class RequiredIfAttribute(string otherProperty, object targetValue, bool 
                                                   .GetProperty(otherProperty)?
                                                   .GetValue(validationContext.ObjectInstance);
 
-        if (otherPropertyValue is null || negate && otherPropertyValue.Equals(targetValue) || !negate && !otherPropertyValue.Equals(targetValue))
+        if (otherPropertyValue is null || !otherPropertyValue.Equals(targetValue))
         {
             return ValidationResult.Success;
         }
