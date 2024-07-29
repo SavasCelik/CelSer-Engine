@@ -86,7 +86,7 @@ public class NewPointerScannerTests
             .Setup(x => x.GetStackStart(It.IsAny<SafeProcessHandle>(), It.IsAny<int>(), It.IsAny<ModuleInfo>()))
             .Returns((SafeProcessHandle hProcess, int threadNr, ModuleInfo? mi) => stackStarts[threadNr]);
         stubNativeApi
-            .Setup(x => x.EnumerateMemoryRegions(It.IsAny<SafeProcessHandle>()))
+            .Setup(x => x.EnumerateMemoryRegions(It.IsAny<SafeProcessHandle>(), null, null))
             .Returns(() => mbis.ToList());
         stubNativeApi
             .Setup(x => x.TryReadVirtualMemory(It.IsAny<SafeProcessHandle>(), It.IsAny<IntPtr>(), It.IsAny<uint>(), It.IsAny<byte[]>()))
