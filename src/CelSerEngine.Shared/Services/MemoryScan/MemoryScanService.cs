@@ -93,15 +93,15 @@ public class MemoryScanService : IMemoryScanService
         var filteredMemorySegments = await Task.Run(() =>
         {
             _nativeApi.UpdateAddresses(processHandle, memorySegments, token);
-
             var passedMemorySegments = new List<IMemorySegment>();
+            var valueComparer = new ValueComparer(scanConstraint);
 
             for (var i = 0; i < memorySegments.Count; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
 
-                if (ValueComparer.MeetsTheScanConstraint(memorySegments[i].Value, scanConstraint.UserInput, scanConstraint))
+                if (valueComparer.MeetsTheScanConstraint(memorySegments[i].Value))
                     passedMemorySegments.Add(memorySegments[i]);
             }
 

@@ -8,45 +8,67 @@ public class ValueComparer : IScanComparer
 {
     private readonly ScanConstraint _scanConstraint;
     private string _userInput;
+    private string _userInputToValue;
     private readonly int _sizeOfT;
 
     public ValueComparer(ScanConstraint scanConstraint)
     {
         _scanConstraint = scanConstraint;
-        _userInput = scanConstraint.UserInput;
+        
+        if (scanConstraint.ScanCompareType == ScanCompareType.ValueBetween)
+        {
+            var hyphenIndex = scanConstraint.UserInput.IndexOf('-');
+            if (hyphenIndex == -1)
+            {
+                throw new ArgumentException("Invalid input for ValueBetween scan type");
+            }
+
+            var userInputFrom = scanConstraint.UserInput[..hyphenIndex];
+            var userInputTo = scanConstraint.UserInput[(hyphenIndex + 1)..];
+            _userInput = userInputFrom;
+            _userInputToValue = userInputTo;
+        }
+        else
+        {
+            _userInput = scanConstraint.UserInput;
+        }
+
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
     }
 
-    public static bool MeetsTheScanConstraint(string lhs, string rhs, ScanConstraint scanConstraint)
+    public bool MeetsTheScanConstraint(string value)
     {
-        return scanConstraint.ScanDataType switch
+        return _scanConstraint.ScanDataType switch
         {
-            ScanDataType.Short => MeetsTheScanConstraint<short>(lhs, rhs, scanConstraint),
-            ScanDataType.Integer => MeetsTheScanConstraint<int>(lhs, rhs, scanConstraint),
-            ScanDataType.Float => MeetsTheScanConstraint<float>(lhs, rhs, scanConstraint),
-            ScanDataType.Double => MeetsTheScanConstraint<double>(lhs, rhs, scanConstraint),
-            ScanDataType.Long => MeetsTheScanConstraint<long>(lhs, rhs, scanConstraint),
-            _ => throw new NotImplementedException($"Parsing string to Type: {scanConstraint.ScanDataType} not implemented")
+            ScanDataType.Short => MeetsTheScanConstraint<short>(value),
+            ScanDataType.Integer => MeetsTheScanConstraint<int>(value),
+            ScanDataType.Float => MeetsTheScanConstraint<float>(value),
+            ScanDataType.Double => MeetsTheScanConstraint<double>(value),
+            ScanDataType.Long => MeetsTheScanConstraint<long>(value),
+            _ => throw new NotImplementedException($"Parsing string to Type: {_scanConstraint.ScanDataType} not implemented")
         };
     }
 
-    public static bool MeetsTheScanConstraint<T>(string lhs, string rhs, ScanConstraint scanConstraint)
+    public bool MeetsTheScanConstraint<T>(string value)
         where T : INumber<T>
     {
-        if (!lhs.TryParseNumber<T>(out var lhsValue) || !rhs.TryParseNumber<T>(out var rhsValue))
+        if (!value.TryParseNumber<T>(out var valueParsed))
             return false;
 
-        return MeetsTheScanConstraint(lhsValue, rhsValue, scanConstraint);
+        return MeetsTheScanConstraint(valueParsed);
     }
 
-    public static bool MeetsTheScanConstraint<T>(T lhs, T rhs, ScanConstraint scanConstraint) 
+    public bool MeetsTheScanConstraint<T>(T valueParsed) 
         where T : INumber<T>
     {
-        return scanConstraint.ScanCompareType switch
+        var userInputParsed = _userInput.ParseNumber<T>();
+
+        return _scanConstraint.ScanCompareType switch
         {
-            ScanCompareType.ExactValue => lhs == rhs,
-            ScanCompareType.SmallerThan => lhs < rhs,
-            ScanCompareType.BiggerThan => lhs > rhs,
+            ScanCompareType.ExactValue => valueParsed == userInputParsed,
+            ScanCompareType.SmallerThan => valueParsed < userInputParsed,
+            ScanCompareType.BiggerThan => valueParsed > userInputParsed,
+            ScanCompareType.ValueBetween => _userInputToValue.TryParseNumber<T>(out var userInputToValueParsed) && valueParsed >= userInputParsed && valueParsed <= userInputToValueParsed,
             _ => throw new NotImplementedException("Not implemented")
         };
     }
@@ -72,7 +94,7 @@ public class ValueComparer : IScanComparer
                 }
                 var memoryValue = regionBytesAsSpan.Slice(i, _sizeOfT).ConvertToString(_scanConstraint.ScanDataType);
 
-                if (MeetsTheScanConstraint(memoryValue, _userInput, _scanConstraint))
+                if (MeetsTheScanConstraint(memoryValue))
                 {
                     matchingProcessMemories.Add(new MemorySegment(virtualMemoryRegion.BaseAddress, i, memoryValue, _scanConstraint.ScanDataType));
                 }

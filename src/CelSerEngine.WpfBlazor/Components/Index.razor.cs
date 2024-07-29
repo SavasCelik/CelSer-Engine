@@ -13,8 +13,15 @@ namespace CelSerEngine.WpfBlazor.Components;
 
 internal class SearchSubmitModel
 {
-    [Required(AllowEmptyStrings = false, ErrorMessage = "Provide a value to scan for")]
+    [RequiredIf(nameof(SelectedScanCompareType), ScanCompareType.ValueBetween, negate: true, ErrorMessage = "Provide a value to scan for")]
     public string SearchValue { get; set; } = string.Empty;
+
+    [RequiredIf(nameof(SelectedScanCompareType), ScanCompareType.ValueBetween, ErrorMessage = "Provide the start value of the range")]
+    public string FromValue { get; set; } = string.Empty;
+
+    [RequiredIf(nameof(SelectedScanCompareType), ScanCompareType.ValueBetween, ErrorMessage = "Provide the end value of the range")]
+    public string ToValue { get; set; } = string.Empty;
+
     public ScanDataType SelectedScanDataType { get; set; } = ScanDataType.Integer;
     public ScanCompareType SelectedScanCompareType { get; set; } = ScanCompareType.ExactValue;
 
@@ -128,7 +135,14 @@ public partial class Index : ComponentBase, IAsyncDisposable
         ScanCancellationTokenSource = new CancellationTokenSource();
         var token = ScanCancellationTokenSource.Token;
         await ScanResultItemsGridRef.ClearScanResultItemsAsync();
-        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue)
+        var userInput = SearchSubmitModel.SearchValue;
+        
+        if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween)
+        {
+            userInput = $"{SearchSubmitModel.FromValue}-{SearchSubmitModel.ToValue}";
+        }
+
+        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, userInput)
         {
             StartAddress = IntPtr.Parse(SearchSubmitModel.StartAddress, System.Globalization.NumberStyles.HexNumber),
             StopAddress = IntPtr.Parse(SearchSubmitModel.StopAddress, System.Globalization.NumberStyles.HexNumber)
@@ -200,7 +214,14 @@ public partial class Index : ComponentBase, IAsyncDisposable
         ScanCancellationTokenSource = new CancellationTokenSource();
         var token = ScanCancellationTokenSource.Token;
         await ScanResultItemsGridRef.ShowScanningOverlayAsync();
-        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, SearchSubmitModel.SearchValue);
+        var userInput = SearchSubmitModel.SearchValue;
+
+        if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween)
+        {
+            userInput = $"{SearchSubmitModel.FromValue}-{SearchSubmitModel.ToValue}";
+        }
+
+        var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, userInput);
         var result = await MemoryScanService.FilterMemorySegmentsByScanConstraintAsync(
             ScanResultItemsGridRef.GetScanResultItems().Cast<IMemorySegment>().ToList(),
             scanConstraint,

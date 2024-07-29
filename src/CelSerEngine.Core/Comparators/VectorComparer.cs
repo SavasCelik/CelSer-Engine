@@ -8,12 +8,32 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
 {
     private readonly ScanConstraint _scanConstraint;
     private readonly Vector<T> _userInputAsVector;
+    private readonly Vector<T> _userInputToValueAsVector;
     private readonly int _sizeOfT;
 
     public VectorComparer(ScanConstraint scanConstraint)
     {
         _scanConstraint = scanConstraint;
-        _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseNumber<T>());
+
+        if (scanConstraint.ScanCompareType == ScanCompareType.ValueBetween)
+        {
+            var hyphenIndex = scanConstraint.UserInput.IndexOf('-');
+            if (hyphenIndex == -1)
+            {
+                throw new ArgumentException("Invalid input for ValueBetween scan type");
+            }
+
+            var userInputFrom = scanConstraint.UserInput[..hyphenIndex];
+            var userInputTo = scanConstraint.UserInput[(hyphenIndex + 1)..];
+
+            _userInputAsVector = new Vector<T>(userInputFrom.ParseNumber<T>());
+            _userInputToValueAsVector = new Vector<T>(userInputTo.ParseNumber<T>());
+        }
+        else
+        {
+            _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseNumber<T>());
+        }
+
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
     }
 
@@ -24,6 +44,8 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
             ScanCompareType.ExactValue => Vector.AsVectorByte(Vector.Equals(new Vector<T>(bytes), _userInputAsVector)),
             ScanCompareType.SmallerThan => Vector.AsVectorByte(Vector.LessThan(new Vector<T>(bytes), _userInputAsVector)),
             ScanCompareType.BiggerThan => Vector.AsVectorByte(Vector.GreaterThan(new Vector<T>(bytes), _userInputAsVector)),
+            ScanCompareType.ValueBetween => Vector.AsVectorByte(
+                Vector.BitwiseAnd(Vector.GreaterThanOrEqual(new Vector<T>(bytes), _userInputAsVector), Vector.LessThanOrEqual(new Vector<T>(bytes), _userInputToValueAsVector))),
             _ => throw new NotImplementedException("Not implemented")
         };
     }
