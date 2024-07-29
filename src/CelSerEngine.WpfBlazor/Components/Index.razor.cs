@@ -193,7 +193,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
         var results = await MemoryScanService.ScanProcessMemoryAsync(scanConstraint, EngineSession.SelectedProcessHandle, _progressBarUpdater, token);
         _progressBarUpdater.Report(100);
-        await ScanResultItemsGridRef.AddScanResultItemsAsync(results.Select(x => new ScanResultItem(x)));
+        await ScanResultItemsGridRef.AddScanResultItemsAsync(results.Select(x => new MemorySegment(x)));
         ProgressBarValue = 0;
         ScanCancellationTokenSource = null;
         IsFirstScan = false;
@@ -231,7 +231,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
             token);
         _progressBarUpdater.Report(100);
         await ScanResultItemsGridRef.ClearScanResultItemsAsync(false);
-        await ScanResultItemsGridRef.AddScanResultItemsAsync(result.Select(x => new ScanResultItem(x)));
+        await ScanResultItemsGridRef.AddScanResultItemsAsync(result.Select(x => new MemorySegment(x)));
         ProgressBarValue = 0;
         ScanCancellationTokenSource = null;
     }
