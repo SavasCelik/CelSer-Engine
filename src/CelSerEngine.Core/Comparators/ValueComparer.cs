@@ -81,6 +81,8 @@ public class ValueComparer : IScanComparer
             ScanCompareType.UnknownInitialValue => true,
             ScanCompareType.IncreasedValue => valueParsed > initialValueParsed!,
             ScanCompareType.IncreasedValueBy => valueParsed == initialValueParsed! + userInputParsed,
+            ScanCompareType.DecreasedValue => valueParsed < initialValueParsed!,
+            ScanCompareType.DecreasedValueBy => valueParsed == initialValueParsed! - userInputParsed,
             _ => throw new NotImplementedException("Not implemented")
         };
     }

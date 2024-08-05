@@ -18,4 +18,8 @@ public enum ScanCompareType
     IncreasedValue,
     [Display(Name = "Increased value by...")]
     IncreasedValueBy,
+    [Display(Name = "Decreased value")]
+    DecreasedValue,
+    [Display(Name = "Decreased value by...")]
+    DecreasedValueBy,
 }
