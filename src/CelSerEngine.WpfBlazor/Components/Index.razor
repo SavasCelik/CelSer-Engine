@@ -40,27 +40,30 @@
                 <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)">
                     <div class="d-flex flex-column gap-2 mt-4">
 
-                        @if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween) {
-                            <div class="form-group has-search">
-                                <span class="bi bi-search form-control-feedback"></span>
-                                <InputText @bind-Value="SearchSubmitModel.FromValue" id="value-text-field" type="search" class="form-control" placeholder="From" />
-                                <ValidationMessage For="() => SearchSubmitModel.FromValue" />
-                            </div>
+                        @* value input field *@
+                        <div style="height: 30px;">
+                            @if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween) {
+                                <div class="form-group has-search">
+                                    <span class="bi bi-search form-control-feedback"></span>
+                                    <InputText @bind-Value="SearchSubmitModel.FromValue" id="value-text-field" type="search" class="form-control" placeholder="From" />
+                                    <ValidationMessage For="() => SearchSubmitModel.FromValue" />
+                                </div>
 
-                            <div class="form-group has-search">
-                                <span class="bi bi-search form-control-feedback"></span>
-                                <InputText @bind-Value="SearchSubmitModel.ToValue" type="search" class="form-control" placeholder="To" />
-                                <ValidationMessage For="() => SearchSubmitModel.ToValue" />
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="form-group has-search">
-                                <span class="bi bi-search form-control-feedback"></span>
-                                <InputText @bind-Value="SearchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
-                                <ValidationMessage For="() => SearchSubmitModel.SearchValue" />
-                            </div>
-                        }
+                                <div class="form-group has-search">
+                                    <span class="bi bi-search form-control-feedback"></span>
+                                    <InputText @bind-Value="SearchSubmitModel.ToValue" type="search" class="form-control" placeholder="To" />
+                                    <ValidationMessage For="() => SearchSubmitModel.ToValue" />
+                                </div>
+                            }
+                            else if (SearchSubmitModel.IsSimpleScan)
+                            {
+                                <div class="form-group has-search">
+                                    <span class="bi bi-search form-control-feedback"></span>
+                                    <InputText @bind-Value="SearchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
+                                    <ValidationMessage For="() => SearchSubmitModel.SearchValue" />
+                                </div>
+                            }
+                        </div>
 
                         @* buttons *@
                         <div class="d-flex gap-1 mb-3 @(IsScanning ? "invisible" : "")">

@@ -34,7 +34,8 @@ internal class SearchSubmitModel
     public MemoryScanFilterOptions Executable { get; set; } = MemoryScanFilterOptions.Dont_Care;
     public MemoryScanFilterOptions CopyOnWrite { get; set; } = MemoryScanFilterOptions.No;
     public MemoryType[] MemoryTypes { get; set; } = [MemoryType.Image, MemoryType.Private];
-    public bool IsSimpleScan => SelectedScanCompareType is not ScanCompareType.ValueBetween and not ScanCompareType.UnknownInitialValue;
+    private ISet<ScanCompareType> _noValueNeededScanTypes = new HashSet<ScanCompareType>([ScanCompareType.UnknownInitialValue, ScanCompareType.IncreasedValue, ScanCompareType.DecreasedValue, ScanCompareType.ChangedValue, ScanCompareType.UnchangedValue]);
+    public bool IsSimpleScan => SelectedScanCompareType != ScanCompareType.ValueBetween && !_noValueNeededScanTypes.Contains(SelectedScanCompareType);
 }
 
 internal enum MemoryScanFilterOptions
