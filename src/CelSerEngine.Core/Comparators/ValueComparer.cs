@@ -28,6 +28,10 @@ public class ValueComparer : IScanComparer
             _userInput = userInputFrom;
             _userInputToValue = userInputTo;
         }
+        else if (scanConstraint.ScanCompareType == ScanCompareType.UnknownInitialValue)
+        {
+            _userInput = "Does not matter";
+        }
         else
         {
             _userInput = scanConstraint.UserInput;
