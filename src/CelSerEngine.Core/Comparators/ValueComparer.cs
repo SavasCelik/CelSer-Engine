@@ -40,29 +40,34 @@ public class ValueComparer : IScanComparer
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();
     }
 
-    public bool MeetsTheScanConstraint(string value)
+    public bool MeetsTheScanConstraint(string value, string? initialValue = null)
     {
         return _scanConstraint.ScanDataType switch
         {
-            ScanDataType.Short => MeetsTheScanConstraint<short>(value),
-            ScanDataType.Integer => MeetsTheScanConstraint<int>(value),
-            ScanDataType.Float => MeetsTheScanConstraint<float>(value),
-            ScanDataType.Double => MeetsTheScanConstraint<double>(value),
-            ScanDataType.Long => MeetsTheScanConstraint<long>(value),
+            ScanDataType.Short => MeetsTheScanConstraint<short>(value, initialValue),
+            ScanDataType.Integer => MeetsTheScanConstraint<int>(value, initialValue),
+            ScanDataType.Float => MeetsTheScanConstraint<float>(value, initialValue),
+            ScanDataType.Double => MeetsTheScanConstraint<double>(value, initialValue),
+            ScanDataType.Long => MeetsTheScanConstraint<long>(value, initialValue),
             _ => throw new NotImplementedException($"Parsing string to Type: {_scanConstraint.ScanDataType} not implemented")
         };
     }
 
-    public bool MeetsTheScanConstraint<T>(string value)
+    public bool MeetsTheScanConstraint<T>(string value, string? initialValue)
         where T : INumber<T>
     {
         if (!value.TryParseNumber<T>(out var valueParsed))
             return false;
 
-        return MeetsTheScanConstraint(valueParsed);
+        var initialValueParsed = default(T?);
+
+        if (initialValue != null && !initialValue.TryParseNumber<T>(out initialValueParsed))
+            return false;
+
+        return MeetsTheScanConstraint(valueParsed, initialValueParsed);
     }
 
-    public bool MeetsTheScanConstraint<T>(T valueParsed) 
+    public bool MeetsTheScanConstraint<T>(T valueParsed, T? initialValueParsed) 
         where T : INumber<T>
     {
         var userInputParsed = _userInput.ParseNumber<T>();
@@ -74,6 +79,7 @@ public class ValueComparer : IScanComparer
             ScanCompareType.BiggerThan => valueParsed > userInputParsed,
             ScanCompareType.ValueBetween => _userInputToValue.TryParseNumber<T>(out var userInputToValueParsed) && valueParsed >= userInputParsed && valueParsed <= userInputToValueParsed,
             ScanCompareType.UnknownInitialValue => true,
+            ScanCompareType.IncreasedValue => valueParsed > initialValueParsed!,
             _ => throw new NotImplementedException("Not implemented")
         };
     }
