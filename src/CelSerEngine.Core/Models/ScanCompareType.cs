@@ -22,4 +22,8 @@ public enum ScanCompareType
     DecreasedValue,
     [Display(Name = "Decreased value by...")]
     DecreasedValueBy,
+    [Display(Name = "Changed value")]
+    ChangedValue,
+    [Display(Name = "Unchanged value")]
+    UnchangedValue,
 }
