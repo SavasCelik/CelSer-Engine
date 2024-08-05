@@ -34,7 +34,7 @@ internal class SearchSubmitModel
     public MemoryScanFilterOptions Executable { get; set; } = MemoryScanFilterOptions.Dont_Care;
     public MemoryScanFilterOptions CopyOnWrite { get; set; } = MemoryScanFilterOptions.No;
     public MemoryType[] MemoryTypes { get; set; } = [MemoryType.Image, MemoryType.Private];
-    public bool IsSimpleScan => SelectedScanCompareType != ScanCompareType.ValueBetween;
+    public bool IsSimpleScan => SelectedScanCompareType is not ScanCompareType.ValueBetween and not ScanCompareType.UnknownInitialValue;
 }
 
 internal enum MemoryScanFilterOptions

@@ -69,6 +69,7 @@ public class ValueComparer : IScanComparer
             ScanCompareType.SmallerThan => valueParsed < userInputParsed,
             ScanCompareType.BiggerThan => valueParsed > userInputParsed,
             ScanCompareType.ValueBetween => _userInputToValue.TryParseNumber<T>(out var userInputToValueParsed) && valueParsed >= userInputParsed && valueParsed <= userInputToValueParsed,
+            ScanCompareType.UnknownInitialValue => true,
             _ => throw new NotImplementedException("Not implemented")
         };
     }
