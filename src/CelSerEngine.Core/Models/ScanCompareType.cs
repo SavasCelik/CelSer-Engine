@@ -16,4 +16,6 @@ public enum ScanCompareType
     UnknownInitialValue,
     [Display(Name = "Increased value")]
     IncreasedValue,
+    [Display(Name = "Increased value by...")]
+    IncreasedValueBy,
 }

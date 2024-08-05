@@ -80,6 +80,7 @@ public class ValueComparer : IScanComparer
             ScanCompareType.ValueBetween => _userInputToValue.TryParseNumber<T>(out var userInputToValueParsed) && valueParsed >= userInputParsed && valueParsed <= userInputToValueParsed,
             ScanCompareType.UnknownInitialValue => true,
             ScanCompareType.IncreasedValue => valueParsed > initialValueParsed!,
+            ScanCompareType.IncreasedValueBy => valueParsed == initialValueParsed! + userInputParsed,
             _ => throw new NotImplementedException("Not implemented")
         };
     }
