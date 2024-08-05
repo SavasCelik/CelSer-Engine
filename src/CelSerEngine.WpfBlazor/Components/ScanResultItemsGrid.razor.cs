@@ -1,4 +1,5 @@
-﻿using CelSerEngine.Core.Native;
+﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Native;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 
@@ -15,8 +16,8 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
     [Inject]
     private INativeApi NativeApi { get; set; } = default!;
 
-    private VirtualizedAgGrid<ScanResultItem> VirtualizedAgGridRef { get; set; } = default!;
-    private List<ScanResultItem> ScanResultItems { get; set; }
+    private VirtualizedAgGrid<MemorySegment> VirtualizedAgGridRef { get; set; } = default!;
+    private List<MemorySegment> ScanResultItems { get; set; }
     private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
 
     private bool _updaterStarted;
@@ -36,7 +37,7 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
         ];
     }
 
-    public async Task AddScanResultItemsAsync(IEnumerable<ScanResultItem> items)
+    public async Task AddScanResultItemsAsync(IEnumerable<MemorySegment> items)
     {
         ScanResultItems.AddRange(items);
         await VirtualizedAgGridRef.ApplyDataAsync();
@@ -70,12 +71,12 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
         await VirtualizedAgGridRef.ShowScanningOverlayAsync();
     }
 
-    public IEnumerable<ScanResultItem> GetScanResultItems()
+    public IEnumerable<MemorySegment> GetScanResultItems()
     {
         return ScanResultItems;
     }
 
-    private async Task OnScanResultItemDoubleClicked(ScanResultItem scanResultItem)
+    private async Task OnScanResultItemDoubleClicked(MemorySegment scanResultItem)
     {
         await TrackedItemsGridRef.AddTrackedItem(new TrackedItem(scanResultItem));
     }

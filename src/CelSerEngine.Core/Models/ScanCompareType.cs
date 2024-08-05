@@ -13,5 +13,17 @@ public enum ScanCompareType
     [Display(Name = "Value between...")]
     ValueBetween,
     [Display(Name = "Unknown initial value")]
-    UnknownInitialValue
+    UnknownInitialValue,
+    [Display(Name = "Increased value")]
+    IncreasedValue,
+    [Display(Name = "Increased value by...")]
+    IncreasedValueBy,
+    [Display(Name = "Decreased value")]
+    DecreasedValue,
+    [Display(Name = "Decreased value by...")]
+    DecreasedValueBy,
+    [Display(Name = "Changed value")]
+    ChangedValue,
+    [Display(Name = "Unchanged value")]
+    UnchangedValue,
 }

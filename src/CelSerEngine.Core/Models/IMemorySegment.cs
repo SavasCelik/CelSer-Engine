@@ -6,5 +6,6 @@ public interface IMemorySegment
     public int BaseOffset { get; set; }
     public IntPtr Address { get; }
     public string Value { get; set; }
+    public string InitialValue { get; set; }
     public ScanDataType ScanDataType { get; set; }
 }

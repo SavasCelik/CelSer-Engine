@@ -101,7 +101,7 @@ public class MemoryScanService : IMemoryScanService
                 if (token.IsCancellationRequested)
                     break;
 
-                if (valueComparer.MeetsTheScanConstraint(memorySegments[i].Value))
+                if (valueComparer.MeetsTheScanConstraint(memorySegments[i].Value, memorySegments[i].InitialValue))
                     passedMemorySegments.Add(memorySegments[i]);
             }
 

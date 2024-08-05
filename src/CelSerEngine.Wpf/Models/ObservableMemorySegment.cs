@@ -18,6 +18,7 @@ public partial class ObservableMemorySegment : ObservableObject, IMemorySegment
     private string _value;
     public IntPtr Address => BaseAddress + BaseOffset;
     public ScanDataType ScanDataType { get; set; }
+    public string InitialValue { get; set; }
     public virtual string AddressDisplayString { get; set; }
 
     public ObservableMemorySegment(IntPtr baseAddress, int baseOffset, string value, ScanDataType scanDataType)
@@ -25,6 +26,7 @@ public partial class ObservableMemorySegment : ObservableObject, IMemorySegment
         _baseAddress = baseAddress;
         _baseOffset = baseOffset;
         _value = value;
+        InitialValue = value;
         _memory = Array.Empty<byte>();
         ScanDataType = scanDataType;
         AddressDisplayString = Address.ToString("X");
