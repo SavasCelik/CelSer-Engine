@@ -29,6 +29,10 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
             _userInputAsVector = new Vector<T>(userInputFrom.ParseNumber<T>());
             _userInputToValueAsVector = new Vector<T>(userInputTo.ParseNumber<T>());
         }
+        else if (scanConstraint.ScanCompareType == ScanCompareType.UnknownInitialValue)
+        {
+            _userInputAsVector = Vector<T>.Zero;
+        }
         else
         {
             _userInputAsVector = new Vector<T>(scanConstraint.UserInput.ParseNumber<T>());
@@ -46,6 +50,7 @@ public class VectorComparer<T> : IScanComparer where T : struct, INumber<T>
             ScanCompareType.BiggerThan => Vector.AsVectorByte(Vector.GreaterThan(new Vector<T>(bytes), _userInputAsVector)),
             ScanCompareType.ValueBetween => Vector.AsVectorByte(
                 Vector.BitwiseAnd(Vector.GreaterThanOrEqual(new Vector<T>(bytes), _userInputAsVector), Vector.LessThanOrEqual(new Vector<T>(bytes), _userInputToValueAsVector))),
+            ScanCompareType.UnknownInitialValue => Vector<byte>.AllBitsSet,
             _ => throw new NotImplementedException("Not implemented")
         };
     }
