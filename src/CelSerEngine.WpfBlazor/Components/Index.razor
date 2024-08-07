@@ -81,7 +81,7 @@
                         <div class="d-flex gap-2">
                             <label for="scanCompareType" class="text-nowrap align-self-center" style="width: 72px">Scan Type</label>
                             <select id="scanCompareType" @bind="SearchSubmitModel.SelectedScanCompareType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)">
-                                @foreach (var item in Enum.GetValues<ScanCompareType>())
+                                @foreach (var item in AvailableScanCompareTypes)
                                 {
                                     <option value="@item">@item.GetDisplayName()</option>
                                 }

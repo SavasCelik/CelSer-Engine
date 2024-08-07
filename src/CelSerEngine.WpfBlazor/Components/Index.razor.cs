@@ -81,6 +81,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private bool IsFirstScan { get; set; } = true;
     private bool IsScanning => ScanCancellationTokenSource != null;
     private CancellationTokenSource? ScanCancellationTokenSource { get; set; }
+    private ScanCompareType[] AvailableScanCompareTypes { get; set; } = [ScanCompareType.ExactValue, ScanCompareType.BiggerThan, ScanCompareType.SmallerThan, ScanCompareType.ValueBetween, ScanCompareType.UnknownInitialValue];
 
     private IJSObjectReference? _module;
     private readonly IProgress<float> _progressBarUpdater;
@@ -197,6 +198,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         await ScanResultItemsGridRef.AddScanResultItemsAsync(results.Select(x => new MemorySegment(x)));
         ProgressBarValue = 0;
         ScanCancellationTokenSource = null;
+        AvailableScanCompareTypes = Enum.GetValues<ScanCompareType>().Where(x => x != ScanCompareType.UnknownInitialValue).ToArray();
         IsFirstScan = false;
     }
 
