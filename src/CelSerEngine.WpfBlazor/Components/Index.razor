@@ -1,4 +1,6 @@
-﻿<ThemeSetter />
+﻿@using CelSerEngine.WpfBlazor.Components.Selects
+
+<ThemeSetter />
 
 <div class="d-flex vh-100">
     <div class="d-flex flex-column flex-grow-1 row-gap-1 m-2">
@@ -39,28 +41,30 @@
                 }
                 <fieldset disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)">
                     <div class="d-flex flex-column gap-2 mt-4">
+                        @* value input field *@
+                        <div class="d-flex flex-column gap-2" style="min-height: 30px;">
+                            @if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween) {
+                                <div class="form-group has-search">
+                                    <span class="bi bi-search form-control-feedback"></span>
+                                    <InputText @bind-Value="SearchSubmitModel.FromValue" id="value-text-field" type="search" class="form-control" placeholder="From" />
+                                    <ValidationMessage For="() => SearchSubmitModel.FromValue" />
+                                </div>
 
-                        @if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween) {
-                            <div class="form-group has-search">
-                                <span class="bi bi-search form-control-feedback"></span>
-                                <InputText @bind-Value="SearchSubmitModel.FromValue" id="value-text-field" type="search" class="form-control" placeholder="From" />
-                                <ValidationMessage For="() => SearchSubmitModel.FromValue" />
-                            </div>
-
-                            <div class="form-group has-search">
-                                <span class="bi bi-search form-control-feedback"></span>
-                                <InputText @bind-Value="SearchSubmitModel.ToValue" type="search" class="form-control" placeholder="To" />
-                                <ValidationMessage For="() => SearchSubmitModel.ToValue" />
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="form-group has-search">
-                                <span class="bi bi-search form-control-feedback"></span>
-                                <InputText @bind-Value="SearchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
-                                <ValidationMessage For="() => SearchSubmitModel.SearchValue" />
-                            </div>
-                        }
+                                <div class="form-group has-search">
+                                    <span class="bi bi-search form-control-feedback"></span>
+                                    <InputText @bind-Value="SearchSubmitModel.ToValue" type="search" class="form-control" placeholder="To" />
+                                    <ValidationMessage For="() => SearchSubmitModel.ToValue" />
+                                </div>
+                            }
+                            else if (SearchSubmitModel.IsSimpleScan)
+                            {
+                                <div class="form-group has-search">
+                                    <span class="bi bi-search form-control-feedback"></span>
+                                    <InputText @bind-Value="SearchSubmitModel.SearchValue" id="value-text-field" type="search" class="form-control" placeholder="Value" />
+                                    <ValidationMessage For="() => SearchSubmitModel.SearchValue" />
+                                </div>
+                            }
+                        </div>
 
                         @* buttons *@
                         <div class="d-flex gap-1 mb-3 @(IsScanning ? "invisible" : "")">
@@ -78,12 +82,10 @@
                         @* scan type & value type *@
                         <div class="d-flex gap-2">
                             <label for="scanCompareType" class="text-nowrap align-self-center" style="width: 72px">Scan Type</label>
-                            <select id="scanCompareType" @bind="SearchSubmitModel.SelectedScanCompareType" disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)">
-                                @foreach (var item in Enum.GetValues<ScanCompareType>())
-                                {
-                                    <option value="@item">@item.GetDisplayName()</option>
-                                }
-                            </select>
+                            <SelectEnum Items="AvailableScanCompareTypes"
+                                @bind-Value="SearchSubmitModel.SelectedScanCompareType"
+                                Id="scanCompareType"
+                                disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)" />
                         </div>
                         <div class="d-flex gap-2">
                             <label for="selectScanDataType" class="text-nowrap align-self-center" style="width: 72px">Value Type</label>

@@ -34,7 +34,8 @@ internal class SearchSubmitModel
     public MemoryScanFilterOptions Executable { get; set; } = MemoryScanFilterOptions.Dont_Care;
     public MemoryScanFilterOptions CopyOnWrite { get; set; } = MemoryScanFilterOptions.No;
     public MemoryType[] MemoryTypes { get; set; } = [MemoryType.Image, MemoryType.Private];
-    public bool IsSimpleScan => SelectedScanCompareType is not ScanCompareType.ValueBetween and not ScanCompareType.UnknownInitialValue;
+    private ISet<ScanCompareType> _noValueNeededScanTypes = new HashSet<ScanCompareType>([ScanCompareType.UnknownInitialValue, ScanCompareType.IncreasedValue, ScanCompareType.DecreasedValue, ScanCompareType.ChangedValue, ScanCompareType.UnchangedValue]);
+    public bool IsSimpleScan => SelectedScanCompareType != ScanCompareType.ValueBetween && !_noValueNeededScanTypes.Contains(SelectedScanCompareType);
 }
 
 internal enum MemoryScanFilterOptions
@@ -80,6 +81,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private bool IsFirstScan { get; set; } = true;
     private bool IsScanning => ScanCancellationTokenSource != null;
     private CancellationTokenSource? ScanCancellationTokenSource { get; set; }
+    private ScanCompareType[] _firstScanCompareTypes => [ScanCompareType.ExactValue, ScanCompareType.BiggerThan, ScanCompareType.SmallerThan, ScanCompareType.ValueBetween, ScanCompareType.UnknownInitialValue];
+    private ScanCompareType[] AvailableScanCompareTypes { get; set; }
 
     private IJSObjectReference? _module;
     private readonly IProgress<float> _progressBarUpdater;
@@ -99,6 +102,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     protected override void OnInitialized()
     {
         EngineSession.OnChange += UpdateModules;
+        AvailableScanCompareTypes = _firstScanCompareTypes;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -196,6 +200,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         await ScanResultItemsGridRef.AddScanResultItemsAsync(results.Select(x => new MemorySegment(x)));
         ProgressBarValue = 0;
         ScanCancellationTokenSource = null;
+        AvailableScanCompareTypes = Enum.GetValues<ScanCompareType>().Where(x => x != ScanCompareType.UnknownInitialValue).ToArray();
         IsFirstScan = false;
     }
 
@@ -240,6 +245,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
     {
         await ScanResultItemsGridRef.ResetScanResultItemsAsync();
         IsFirstScan = true;
+        AvailableScanCompareTypes = _firstScanCompareTypes;
+        SearchSubmitModel.SelectedScanCompareType = ScanCompareType.ExactValue;
         await _module!.InvokeVoidAsync("focusSearchValueInput");
     }
 
