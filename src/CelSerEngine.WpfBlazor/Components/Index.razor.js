@@ -7,12 +7,6 @@ export function initIndex() {
             showSearch: false,
         }
     });
-    new SlimSelect({
-        select: '#scanCompareType',
-        settings: {
-            showSearch: false,
-        }
-    });
 
     new SlimSelect({
         select: '#writable',

@@ -81,7 +81,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private bool IsFirstScan { get; set; } = true;
     private bool IsScanning => ScanCancellationTokenSource != null;
     private CancellationTokenSource? ScanCancellationTokenSource { get; set; }
-    private ScanCompareType[] AvailableScanCompareTypes { get; set; } = [ScanCompareType.ExactValue, ScanCompareType.BiggerThan, ScanCompareType.SmallerThan, ScanCompareType.ValueBetween, ScanCompareType.UnknownInitialValue];
+    private ScanCompareType[] _firstScanCompareTypes => [ScanCompareType.ExactValue, ScanCompareType.BiggerThan, ScanCompareType.SmallerThan, ScanCompareType.ValueBetween, ScanCompareType.UnknownInitialValue];
+    private ScanCompareType[] AvailableScanCompareTypes { get; set; }
 
     private IJSObjectReference? _module;
     private readonly IProgress<float> _progressBarUpdater;
@@ -101,6 +102,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     protected override void OnInitialized()
     {
         EngineSession.OnChange += UpdateModules;
+        AvailableScanCompareTypes = _firstScanCompareTypes;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -243,6 +245,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
     {
         await ScanResultItemsGridRef.ResetScanResultItemsAsync();
         IsFirstScan = true;
+        AvailableScanCompareTypes = _firstScanCompareTypes;
+        SearchSubmitModel.SelectedScanCompareType = ScanCompareType.ExactValue;
         await _module!.InvokeVoidAsync("focusSearchValueInput");
     }
 
