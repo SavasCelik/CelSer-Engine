@@ -26,6 +26,7 @@ public partial class SelectProcess : ComponentBase, IDisposable
     private MainWindow MainWindow { get; set; } = default!;
 
     private DotNetObjectReference<SelectProcess>? _dotNetHelper;
+    private IJSObjectReference? _module;
 
     protected override async Task OnInitializedAsync()
     {
@@ -43,19 +44,19 @@ public partial class SelectProcess : ComponentBase, IDisposable
         if (firstRender)
         {
             _dotNetHelper = DotNetObjectReference.Create(this);
-            var module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/SelectProcess.razor.js");
-            await module.InvokeVoidAsync("ready", JsonSerializer.Serialize(_processes.Select((x, i) => new { Name = x.DisplayString, x.IconBase64Source, x.Process.Id })), _dotNetHelper);
-            await module.DisposeAsync();
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./Components/SelectProcess.razor.js");
+            await _module.InvokeVoidAsync("ready", JsonSerializer.Serialize(_processes.Select((x, i) => new { Name = x.DisplayString, x.IconBase64Source, x.Process.Id })), _dotNetHelper);
         }
     }
 
-    private void RefreshProcessList()
+    private async void RefreshProcessList()
     {
         _processes = Process.GetProcesses()
             .OrderBy(p => p.ProcessName)
             .Select(p => new ProcessAdapter(p))
             .Where(pa => pa.MainModule != null)
             .ToList();
+        await _module!.InvokeVoidAsync("updateProcessList", JsonSerializer.Serialize(_processes.Select((x, i) => new { Name = x.DisplayString, x.IconBase64Source, x.Process.Id })));
     }
 
     [JSInvokable]
@@ -73,6 +74,12 @@ public partial class SelectProcess : ComponentBase, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        // using IAsyncDisposable make the Closing method in SelectProcess.xaml.cs throw an exception
         _dotNetHelper?.Dispose();
+
+        if (_module != null)
+        {
+            _module.DisposeAsync();
+        }
     }
 }

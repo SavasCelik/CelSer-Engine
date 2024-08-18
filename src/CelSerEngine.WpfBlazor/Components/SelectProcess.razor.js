@@ -2,7 +2,7 @@ let gridApi;
 let filterTextField;
 let dotNetHelper;
 
-function ready(data, _dotNetHelper) {
+export function ready(data, _dotNetHelper) {
     dotNetHelper = _dotNetHelper;
     filterTextField = document.querySelector("#filter-text-field");
     filterTextField.addEventListener("input", onFilterTextFieldChanged)
@@ -35,6 +35,10 @@ function ready(data, _dotNetHelper) {
     gridApi = agGrid.createGrid(myGridElement, gridOptions);
 }
 
+export function updateProcessList(data) {
+    gridApi.setGridOption("rowData", JSON.parse(data));
+}
+
 async function selectProcess(row) {
     await dotNetHelper.invokeMethodAsync("SetSelectedProcessById", row.data.Id)
 }
@@ -45,5 +49,3 @@ function onFilterTextFieldChanged() {
         filterTextField.value,
     );
 }
-
-export { ready }
