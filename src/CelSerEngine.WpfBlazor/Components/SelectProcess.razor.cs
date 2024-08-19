@@ -49,13 +49,17 @@ public partial class SelectProcess : ComponentBase, IDisposable
         }
     }
 
-    private async void RefreshProcessList()
+    private async Task RefreshProcessList()
     {
-        _processes = Process.GetProcesses()
+        await _module!.InvokeVoidAsync("showLoadingOverlay");
+        await Task.Run(() =>
+        {
+            _processes = Process.GetProcesses()
             .OrderBy(p => p.ProcessName)
             .Select(p => new ProcessAdapter(p))
             .Where(pa => pa.MainModule != null)
             .ToList();
+        });
         await _module!.InvokeVoidAsync("updateProcessList", JsonSerializer.Serialize(_processes.Select((x, i) => new { Name = x.DisplayString, x.IconBase64Source, x.Process.Id })));
     }
 
