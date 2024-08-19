@@ -62,7 +62,7 @@ export function focusFirstInvalidInput() {
 }
 
 export function focusSearchValueInput() {
-    document.querySelector("#value-text-field").focus();
+    setTimeout(() => document.querySelector("#value-text-field")?.focus(), 100);
 }
 
 export function updateModules(data) {
