@@ -97,12 +97,12 @@ public partial class Index : ComponentBase, IAsyncDisposable
                 StateHasChanged();
             }
         });
+        AvailableScanCompareTypes = _firstScanCompareTypes;
     }
 
     protected override void OnInitialized()
     {
         EngineSession.OnChange += UpdateModules;
-        AvailableScanCompareTypes = _firstScanCompareTypes;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
