@@ -149,7 +149,8 @@ public class NewPointerScannerTests
                 RegionSize = x.RegionSize,
                 State = x.State,
                 Protect = x.Protect,
-                Type = x.Type
+                Type = x.Type,
+                Data = []
             }).ToArray();
 
         var buffer = new byte[currentMemRegs.Max(x => x.RegionSize)];
