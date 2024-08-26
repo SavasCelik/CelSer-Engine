@@ -28,8 +28,6 @@ img {
     --ss-focus-color: transparent;
     --ss-primary-color: var(--ce-primary-700);
     --ss-disabled-color: var(--bs-secondary-bg);
-    --bs-link-color: var(--ce-primary-700);
-    --bs-link-hover-color: var(--ce-primary-500);
 }
 
 [data-bs-theme=dark] {
@@ -302,6 +300,8 @@ input[type="search"]::-webkit-search-cancel-button {
 
 
 .nav-bottom {
+    --bs-link-color: var(--ce-primary-700);
+    --bs-link-hover-color: var(--ce-primary-500);
     --bs-nav-tabs-link-active-border-color: var(--bs-body-bg) var(--bs-border-color) var(--bs-border-color);
     border-top: var(--bs-nav-tabs-border-width) solid var(--bs-nav-tabs-border-color);
     border-bottom: none;
