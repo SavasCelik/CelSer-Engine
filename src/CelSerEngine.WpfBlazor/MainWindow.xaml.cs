@@ -1,9 +1,11 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfBlazor.Extensions;
+using CelSerEngine.WpfBlazor.Loggers;
 using CelSerEngine.WpfBlazor.Views;
 using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Windows;
 
@@ -30,6 +32,11 @@ public partial class MainWindow : Window
         
         serviceCollection.AddSingleton<IMemoryScanService, MemoryScanService>();
         serviceCollection.AddSingleton<INativeApi, NativeApi>();
+
+        var logManager = new BlazorLogManager();
+        serviceCollection.AddSingleton(logManager);
+        serviceCollection.AddLogging(x => x.ClearProviders().AddProvider(new BlazorLoggerProvider(logManager)));
+
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);
 

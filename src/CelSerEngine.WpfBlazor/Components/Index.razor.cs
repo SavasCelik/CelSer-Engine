@@ -4,6 +4,7 @@ using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
@@ -59,6 +60,9 @@ public partial class Index : ComponentBase, IAsyncDisposable
     private IJSRuntime JSRuntime { get; set; } = default!;
 
     [Inject]
+    private ILogger<Index> Logger { get; set; } = default!;
+
+    [Inject]
     private IMemoryScanService MemoryScanService { get; set; } = default!;
 
     [Inject]
@@ -94,6 +98,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
             if (newValue - ProgressBarValue >= 1)
             {
                 ProgressBarValue = newValue;
+                Logger.LogInformation("Scan progress is at: {value}", newValue);
                 StateHasChanged();
             }
         });
@@ -102,6 +107,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     protected override void OnInitialized()
     {
+        Logger.LogInformation("Initialized Index component");
         EngineSession.OnChange += UpdateModules;
     }
 
@@ -109,6 +115,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
+            Logger.LogInformation("Initializing Index component");
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Index.razor.js");
             await _module.InvokeVoidAsync("initIndex");
 
