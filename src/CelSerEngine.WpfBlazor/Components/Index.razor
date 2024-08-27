@@ -43,7 +43,8 @@
                     <div class="d-flex flex-column gap-2 mt-4">
                         @* value input field *@
                         <div class="d-flex flex-column gap-2" style="min-height: 30px;">
-                            @if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween) {
+                            @if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween)
+                            {
                                 <div class="form-group has-search">
                                     <span class="bi bi-search form-control-feedback"></span>
                                     <InputText @bind-Value="SearchSubmitModel.FromValue" id="value-text-field" type="search" class="form-control" placeholder="From" />
@@ -83,9 +84,9 @@
                         <div class="d-flex gap-2">
                             <label for="scanCompareType" class="text-nowrap align-self-center" style="width: 72px">Scan Type</label>
                             <SelectEnum Items="AvailableScanCompareTypes"
-                                @bind-Value="SearchSubmitModel.SelectedScanCompareType"
-                                Id="scanCompareType"
-                                disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)" />
+                                        @bind-Value="SearchSubmitModel.SelectedScanCompareType"
+                                        Id="scanCompareType"
+                                        disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)" />
                         </div>
                         <div class="d-flex gap-2">
                             <label for="selectScanDataType" class="text-nowrap align-self-center" style="width: 72px">Value Type</label>
@@ -176,7 +177,7 @@
                 </div>
             </div>
         </div>
-        
+
         <ul class="nav nav-tabs nav-bottom mt-1" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tracked-items-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Tacked Items</button>

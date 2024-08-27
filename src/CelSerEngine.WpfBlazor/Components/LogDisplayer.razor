@@ -1,31 +1,9 @@
-﻿@using CelSerEngine.WpfBlazor.Loggers
-@using Microsoft.AspNetCore.Components.Web.Virtualization
-@inject BlazorLogManager LogManager
+﻿@using Microsoft.AspNetCore.Components.Web.Virtualization
 
-<div class="h-100 border rounded-3 p-2" style="user-select: text;">
-    <Virtualize Items="logsContent">
-        <div class="mb-2">@context</div>
-    </Virtualize>
+<div class="d-flex h-100 border rounded-3 py-2 ps-2" style="flex-flow: column; user-select: text;">
+    <div id="logMessages" class="d-flex flex-column gap-1 flex-grow-1 overflow-auto" style="height: 0;">
+        <Virtualize Items="LogsContent">
+            <div>@context</div>
+        </Virtualize>
+    </div>
 </div>
-
-
-@code {
-    private ICollection<string> logsContent = [string.Empty];
-
-    protected override void OnInitialized()
-    {
-        // Subscribe to the log events
-        LogManager.OnLogReceived += HandleLogReceived;
-    }
-
-    private void HandleLogReceived(string logMessage)
-    {
-        logsContent.Add(logMessage);
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        LogManager.OnLogReceived -= HandleLogReceived;
-    }
-}
