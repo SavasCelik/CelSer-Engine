@@ -1,4 +1,6 @@
-﻿namespace CelSerEngine.WpfBlazor;
+﻿using Microsoft.Extensions.Logging;
+
+namespace CelSerEngine.WpfBlazor;
 
 /// <summary>
 /// Felt cute, might delete later
@@ -7,6 +9,7 @@
 /// </summary>
 public class ThemeManager
 {
+    private readonly ILogger<ThemeManager> _logger;
     private bool _isDark = false;
     public bool IsDark
     {
@@ -24,13 +27,15 @@ public class ThemeManager
     public event Action? OnThemeChanged;
     private void NotifyStateChanged() => OnThemeChanged?.Invoke();
 
-    public ThemeManager()
+    public ThemeManager(ILogger<ThemeManager> logger)
     {
+        _logger = logger;
         _isDark = Properties.Settings.Default.Theme == "dark";
     }
 
     public void ToggleTheme()
     {
+        _logger.LogInformation("Toggling theme");
         IsDark = !IsDark;
     }
 

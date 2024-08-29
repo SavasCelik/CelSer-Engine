@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CelSerEngine.WpfBlazor.Loggers;
 public class BlazorLogger : ILogger
@@ -17,7 +12,7 @@ public class BlazorLogger : ILogger
         _logManager = logManager;
     }
 
-    public IDisposable BeginScope<TState>(TState state) => null;
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null!;
 
     public bool IsEnabled(LogLevel logLevel) => true;
 
@@ -28,7 +23,7 @@ public class BlazorLogger : ILogger
         Exception? exception,
         Func<TState, Exception?, string> formatter)
     {
-        var message = $"{logLevel}: {_categoryName}: {formatter(state, exception)}";
+        var message = $"[{DateTime.Now.ToLongTimeString()} {logLevel}{(logLevel == LogLevel.Debug ? $" {_categoryName}" : "")}] - {formatter(state, exception)}";
         _logManager.AppendLog(message);
     }
 }

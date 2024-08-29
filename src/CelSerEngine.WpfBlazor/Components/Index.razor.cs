@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.IO;
 using static CelSerEngine.Core.Native.Enums;
 
@@ -98,7 +99,6 @@ public partial class Index : ComponentBase, IAsyncDisposable
             if (newValue - ProgressBarValue >= 1)
             {
                 ProgressBarValue = newValue;
-                Logger.LogInformation("Scan progress is at: {value}", newValue);
                 StateHasChanged();
             }
         });
@@ -107,7 +107,6 @@ public partial class Index : ComponentBase, IAsyncDisposable
 
     protected override void OnInitialized()
     {
-        Logger.LogInformation("Initialized Index component");
         EngineSession.OnChange += UpdateModules;
     }
 
@@ -115,7 +114,6 @@ public partial class Index : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
-            Logger.LogInformation("Initializing Index component");
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Index.razor.js");
             await _module.InvokeVoidAsync("initIndex");
 
@@ -140,6 +138,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
     {
         if (!formContext.Validate())
         {
+            Logger.LogInformation("Validating inputs failed");
             await SearchScanInvalidSubmit();
             return;
         }
@@ -202,7 +201,11 @@ public partial class Index : ComponentBase, IAsyncDisposable
             scanConstraint.ExcludedProtections |= MemoryProtections.CopyOnWrite;
         }
 
+        Logger.LogInformation("First scan started...");
+        var sw = Stopwatch.StartNew();
         var results = await MemoryScanService.ScanProcessMemoryAsync(scanConstraint, EngineSession.SelectedProcessHandle, _progressBarUpdater, token);
+        sw.Stop();
+        Logger.LogInformation("Scan completed in: {duration} ms", sw.ElapsedMilliseconds);
         _progressBarUpdater.Report(100);
         await ScanResultItemsGridRef.AddScanResultItemsAsync(results.Select(x => new MemorySegment(x)));
         ProgressBarValue = 0;
@@ -234,6 +237,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
             userInput = $"{SearchSubmitModel.FromValue}-{SearchSubmitModel.ToValue}";
         }
 
+        Logger.LogInformation("Next scan started...");
+        var sw = Stopwatch.StartNew();
         var scanConstraint = new ScanConstraint(SearchSubmitModel.SelectedScanCompareType, SearchSubmitModel.SelectedScanDataType, userInput);
         var result = await MemoryScanService.FilterMemorySegmentsByScanConstraintAsync(
             ScanResultItemsGridRef.GetScanResultItems().Cast<IMemorySegment>().ToList(),
@@ -241,6 +246,8 @@ public partial class Index : ComponentBase, IAsyncDisposable
             EngineSession.SelectedProcessHandle,
             _progressBarUpdater,
             token);
+        sw.Stop();
+        Logger.LogInformation("Scan completed in: {duration}", sw.Elapsed);
         _progressBarUpdater.Report(100);
         await ScanResultItemsGridRef.ClearScanResultItemsAsync(false);
         await ScanResultItemsGridRef.AddScanResultItemsAsync(result.Select(x => new MemorySegment(x)));
@@ -262,6 +269,11 @@ public partial class Index : ComponentBase, IAsyncDisposable
         if (ScanCancellationTokenSource != null)
         {
             await ScanCancellationTokenSource.CancelAsync();
+            Logger.LogInformation("Scan canceled");
+        }
+        else
+        {
+            Logger.LogDebug("Scan could not be canceled");
         }
     }
 
