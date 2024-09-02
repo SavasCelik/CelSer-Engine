@@ -5,5 +5,7 @@ document.querySelector("[data-bs-target='#console-tab-pane']").addEventListener(
 
 
 export function scrollToBottom() {
-    logMessagesEl.scrollTop = logMessagesEl.scrollHeight;
+    setTimeout(() => {
+        logMessagesEl.scrollTop = logMessagesEl.scrollHeight;
+    }, 100);
 }
