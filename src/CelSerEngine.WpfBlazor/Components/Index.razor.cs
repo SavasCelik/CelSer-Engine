@@ -205,7 +205,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
         var sw = Stopwatch.StartNew();
         var results = await MemoryScanService.ScanProcessMemoryAsync(scanConstraint, EngineSession.SelectedProcessHandle, _progressBarUpdater, token);
         sw.Stop();
-        Logger.LogInformation("Scan completed in: {duration} ms", sw.ElapsedMilliseconds);
+        Logger.LogInformation("Scan completed found: {count} addresses in: {duration} ms", results.Count, sw.ElapsedMilliseconds);
         _progressBarUpdater.Report(100);
         await ScanResultItemsGridRef.AddScanResultItemsAsync(results.Select(x => new MemorySegment(x)));
         ProgressBarValue = 0;
@@ -247,7 +247,7 @@ public partial class Index : ComponentBase, IAsyncDisposable
             _progressBarUpdater,
             token);
         sw.Stop();
-        Logger.LogInformation("Scan completed in: {duration}", sw.Elapsed);
+        Logger.LogInformation("Scan completed found: {count} addresses in: {duration} ms", result.Count, sw.ElapsedMilliseconds);
         _progressBarUpdater.Report(100);
         await ScanResultItemsGridRef.ClearScanResultItemsAsync(false);
         await ScanResultItemsGridRef.AddScanResultItemsAsync(result.Select(x => new MemorySegment(x)));
