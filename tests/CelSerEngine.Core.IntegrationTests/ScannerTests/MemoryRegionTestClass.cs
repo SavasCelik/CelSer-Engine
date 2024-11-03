@@ -11,5 +11,5 @@ public class MemoryRegionTestClass
     public MEMORY_STATE State { get; set; }
     public MEMORY_PROTECTION Protect { get; set; }
     public uint Type { get; set; }
-    public byte[] Data { get; set; }
+    public required byte[] Data { get; set; }
 }

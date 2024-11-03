@@ -102,7 +102,7 @@ public class ScriptCompiler
         if (!File.Exists(file))
         {
             // check framework or dedicated runtime app folder
-            var path = Path.GetDirectoryName(typeof(object).Assembly.Location);
+            var path = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
             file = Path.Combine(path, assemblyDll);
             if (!File.Exists(file))
                 return;

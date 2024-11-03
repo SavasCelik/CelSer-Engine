@@ -32,7 +32,7 @@ public abstract class PointerScanner2
         NativeApi = nativeApi;
         PointerScanOptions = pointerScanOptions;
         _useStacks = true;
-        _modules = new List<ModuleInfo>();
+        _modules = [];
     }
 
     public async Task<IList<Pointer>> StartPointerScanAsync(SafeProcessHandle processHandle , CancellationToken cancellationToken = default)

@@ -1,0 +1,9 @@
+﻿@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+<div class="d-flex h-100 border rounded-3 py-2 ps-2" style="flex-flow: column; user-select: text;">
+    <div id="logMessages" class="d-flex flex-column gap-1 flex-grow-1 overflow-auto" style="height: 0;">
+        <Virtualize Items="LogsContent">
+            <div>@context</div>
+        </Virtualize>
+    </div>
+</div>

@@ -30,11 +30,13 @@ public class ValueComparer : IScanComparer
         }
         else if (scanConstraint.ScanCompareType == ScanCompareType.UnknownInitialValue)
         {
-            _userInput = "Does not matter";
+            _userInput = string.Empty;
+            _userInputToValue = string.Empty;
         }
         else
         {
             _userInput = scanConstraint.UserInput;
+            _userInputToValue = string.Empty;
         }
 
         _sizeOfT = scanConstraint.ScanDataType.GetPrimitiveSize();

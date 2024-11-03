@@ -297,3 +297,20 @@ input[type="search"]::-webkit-search-cancel-button {
     border: var(--bs-spinner-border-width) solid lightgray;
     border-right-color: var(--ce-primary-700);
 }
+
+
+.nav-bottom {
+    --bs-link-color: var(--ce-primary-700);
+    --bs-link-hover-color: var(--ce-primary-500);
+    --bs-nav-tabs-link-active-border-color: var(--bs-body-bg) var(--bs-border-color) var(--bs-border-color);
+    border-top: var(--bs-nav-tabs-border-width) solid var(--bs-nav-tabs-border-color);
+    border-bottom: none;
+}
+
+    .nav-bottom .nav-link {
+        margin-top: calc(-1* var(--bs-nav-tabs-border-width));
+        border-top-left-radius: inherit;
+        border-top-right-radius: inherit;
+        border-bottom-left-radius: var(--bs-nav-tabs-border-radius);
+        border-bottom-right-radius: var(--bs-nav-tabs-border-radius);
+    }

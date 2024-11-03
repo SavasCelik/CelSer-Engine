@@ -43,7 +43,8 @@
                     <div class="d-flex flex-column gap-2 mt-4">
                         @* value input field *@
                         <div class="d-flex flex-column gap-2" style="min-height: 30px;">
-                            @if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween) {
+                            @if (SearchSubmitModel.SelectedScanCompareType == ScanCompareType.ValueBetween)
+                            {
                                 <div class="form-group has-search">
                                     <span class="bi bi-search form-control-feedback"></span>
                                     <InputText @bind-Value="SearchSubmitModel.FromValue" id="value-text-field" type="search" class="form-control" placeholder="From" />
@@ -83,9 +84,9 @@
                         <div class="d-flex gap-2">
                             <label for="scanCompareType" class="text-nowrap align-self-center" style="width: 72px">Scan Type</label>
                             <SelectEnum Items="AvailableScanCompareTypes"
-                                @bind-Value="SearchSubmitModel.SelectedScanCompareType"
-                                Id="scanCompareType"
-                                disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)" />
+                                        @bind-Value="SearchSubmitModel.SelectedScanCompareType"
+                                        Id="scanCompareType"
+                                        disabled="@(EngineSession.SelectedProcess?.DisplayString == null || IsScanning)" />
                         </div>
                         <div class="d-flex gap-2">
                             <label for="selectScanDataType" class="text-nowrap align-self-center" style="width: 72px">Value Type</label>
@@ -166,8 +167,24 @@
             </EditForm>
         </div>
 
-        <div id="split-1" class="d-flex flex-grow-1">
-            <TrackedItemsGrid @ref="TrackedItemsGridRef"></TrackedItemsGrid>
+        <div id="split-1">
+            <div class="tab-content h-100">
+                <div class="tab-pane fade h-100 show active" id="tracked-items-tab-pane" tabindex="0">
+                    <TrackedItemsGrid @ref="TrackedItemsGridRef"></TrackedItemsGrid>
+                </div>
+                <div class="tab-pane fade h-100" id="console-tab-pane" role="tabpanel" tabindex="0">
+                    <LogDisplayer />
+                </div>
+            </div>
         </div>
+
+        <ul class="nav nav-tabs nav-bottom mt-1" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tracked-items-tab-pane" type="button"><i class="bi bi-list-ul"></i> Tacked Items</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#console-tab-pane" type="button"><i class="bi bi-terminal"></i> Logs</button>
+            </li>
+        </ul>
     </div>
 </div>
