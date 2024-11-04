@@ -56,6 +56,11 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
                 Text = "Toggle selected items",
                 OnClick = EventCallback.Factory.Create(this, OnToggleFreezeSelectedItemsContextMenuClicked)
             },
+            new ContextMenuItem
+            {
+                Text = "Pointer scan for this address",
+                OnClick = EventCallback.Factory.Create(this, OnToggleFreezeSelectedItemsContextMenuClicked)
+            },
         ];
     }
 
@@ -251,6 +256,18 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         {
             item.IsFrozen = !areAllFrozen;
         }
+
+        await RefreshDataAsync();
+    }
+
+
+
+    private async Task OnPointerScanForAddress()
+    {
+        var selectedTrackedItems = await GetSelectedTrackedItems();
+        var selectedTrackedItem = selectedTrackedItems.First();
+
+
 
         await RefreshDataAsync();
     }
