@@ -59,7 +59,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
             new ContextMenuItem
             {
                 Text = "Pointer scan for this address",
-                OnClick = EventCallback.Factory.Create(this, OnToggleFreezeSelectedItemsContextMenuClicked)
+                OnClick = EventCallback.Factory.Create(this, OnPointerScanForThisAddressContextMenuClicked)
             },
         ];
     }
@@ -210,6 +210,17 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
     }
 
+    private async Task ShowPointerScanOptionsModal(TrackedItem selectedTrackedItem)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            { nameof(ModalPointerScanOptions.ScanAddress), selectedTrackedItem.Item.Address.ToString("X") },
+            //{ nameof(ModalPointerScanOptions.DescriptionChanged), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItems)) },
+        };
+
+        await ModalRef.ShowAsync<ModalPointerScanOptions>("Pointer scanner options", parameters);
+    }
+
     private async Task OnValueChangeRequested(string desiredValue, params TrackedItem[] trackedItems)
     {
         foreach (var trackedItem in trackedItems)
@@ -262,12 +273,15 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
 
 
-    private async Task OnPointerScanForAddress()
+    private async Task OnPointerScanForThisAddressContextMenuClicked()
     {
         var selectedTrackedItems = await GetSelectedTrackedItems();
-        var selectedTrackedItem = selectedTrackedItems.First();
+        var selectedTrackedItem = selectedTrackedItems.FirstOrDefault();
 
-
+        if (selectedTrackedItem != null)
+        {
+            await ShowPointerScanOptionsModal(selectedTrackedItem);
+        }
 
         await RefreshDataAsync();
     }

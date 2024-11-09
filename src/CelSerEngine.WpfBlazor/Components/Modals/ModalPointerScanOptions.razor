@@ -1,7 +1,7 @@
 ﻿
-<EditForm EditContext="EditContext" OnSubmit="OnSubmitAsync">
+<EditForm Model="PointerScanOptions" OnSubmit="OnSubmitAsync">
     <div class="modal-body">
-        <InputText @bind-Value="Description" class="form-control" placeholder="Desired Description" />
+        <InputText @bind-Value="ScanAddress" class="form-control" />
     </div>
     <div class="modal-footer border-top-0 pt-0">
         <button type="submit" class="btn btn-ce-primary">OK</button>
