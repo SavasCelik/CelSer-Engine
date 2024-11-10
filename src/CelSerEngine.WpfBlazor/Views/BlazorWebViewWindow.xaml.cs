@@ -1,22 +1,32 @@
-﻿using Microsoft.AspNetCore.Components.WebView;
+﻿using Microsoft.AspNetCore.Components.WebView.Wpf;
+using Microsoft.AspNetCore.Components.WebView;
 using System.Diagnostics;
 using System.Windows;
 
 namespace CelSerEngine.WpfBlazor.Views;
 /// <summary>
-/// Interaction logic for PointerScanner.xaml
+/// Interaction logic for BlazorWebViewWindow.xaml
 /// </summary>
-public partial class PointerScanner : Window
+public partial class BlazorWebViewWindow : Window
 {
-    public PointerScanner(MainWindow mainWindow)
+    public BlazorWebViewWindow(MainWindow mainWindow, Type componentType, string title, int width = 800, int height = 450)
     {
         InitializeComponent();
+        Title = title;
+        Width = width;
+        Height = height;
         Resources.Add("services", mainWindow.Services);
         blazorWebView.BlazorWebViewInitialized += BlazorWebView_BlazorWebViewInitialized;
         Closing += async (s, args) =>
         {
             await blazorWebView.DisposeAsync();
         };
+        var component = new RootComponent
+        {
+            ComponentType = componentType,
+            Selector = "#app"
+        };
+        blazorWebView.RootComponents.Add(component);
     }
 
     private void BlazorWebView_BlazorWebViewInitialized(object? sender, BlazorWebViewInitializedEventArgs e)

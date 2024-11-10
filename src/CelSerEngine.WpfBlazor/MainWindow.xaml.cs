@@ -17,7 +17,7 @@ public partial class MainWindow : Window
 {
     public IServiceProvider Services { get; set; }
 
-    private SelectProcess? _selectProcess;
+    private BlazorWebViewWindow? _selectProcess;
 
     public MainWindow()
     {
@@ -71,7 +71,7 @@ public partial class MainWindow : Window
 
     public void OpenProcessSelector()
     {
-        _selectProcess = new SelectProcess(this);
+        _selectProcess = new BlazorWebViewWindow(this, typeof(Components.SelectProcess), "Select Process");
         _selectProcess.ShowModal(this);
     }
 
@@ -86,7 +86,7 @@ public partial class MainWindow : Window
 
     public void OpenPointerScanner()
     {
-        var pointerScanner = new PointerScanner(this);
+        var pointerScanner = new BlazorWebViewWindow(this, typeof(Components.PointerScanner), "Pointer Scanner");
         pointerScanner.Show();
     }
 }
