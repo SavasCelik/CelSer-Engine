@@ -39,7 +39,7 @@ public partial class SelectProcess : ComponentBase, IDisposable
         await base.OnInitializedAsync();
     }
 
-    protected async override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
@@ -78,7 +78,7 @@ public partial class SelectProcess : ComponentBase, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        // using IAsyncDisposable make the Closing method in SelectProcess.xaml.cs throw an exception
+        // using IAsyncDisposable make the Closing method in BlazorWebViewWindow.xaml.cs throw an exception
         _dotNetHelper?.Dispose();
 
         if (_module != null)
