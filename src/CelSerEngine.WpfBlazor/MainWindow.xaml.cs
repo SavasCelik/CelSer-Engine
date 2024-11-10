@@ -83,4 +83,10 @@ public partial class MainWindow : Window
             _selectProcess = null;
         });
     }
+
+    public void OpenPointerScanner()
+    {
+        var pointerScanner = new PointerScanner(this);
+        pointerScanner.Show();
+    }
 }

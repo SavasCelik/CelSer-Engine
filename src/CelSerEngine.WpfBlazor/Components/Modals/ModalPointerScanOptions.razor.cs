@@ -8,6 +8,9 @@ public partial class ModalPointerScanOptions : ComponentBase
     [CascadingParameter]
     protected Modal ModalContainer { get; set; } = default!;
 
+    [Inject]
+    private MainWindow MainWindow { get; set; } = default!;
+
     [Parameter]
     public string ScanAddress { get; set; } = default!;
 
@@ -30,6 +33,7 @@ public partial class ModalPointerScanOptions : ComponentBase
         }
 
         await ModalContainer.HideModalAsync();
+        MainWindow.OpenPointerScanner();
         //await OnSubmit.InvokeAsync(PointerScanOptions);
     }
 }
