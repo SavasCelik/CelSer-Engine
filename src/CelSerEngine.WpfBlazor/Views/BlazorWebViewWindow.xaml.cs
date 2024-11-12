@@ -9,7 +9,7 @@ namespace CelSerEngine.WpfBlazor.Views;
 /// </summary>
 public partial class BlazorWebViewWindow : Window
 {
-    public BlazorWebViewWindow(MainWindow mainWindow, Type componentType, string title, int width = 800, int height = 450)
+    public BlazorWebViewWindow(MainWindow mainWindow, Type componentType, string title, int width = 800, int height = 450, IDictionary<string, object?>? parameters = null)
     {
         InitializeComponent();
         Title = title;
@@ -24,7 +24,8 @@ public partial class BlazorWebViewWindow : Window
         var component = new RootComponent
         {
             ComponentType = componentType,
-            Selector = "#app"
+            Selector = "#app",
+            Parameters = parameters
         };
         blazorWebView.RootComponents.Add(component);
     }
