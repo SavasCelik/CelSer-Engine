@@ -29,7 +29,7 @@ public partial class PointerScanner : ComponentBase, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        // using IAsyncDisposable make the Closing method in BlazorWebViewWindow.xaml.cs throw an exception
+        // using IAsyncDisposable causes the closing method in BlazorWebViewWindow.xaml.cs to throw an exception
         _dotNetHelper?.Dispose();
 
         if (_module != null)
