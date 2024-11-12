@@ -33,7 +33,7 @@ public partial class ModalPointerScanOptions : ComponentBase
         }
 
         await ModalContainer.HideModalAsync();
-        MainWindow.OpenPointerScanner();
+        MainWindow.OpenPointerScanner(PointerScanOptions);
         //await OnSubmit.InvokeAsync(PointerScanOptions);
     }
 }

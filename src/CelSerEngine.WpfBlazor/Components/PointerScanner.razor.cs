@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using CelSerEngine.WpfBlazor.Components.Modals;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System.Reflection;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
 public partial class PointerScanner : ComponentBase, IDisposable
 {
+    [Parameter]
+    public PointerScanOptions PointerScanOptions { get; set; } = default!;
+
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
 
