@@ -15,14 +15,14 @@ public partial class ModalPointerScanOptions : ComponentBase
     public string ScanAddress { get; set; } = default!;
 
     //[Parameter]
-    //public EventCallback<PointerScanOptions> OnSubmit { get; set; }
+    //public EventCallback<PointerScanOptionsSubmitModel> OnSubmit { get; set; }
 
-    private PointerScanOptions PointerScanOptions { get; } = new();
+    private PointerScanOptionsSubmitModel PointerScanOptionsSubmitModel { get; } = new();
 
     protected override void OnInitialized()
     {
         //ValueChangeSubmitModel = new(Value);
-        PointerScanOptions.ScanAddress = ScanAddress;
+        PointerScanOptionsSubmitModel.ScanAddress = ScanAddress;
     }
 
     private async Task OnSubmitAsync(EditContext formContext)
@@ -33,12 +33,12 @@ public partial class ModalPointerScanOptions : ComponentBase
         }
 
         await ModalContainer.HideModalAsync();
-        MainWindow.OpenPointerScanner(PointerScanOptions);
-        //await OnSubmit.InvokeAsync(PointerScanOptions);
+        MainWindow.OpenPointerScanner(PointerScanOptionsSubmitModel);
+        //await OnSubmit.InvokeAsync(PointerScanOptionsSubmitModel);
     }
 }
 
-public class PointerScanOptions
+public class PointerScanOptionsSubmitModel
 {
     public string ScanAddress { get; set; } = string.Empty;
     public string Offset { get; set; } = string.Empty;
