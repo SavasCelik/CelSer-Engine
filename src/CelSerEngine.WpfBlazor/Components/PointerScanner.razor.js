@@ -22,6 +22,26 @@ export function initPointerScanner() {
     pointerScannerResultsGridApi = agGrid.createGrid(document.querySelector('#pointerScannerResultsGrid'), gridOptions);
 }
 
-export function applyPointerScannerResults(items) {
-    pointerScannerResultsGridApi.setGridOption("rowData", items);
+export function applyPointerScannerResults(pointerScanResult) {
+    const newColDefs = [
+        {
+            field: "baseAddress",
+            headerName: "Base Address",
+            sortable: false,
+            resizable: false,
+        }
+    ];
+
+    for (var i = 0; i < pointerScanResult.maxLevel; i++) {
+        const captureIndex = i; // this could be done using the p parameter in the valueGetter, but this is way easier.
+        newColDefs.push({
+            valueGetter: p => p.data.offsetArray[captureIndex],
+            headerName: `Offset ${i}`,
+            sortable: false,
+            resizable: false
+        });
+    }
+
+    pointerScannerResultsGridApi.setGridOption("columnDefs", newColDefs);
+    pointerScannerResultsGridApi.setGridOption("rowData", pointerScanResult.pointers);
 }

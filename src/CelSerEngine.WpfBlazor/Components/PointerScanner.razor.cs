@@ -44,7 +44,16 @@ public partial class PointerScanner : ComponentBase, IDisposable
             };
             var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
             var foundPointers = await pointerScanner.StartPointerScanAsync(EngineSession.SelectedProcessHandle);
-            await _module!.InvokeVoidAsync("applyPointerScannerResults", foundPointers.Select(x => new { BaseAddress = x.ModuleNameWithBaseOffset }));
+            await _module!.InvokeVoidAsync("applyPointerScannerResults",
+                new
+                {
+                    Pointers = foundPointers.Select(x => new
+                    {
+                        BaseAddress = x.ModuleNameWithBaseOffset,
+                        OffsetArray = x.Offsets.Select(y => y.ToString("X")).Reverse().ToArray(),
+                    }),
+                    MaxLevel = pointerScanOptions.MaxLevel
+                });
         }
     }
 
