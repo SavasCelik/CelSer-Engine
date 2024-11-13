@@ -38,13 +38,13 @@ public partial class PointerScanner : ComponentBase, IDisposable
 
             var pointerScanOptions = new PointerScanOptions
             {
-                MaxLevel = 0x1000,
-                MaxOffset = 4,
+                MaxOffset = 0x1000,
+                MaxLevel = 4,
                 SearchedAddress = new IntPtr(long.Parse(PointerScanOptionsSubmitModel.ScanAddress, NumberStyles.HexNumber))
             };
             var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
             var foundPointers = await pointerScanner.StartPointerScanAsync(EngineSession.SelectedProcessHandle);
-            await _module!.InvokeVoidAsync("applyPointerScannerResults", foundPointers.Select(x => new { BaseAddress = x.BaseAddress.ToString("X") }));
+            await _module!.InvokeVoidAsync("applyPointerScannerResults", foundPointers.Select(x => new { BaseAddress = x.ModuleNameWithBaseOffset }));
         }
     }
 
