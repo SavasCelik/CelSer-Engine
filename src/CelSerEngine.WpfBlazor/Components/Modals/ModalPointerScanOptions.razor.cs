@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using CelSerEngine.WpfBlazor.Models;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using System.ComponentModel.DataAnnotations;
 
 namespace CelSerEngine.WpfBlazor.Components.Modals;
 
@@ -40,8 +42,10 @@ public partial class ModalPointerScanOptions : ComponentBase
 
 public class PointerScanOptionsSubmitModel
 {
+    [IsIntPtr]
     public string ScanAddress { get; set; } = string.Empty;
-    public string Offset { get; set; } = string.Empty;
-    public string Value { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
+    [Range(1, int.MaxValue, ErrorMessage = "Make sure the max. offset is not negative")]
+    public int MaxOffset { get; set; } = 0x1000;
+    [Range(1, 32)]
+    public int MaxLevel { get; set; } = 4;
 }

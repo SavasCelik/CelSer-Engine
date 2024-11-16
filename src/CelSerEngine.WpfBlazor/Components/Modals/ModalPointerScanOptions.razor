@@ -1,7 +1,24 @@
 ﻿
 <EditForm Model="PointerScanOptionsSubmitModel" OnSubmit="OnSubmitAsync">
+    <DataAnnotationsValidator />
     <div class="modal-body">
-        <InputText @bind-Value="ScanAddress" class="form-control" />
+        <div class="d-flex column-gap-1">
+            <div>
+                <label for="scanAddress" class="form-label">Scan Address: </label>
+                <InputText @bind-Value="PointerScanOptionsSubmitModel.ScanAddress" id="scanAddress" class="form-control"/>
+                <ValidationMessage For="() => PointerScanOptionsSubmitModel.ScanAddress" />
+            </div>
+            <div>
+                <label for="maxOffset" class="form-label">Max. Offset Value: </label>
+                <InputNumber @bind-Value="PointerScanOptionsSubmitModel.MaxOffset" id="maxOffset" class="form-control" />
+                <ValidationMessage For="() => PointerScanOptionsSubmitModel.MaxOffset" />
+            </div>
+            <div>
+                <label for="maxLevel" class="form-label">Max. Level: </label>
+                <InputNumber @bind-Value="PointerScanOptionsSubmitModel.MaxLevel" id="maxLevel" class="form-control" />
+                <ValidationMessage For="() => PointerScanOptionsSubmitModel.MaxLevel" />
+            </div>
+        </div>
     </div>
     <div class="modal-footer border-top-0 pt-0">
         <button type="submit" class="btn btn-ce-primary">OK</button>

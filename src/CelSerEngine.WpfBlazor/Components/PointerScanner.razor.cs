@@ -38,8 +38,8 @@ public partial class PointerScanner : ComponentBase, IDisposable
 
             var pointerScanOptions = new PointerScanOptions
             {
-                MaxOffset = 0x1000,
-                MaxLevel = 4,
+                MaxOffset = PointerScanOptionsSubmitModel.MaxOffset,
+                MaxLevel = PointerScanOptionsSubmitModel.MaxLevel,
                 SearchedAddress = new IntPtr(long.Parse(PointerScanOptionsSubmitModel.ScanAddress, NumberStyles.HexNumber))
             };
             var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
