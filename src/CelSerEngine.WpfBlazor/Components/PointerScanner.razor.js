@@ -32,6 +32,7 @@ export function applyPointerScannerResults(pointerScanResult) {
         }
     ];
 
+    // create offset cols
     for (var i = 0; i < pointerScanResult.maxLevel; i++) {
         const captureIndex = i; // this could be done using the p parameter in the valueGetter, but this is way easier.
         newColDefs.push({
