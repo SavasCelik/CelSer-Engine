@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.WpfBlazor.Components.Modals;
+using CelSerEngine.WpfBlazor.Components.PointerScanner;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

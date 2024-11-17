@@ -1,9 +1,10 @@
-﻿using CelSerEngine.WpfBlazor.Models;
+﻿using CelSerEngine.WpfBlazor.Components.Modals;
+using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using System.ComponentModel.DataAnnotations;
 
-namespace CelSerEngine.WpfBlazor.Components.Modals;
+namespace CelSerEngine.WpfBlazor.Components.PointerScanner;
 
 public partial class ModalPointerScanOptions : ComponentBase
 {
@@ -30,9 +31,7 @@ public partial class ModalPointerScanOptions : ComponentBase
     private async Task OnSubmitAsync(EditContext formContext)
     {
         if (!formContext.Validate())
-        {
             return;
-        }
 
         await ModalContainer.HideModalAsync();
         MainWindow.OpenPointerScanner(PointerScanOptionsSubmitModel);

@@ -1,6 +1,6 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
-using CelSerEngine.WpfBlazor.Components.Modals;
+using CelSerEngine.WpfBlazor.Components.PointerScanner;
 using CelSerEngine.WpfBlazor.Extensions;
 using CelSerEngine.WpfBlazor.Loggers;
 using CelSerEngine.WpfBlazor.Views;
@@ -91,7 +91,7 @@ public partial class MainWindow : Window
         {
             { nameof(Components.PointerScanner.PointerScanOptionsSubmitModel), pointerScanOptionsSubmitModel }
         };
-        var pointerScanner = new BlazorWebViewWindow(this, typeof(Components.PointerScanner), "Pointer Scanner", parameters: parameters);
+        var pointerScanner = new BlazorWebViewWindow(this, typeof(PointerScanner), "Pointer Scanner", parameters: parameters);
         pointerScanner.Show();
     }
 }

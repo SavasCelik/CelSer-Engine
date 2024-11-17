@@ -1,12 +1,11 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
-using CelSerEngine.WpfBlazor.Components.Modals;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Globalization;
 
-namespace CelSerEngine.WpfBlazor.Components;
+namespace CelSerEngine.WpfBlazor.Components.PointerScanner;
 
 public partial class PointerScanner : ComponentBase, IDisposable
 {
@@ -33,7 +32,7 @@ public partial class PointerScanner : ComponentBase, IDisposable
         if (firstRender)
         {
             _dotNetHelper = DotNetObjectReference.Create(this);
-            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/PointerScanner.razor.js");
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/PointerScanner/PointerScanner.razor.js");
             await _module!.InvokeVoidAsync("initPointerScanner", _dotNetHelper);
 
             var pointerScanOptions = new PointerScanOptions
