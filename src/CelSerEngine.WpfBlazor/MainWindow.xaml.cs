@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
+using CelSerEngine.WpfBlazor.Components.PointerScanner;
 using CelSerEngine.WpfBlazor.Extensions;
 using CelSerEngine.WpfBlazor.Loggers;
 using CelSerEngine.WpfBlazor.Views;
@@ -17,7 +18,7 @@ public partial class MainWindow : Window
 {
     public IServiceProvider Services { get; set; }
 
-    private SelectProcess? _selectProcess;
+    private BlazorWebViewWindow? _selectProcess;
 
     public MainWindow()
     {
@@ -71,7 +72,7 @@ public partial class MainWindow : Window
 
     public void OpenProcessSelector()
     {
-        _selectProcess = new SelectProcess(this);
+        _selectProcess = new BlazorWebViewWindow(this, typeof(Components.SelectProcess), "Select Process");
         _selectProcess.ShowModal(this);
     }
 
@@ -82,5 +83,15 @@ public partial class MainWindow : Window
             _selectProcess?.Close();
             _selectProcess = null;
         });
+    }
+
+    public void OpenPointerScanner(PointerScanOptionsSubmitModel pointerScanOptionsSubmitModel)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            { nameof(Components.PointerScanner.PointerScanOptionsSubmitModel), pointerScanOptionsSubmitModel }
+        };
+        var pointerScanner = new BlazorWebViewWindow(this, typeof(PointerScanner), "Pointer Scanner", parameters: parameters);
+        pointerScanner.Show();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.WpfBlazor.Components.Modals;
+using CelSerEngine.WpfBlazor.Components.PointerScanner;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -55,6 +56,11 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
             {
                 Text = "Toggle selected items",
                 OnClick = EventCallback.Factory.Create(this, OnToggleFreezeSelectedItemsContextMenuClicked)
+            },
+            new ContextMenuItem
+            {
+                Text = "Pointer scan for this address",
+                OnClick = EventCallback.Factory.Create(this, OnPointerScanForThisAddressContextMenuClicked)
             },
         ];
     }
@@ -205,6 +211,17 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
     }
 
+    private async Task ShowPointerScanOptionsModal(TrackedItem selectedTrackedItem)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            { nameof(ModalPointerScanOptions.ScanAddress), selectedTrackedItem.Item.Address.ToString("X") },
+            //{ nameof(ModalPointerScanOptions.DescriptionChanged), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItems)) },
+        };
+
+        await ModalRef.ShowAsync<ModalPointerScanOptions>("Pointer scanner options", parameters);
+    }
+
     private async Task OnValueChangeRequested(string desiredValue, params TrackedItem[] trackedItems)
     {
         foreach (var trackedItem in trackedItems)
@@ -250,6 +267,21 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         foreach (var item in selectedTrackedItems)
         {
             item.IsFrozen = !areAllFrozen;
+        }
+
+        await RefreshDataAsync();
+    }
+
+
+
+    private async Task OnPointerScanForThisAddressContextMenuClicked()
+    {
+        var selectedTrackedItems = await GetSelectedTrackedItems();
+        var selectedTrackedItem = selectedTrackedItems.FirstOrDefault();
+
+        if (selectedTrackedItem != null)
+        {
+            await ShowPointerScanOptionsModal(selectedTrackedItem);
         }
 
         await RefreshDataAsync();

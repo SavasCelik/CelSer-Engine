@@ -1,37 +1,33 @@
-﻿using Microsoft.AspNetCore.Components.WebView;
-using Microsoft.AspNetCore.Components.WebView.Wpf;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using Microsoft.AspNetCore.Components.WebView.Wpf;
+using Microsoft.AspNetCore.Components.WebView;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace CelSerEngine.WpfBlazor.Views;
 /// <summary>
-/// Interaction logic for SelectProcess.xaml
+/// Interaction logic for BlazorWebViewWindow.xaml
 /// </summary>
-public partial class SelectProcess : Window
+public partial class BlazorWebViewWindow : Window
 {
-    public SelectProcess(MainWindow mainWindow)
+    public BlazorWebViewWindow(MainWindow mainWindow, Type componentType, string title, int width = 800, int height = 450, IDictionary<string, object?>? parameters = null)
     {
         InitializeComponent();
+        Title = title;
+        Width = width;
+        Height = height;
         Resources.Add("services", mainWindow.Services);
         blazorWebView.BlazorWebViewInitialized += BlazorWebView_BlazorWebViewInitialized;
-        Closing += async (s, args) => 
+        Closing += async (s, args) =>
         {
             await blazorWebView.DisposeAsync();
         };
+        var component = new RootComponent
+        {
+            ComponentType = componentType,
+            Selector = "#app",
+            Parameters = parameters
+        };
+        blazorWebView.RootComponents.Add(component);
     }
 
     private void BlazorWebView_BlazorWebViewInitialized(object? sender, BlazorWebViewInitializedEventArgs e)
