@@ -2,7 +2,9 @@
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace CelSerEngine.WpfBlazor.Components.PointerScanner;
@@ -11,6 +13,9 @@ public partial class PointerScanner : ComponentBase, IDisposable
 {
     [Parameter]
     public PointerScanOptionsSubmitModel PointerScanOptionsSubmitModel { get; set; } = default!;
+
+    [Inject]
+    private ILogger<PointerScanner> Logger { get; set; } = default!;
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
@@ -42,7 +47,14 @@ public partial class PointerScanner : ComponentBase, IDisposable
                 SearchedAddress = new IntPtr(long.Parse(PointerScanOptionsSubmitModel.ScanAddress, NumberStyles.HexNumber))
             };
             var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
+            // also log the given pointer scan options
+            Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
+                pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset, pointerScanOptions.SearchedAddress.ToString("X"));
+            var stopwatch = Stopwatch.StartNew();
             var foundPointers = await pointerScanner.StartPointerScanAsync(EngineSession.SelectedProcessHandle);
+            stopwatch.Stop();
+            Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
+
             await _module!.InvokeVoidAsync("applyPointerScannerResults",
                 new
                 {
