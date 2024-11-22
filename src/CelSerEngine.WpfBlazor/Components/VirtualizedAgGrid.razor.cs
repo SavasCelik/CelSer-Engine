@@ -92,7 +92,7 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
     [JSInvokable]
     public Task SelectTillItemAsync(string selectTillItem)
     {
-        var isSlecting = false;
+        var isSelecting = false;
         var lastAddress = selectTillItem;
         var firstAddress = SelectedItems.LastOrDefault();
 
@@ -113,16 +113,16 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
             var address = GetRowId(item);
             if (address == firstAddress || address == lastAddress)
             {
-                isSlecting = !isSlecting;
+                isSelecting = !isSelecting;
 
-                if (!isSlecting)
+                if (!isSelecting)
                 {
                     SelectedItems.Add(address);
                     break;
                 }
             }
 
-            if (isSlecting)
+            if (isSelecting)
             {
                 SelectedItems.Add(address);
             }
