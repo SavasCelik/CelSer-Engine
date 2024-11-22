@@ -103,6 +103,11 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
             return Task.CompletedTask;
         }
 
+        if (firstAddress == lastAddress)
+        {
+            return Task.CompletedTask;
+        }
+
         foreach (var item in Items)
         {
             var address = GetRowId(item);
