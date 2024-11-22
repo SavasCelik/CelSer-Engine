@@ -27,8 +27,7 @@ export function applyPointerScannerResults(pointerScanResult) {
         {
             field: "baseAddress",
             headerName: "Base Address",
-            sortable: false,
-            resizable: false,
+            sortable: false
         }
     ];
 
@@ -38,10 +37,15 @@ export function applyPointerScannerResults(pointerScanResult) {
         newColDefs.push({
             valueGetter: p => p.data.offsetArray[captureIndex],
             headerName: `Offset ${i}`,
-            sortable: false,
-            resizable: false
+            sortable: false
         });
     }
+
+    newColDefs.push({
+        field: "pointsTo",
+        headerName: "Points To",
+        sortable: false
+    });
 
     pointerScannerResultsGridApi.setGridOption("columnDefs", newColDefs);
     pointerScannerResultsGridApi.setGridOption("rowData", pointerScanResult.pointers);

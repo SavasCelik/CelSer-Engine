@@ -47,7 +47,6 @@ public partial class PointerScanner : ComponentBase, IDisposable
                 SearchedAddress = new IntPtr(long.Parse(PointerScanOptionsSubmitModel.ScanAddress, NumberStyles.HexNumber))
             };
             var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
-            // also log the given pointer scan options
             Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
                 pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset, pointerScanOptions.SearchedAddress.ToString("X"));
             var stopwatch = Stopwatch.StartNew();
@@ -62,6 +61,7 @@ public partial class PointerScanner : ComponentBase, IDisposable
                     {
                         BaseAddress = x.ModuleNameWithBaseOffset,
                         OffsetArray = x.Offsets.Select(y => y.ToString("X")).Reverse().ToArray(),
+                        PointsTo = string.Empty
                     }),
                     MaxLevel = pointerScanOptions.MaxLevel
                 });
