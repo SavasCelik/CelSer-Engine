@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 using System.Globalization;
 using System.Text.Json;
 
-namespace CelSerEngine.WpfBlazor.Components;
+namespace CelSerEngine.WpfBlazor.Components.AgGrid;
 
 public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyncDisposable
 {
@@ -106,9 +106,7 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
         }
 
         if (firstAddress == lastAddress)
-        {
             return Task.CompletedTask;
-        }
 
         foreach (var item in Items)
         {
@@ -125,9 +123,7 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
             }
 
             if (isSelecting)
-            {
                 SelectedItems.Add(address);
-            }
         }
 
         return Task.CompletedTask;
@@ -169,8 +165,6 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
         _dotNetHelper?.Dispose();
 
         if (_module != null)
-        {
             await _module.DisposeAsync();
-        }
     }
 }
