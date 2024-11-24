@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
-public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
+public partial class VirtualizedAgGrid<TSource> : ComponentBase, IAsyncDisposable
 {
     public HashSet<string> SelectedItems { get; set; } = [];
 
@@ -19,20 +19,20 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
     /// Gets or sets the fixed item source.
     /// </summary>
     [Parameter]
-    public ICollection<TItem> Items { get; set; } = default!;
+    public ICollection<TSource> Items { get; set; } = default!;
 
     [Parameter]
-    public Func<TItem, string> GetRowId { get; set; } = default!;
+    public Func<TSource, string> GetRowId { get; set; } = default!;
 
     [Parameter]
-    public Func<TItem, object> SerializableItem { get; set; } = default!;
+    public Func<TSource, object> SerializableItem { get; set; } = default!;
 
     [Parameter]
-    public EventCallback<TItem> OnRowDoubleClicked { get; set; }
+    public EventCallback<TSource> OnRowDoubleClicked { get; set; }
 
     private CultureInfo _cultureInfo = new("en-US");
     private IJSObjectReference? _module;
-    private DotNetObjectReference<VirtualizedAgGrid<TItem>>? _dotNetHelper;
+    private DotNetObjectReference<VirtualizedAgGrid<TSource>>? _dotNetHelper;
     private int _lastStartIndex = 0;
     private int _lastItemCount = 0;
 
@@ -62,7 +62,7 @@ public partial class VirtualizedAgGrid<TItem> : ComponentBase, IAsyncDisposable
         await _module!.InvokeVoidAsync("resetGrid");
     }
 
-    public IEnumerable<TItem> GetVisibleItems()
+    public IEnumerable<TSource> GetVisibleItems()
     {
         return Items.Skip(_lastStartIndex).Take(_lastItemCount);
     }
