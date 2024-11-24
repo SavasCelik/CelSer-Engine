@@ -39,7 +39,7 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
         if (firstRender)
         {
             _dotNetHelper = DotNetObjectReference.Create(this);
-            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/VirtualizedAgGrid.razor.js");
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/AgGrid/VirtualizedAgGrid.razor.js");
             await _module.InvokeVoidAsync("initVirtualizedAgGrid", _dotNetHelper);
         }
     }
