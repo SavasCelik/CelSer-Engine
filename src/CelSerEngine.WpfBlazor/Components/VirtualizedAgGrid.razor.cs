@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
-public partial class VirtualizedAgGrid<TSource> : ComponentBase, IAsyncDisposable
+public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyncDisposable
 {
     public HashSet<string> SelectedItems { get; set; } = [];
 
@@ -25,14 +25,11 @@ public partial class VirtualizedAgGrid<TSource> : ComponentBase, IAsyncDisposabl
     public Func<TSource, string> GetRowId { get; set; } = default!;
 
     [Parameter]
-    public Func<TSource, object> SerializableItem { get; set; } = default!;
-
-    [Parameter]
     public EventCallback<TSource> OnRowDoubleClicked { get; set; }
 
     private CultureInfo _cultureInfo = new("en-US");
     private IJSObjectReference? _module;
-    private DotNetObjectReference<VirtualizedAgGrid<TSource>>? _dotNetHelper;
+    private DotNetObjectReference<VirtualizedAgGrid<TSource, TDisplay>>? _dotNetHelper;
     private int _lastStartIndex = 0;
     private int _lastItemCount = 0;
 
@@ -88,7 +85,7 @@ public partial class VirtualizedAgGrid<TSource> : ComponentBase, IAsyncDisposabl
 
         return Task.FromResult(JsonSerializer.Serialize(visibleItems.Select(x => new
         {
-            Item = SerializableItem(x),
+            Item = (TDisplay)Activator.CreateInstance(typeof(TDisplay), x)!,
             IsSelected = SelectedItems.Contains(GetRowId(x)),
             RowId = GetRowId(x)
         })));

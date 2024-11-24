@@ -16,7 +16,7 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
     [Inject]
     private INativeApi NativeApi { get; set; } = default!;
 
-    private VirtualizedAgGrid<MemorySegment> VirtualizedAgGridRef { get; set; } = default!;
+    private VirtualizedAgGrid<MemorySegment, ScanResultItem> VirtualizedAgGridRef { get; set; } = default!;
     private List<MemorySegment> ScanResultItems { get; set; }
     private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
 
