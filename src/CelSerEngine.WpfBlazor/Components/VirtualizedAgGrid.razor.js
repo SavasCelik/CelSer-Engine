@@ -41,7 +41,7 @@ function initVirtualizedAgGrid(_dotNetHelper) {
         loadingOverlayComponentParams: {
             isScanning: false,
         },
-        getRowId: (params) => params.data.Item.Address,
+        getRowId: (params) => params.data.RowId,
         // Column Definitions: Defines the columns to be displayed.
         columnDefs: [
             {
@@ -114,7 +114,7 @@ function handleEvents() {
             if (e.shiftKey) {
                 e.preventDefault();
                 await dotNetHelper.invokeMethodAsync("SelectTillItemAsync", rowId);
-                gridApi.forEachNode(async (node) => node.selectThisNode(await dotNetHelper.invokeMethodAsync("IsItemSelectedAsync", node.data.Item.Address)));
+                gridApi.forEachNode(async (node) => node.selectThisNode(await dotNetHelper.invokeMethodAsync("IsItemSelectedAsync", node.data.RowId)));
                 return;
             }
 
@@ -150,7 +150,7 @@ async function onResize(entry) {
 }
 
 async function onRowDoubleClicked(row) {
-    await dotNetHelper.invokeMethodAsync('OnRowDoubleClickedDispatcherAsync', row.data.Item.Address);
+    await dotNetHelper.invokeMethodAsync('OnRowDoubleClickedDispatcherAsync', row.data.RowId);
 }
 
 function showLoadingOverlay(showSpinner = true) {
