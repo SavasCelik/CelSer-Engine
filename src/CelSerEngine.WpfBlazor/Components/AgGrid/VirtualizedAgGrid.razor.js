@@ -35,7 +35,6 @@ function initVirtualizedAgGrid(_dotNetHelper, _gridOptions) {
             sortable: false,
             flex: 1
         },
-        rowSelection: 'multiple',
         animateRows: false,
         loadingOverlayComponent: loadingOverlay,
         loadingOverlayComponentParams: {
@@ -72,6 +71,7 @@ function initVirtualizedAgGrid(_dotNetHelper, _gridOptions) {
         });
     }
     gridOptions["columnDefs"] = columnDefs;
+    gridOptions["rowSelection"] = _gridOptions.rowSelection.toLowerCase();
 
     const myGridElement = document.querySelector('#scanResultsGrid');
     gridApi = agGrid.createGrid(myGridElement, gridOptions);

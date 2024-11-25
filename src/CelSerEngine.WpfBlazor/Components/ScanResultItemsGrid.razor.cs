@@ -46,6 +46,7 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
                 new ColumnDef { Field = "Value", HeaderName = "Value" },
                 new ColumnDef { Field = "PreviousValue", HeaderName = "Previous Value" }
             ],
+            RowSelection = RowSelection.Multiple,
             GetRowStyleFunc = $$"""
                                     function(item)
                                     {
