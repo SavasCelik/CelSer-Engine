@@ -19,6 +19,8 @@ public partial class BlazorWebViewWindow : Window
         blazorWebView.BlazorWebViewInitialized += BlazorWebView_BlazorWebViewInitialized;
         Closing += async (s, args) =>
         {
+            // if this DisposeAsync fails, make sure IAsyncDisposable isn't used in the components that are loaded in the BlazorWebViewWindow.xaml.cs
+            // In case a nested component is using IAsyncDisposable make sure to dispose the nested component in the parent component
             await blazorWebView.DisposeAsync();
         };
         var component = new RootComponent
