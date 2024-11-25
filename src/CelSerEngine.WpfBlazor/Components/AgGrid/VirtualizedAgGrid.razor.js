@@ -63,14 +63,7 @@ function initVirtualizedAgGrid(_dotNetHelper, _gridOptions) {
         };
     }
 
-    const columnDefs = [];
-    for (const columnDef of _gridOptions.columnDefs) {
-        columnDefs.push({
-            field: `Item.${columnDef.field}`,
-            headerName: columnDef.headerName ?? columnDef.field,
-        });
-    }
-    gridOptions["columnDefs"] = columnDefs;
+    gridOptions["columnDefs"] = generateColumnDefs(_gridOptions.columnDefs);
     gridOptions["rowSelection"] = _gridOptions.rowSelection.toLowerCase();
 
     const myGridElement = document.querySelector('#scanResultsGrid');
@@ -208,4 +201,32 @@ async function onScroll() {
     const visibleItems = await loadItemsIntoGrid(startIndex, visibleRowCount);
 }
 
-export { initVirtualizedAgGrid, itemsChanged, showLoadingOverlay, resetGrid }
+function generateColumnDefs(columnDefs) {
+    const newColDefs = [];
+    for (const columnDef of columnDefs) {
+        if (columnDef.isArray) {
+            // create cols from array items
+            for (var i = 0; i < columnDef.arraySize; i++) {
+                const captureIndex = i; // this could be done using the p parameter in the valueGetter, but this is way easier.
+                newColDefs.push({
+                    valueGetter: p => p.data.Item[columnDef.field][captureIndex],
+                    headerName: `${columnDef.headerName} ${i}`,
+                });
+            }
+        }
+        else {
+            newColDefs.push({
+                field: `Item.${columnDef.field}`,
+                headerName: columnDef.headerName ?? columnDef.field,
+            });
+        }
+    }
+
+    return newColDefs;
+}
+
+function updateColumnDefs(columnDefs) {
+    gridApi.setGridOption("columnDefs", generateColumnDefs(columnDefs)); 
+}
+
+export { initVirtualizedAgGrid, itemsChanged, showLoadingOverlay, resetGrid, updateColumnDefs }

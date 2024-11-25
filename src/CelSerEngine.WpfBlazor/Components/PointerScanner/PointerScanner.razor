@@ -1,5 +1,11 @@
 ﻿<ThemeSetter />
 
 <div class="d-flex vh-100">
-    <div id="pointerScannerResultsGrid" class="@(ThemeManager.IsDark ? "ag-theme-quartz-dark" : "ag-theme-quartz") flex-grow-1 w-100 h-100"></div>
+    <VirtualizedAgGrid @ref="VirtualizedAgGridRef"
+                       Items="ScanResultItems"
+                       TSource="CelSerEngine.Core.Models.Pointer"
+                       TDisplay="PointerScanResultItem"
+                       GetRowId="x => x.ModuleNameWithBaseOffset + x.OffsetsDisplayString"
+                       GridOptions="GridOptions">
+    </VirtualizedAgGrid>
 </div>

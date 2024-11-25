@@ -14,6 +14,8 @@ public class ColumnDef
 {
     public required string Field { get; set; }
     public string? HeaderName { get; set; }
+    public bool IsArray { get; set; }
+    public int ArraySize { get; set; }
 }
 
 public enum RowSelection

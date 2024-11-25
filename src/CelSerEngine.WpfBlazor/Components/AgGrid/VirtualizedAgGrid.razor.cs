@@ -47,6 +47,11 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
         }
     }
 
+    public async Task UpdateColumnDefs()
+    {
+        await _module!.InvokeVoidAsync("updateColumnDefs", GridOptions.ColumnDefs);
+    }
+
     public async Task ApplyDataAsync()
     {
         await _module!.InvokeVoidAsync("itemsChanged", Items.Count);
