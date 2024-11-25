@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
+using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
@@ -57,12 +58,7 @@ public partial class PointerScanner : ComponentBase, IDisposable
             await _module!.InvokeVoidAsync("applyPointerScannerResults",
                 new
                 {
-                    Pointers = foundPointers.Select(x => new
-                    {
-                        BaseAddress = x.ModuleNameWithBaseOffset,
-                        OffsetArray = x.Offsets.Select(y => y.ToString("X")).Reverse().ToArray(),
-                        PointsTo = string.Empty
-                    }),
+                    Pointers = foundPointers.Select(x => new PointerScanResultItem(x)),
                     MaxLevel = pointerScanOptions.MaxLevel
                 });
         }
