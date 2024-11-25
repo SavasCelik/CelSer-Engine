@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace CelSerEngine.WpfBlazor.Components.AgGrid;
 
-public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyncDisposable
+public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyncDisposable where TDisplay : new()
 {
     public HashSet<string> SelectedItems { get; set; } = [];
 
@@ -25,6 +25,9 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     public Func<TSource, string> GetRowId { get; set; } = default!;
 
     [Parameter]
+    public GridOptions GridOptions { get; set; } = default!;
+
+    [Parameter]
     public EventCallback<TSource> OnRowDoubleClicked { get; set; }
 
     private CultureInfo _cultureInfo = new("en-US");
@@ -40,7 +43,7 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
         {
             _dotNetHelper = DotNetObjectReference.Create(this);
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/AgGrid/VirtualizedAgGrid.razor.js");
-            await _module.InvokeVoidAsync("initVirtualizedAgGrid", _dotNetHelper);
+            await _module.InvokeVoidAsync("initVirtualizedAgGrid", _dotNetHelper, GridOptions);
         }
     }
 

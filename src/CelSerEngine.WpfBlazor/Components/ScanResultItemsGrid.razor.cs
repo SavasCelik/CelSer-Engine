@@ -18,6 +18,7 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
     private INativeApi NativeApi { get; set; } = default!;
 
     private VirtualizedAgGrid<MemorySegment, ScanResultItem> VirtualizedAgGridRef { get; set; } = default!;
+    private GridOptions GridOptions { get; set; }
     private List<MemorySegment> ScanResultItems { get; set; }
     private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
 
@@ -36,6 +37,24 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
                 OnClick = EventCallback.Factory.Create(this, ContextMenuItemClickedAsync)
             },
         ];
+
+        GridOptions = new GridOptions
+        {
+            ColumnDefs =
+            [
+                new ColumnDef { Field = "Address", HeaderName = "Address" },
+                new ColumnDef { Field = "Value", HeaderName = "Value" },
+                new ColumnDef { Field = "PreviousValue", HeaderName = "Previous Value" }
+            ],
+            GetRowStyleFunc = $$"""
+                                    function(item)
+                                    {
+                                        return item.{{nameof(ScanResultItem.PreviousValue)}} !== item.{{nameof(ScanResultItem.Value)}}
+                                        ? { color: 'red' }
+                                        : { color: 'inherit' };
+                                    }
+                                """
+        };
     }
 
     public async Task AddScanResultItemsAsync(IEnumerable<MemorySegment> items)

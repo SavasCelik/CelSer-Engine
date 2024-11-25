@@ -5,7 +5,7 @@ const itemHeight = 25;
 const maxDivHeight = 32000000;
 let totalItemCount = 0;
 
-function initVirtualizedAgGrid(_dotNetHelper) {
+function initVirtualizedAgGrid(_dotNetHelper, _gridOptions) {
     dotNetHelper = _dotNetHelper;
 
     const loadingOverlay = class CustomLoadingOverlay {
@@ -42,21 +42,6 @@ function initVirtualizedAgGrid(_dotNetHelper) {
             isScanning: false,
         },
         getRowId: (params) => params.data.RowId,
-        // Column Definitions: Defines the columns to be displayed.
-        columnDefs: [
-            {
-                field: "Item.Address",
-                headerName: "Address"
-            },
-            {
-                field: "Item.Value",
-                headerName: "Value"
-            },
-            {
-                field: "Item.PreviousValue",
-                headerName: "Previous"
-            }
-        ],
         onModelUpdated: (params) => {
             const nodesToSelect = [];
             params.api.forEachNode((node) => {
@@ -66,16 +51,27 @@ function initVirtualizedAgGrid(_dotNetHelper) {
             });
             params.api.setNodesSelected({ nodes: nodesToSelect, newValue: true });
         },
-        getRowStyle: params => {
-            if (params.node.data && params.node.data.Item.PreviousValue != params.node.data.Item.Value) {
-                return { color: 'red' };
-            }
-            else {
-                return { color: 'inherit' };
-            }
-        },
         onRowDoubleClicked: onRowDoubleClicked
     };
+    
+    if (_gridOptions.getRowStyleFunc != null) {
+        gridOptions["getRowStyle"] = params => {
+            if (params.node.data) {
+                const getRowStyleFunc = new Function("itemParam", `return ${_gridOptions.getRowStyleFunc}(itemParam);`);
+
+                return getRowStyleFunc(params.node.data.Item);
+            }
+        };
+    }
+
+    const columnDefs = [];
+    for (const columnDef of _gridOptions.columnDefs) {
+        columnDefs.push({
+            field: `Item.${columnDef.field}`,
+            headerName: columnDef.headerName ?? columnDef.field,
+        });
+    }
+    gridOptions["columnDefs"] = columnDefs;
 
     const myGridElement = document.querySelector('#scanResultsGrid');
     gridApi = agGrid.createGrid(myGridElement, gridOptions);
