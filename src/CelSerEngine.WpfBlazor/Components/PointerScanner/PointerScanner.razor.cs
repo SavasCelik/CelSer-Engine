@@ -34,8 +34,6 @@ public partial class PointerScanner : ComponentBase, IDisposable
     private VirtualizedAgGrid<Pointer, PointerScanResultItem> VirtualizedAgGridRef { get; set; } = default!;
     private GridOptions GridOptions { get; }
     private List<Pointer> ScanResultItems { get; }
-
-    private IJSObjectReference? _module;
     private DotNetObjectReference<PointerScanner>? _dotNetHelper;
 
     public PointerScanner()
@@ -58,10 +56,6 @@ public partial class PointerScanner : ComponentBase, IDisposable
         if (firstRender)
         {
             _dotNetHelper = DotNetObjectReference.Create(this);
-            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/PointerScanner/PointerScanner.razor.js");
-
-            //await _module!.InvokeVoidAsync("initPointerScanner", _dotNetHelper);
-
             var pointerScanOptions = new PointerScanOptions
             {
                 MaxOffset = PointerScanOptionsSubmitModel.MaxOffset,
@@ -88,11 +82,5 @@ public partial class PointerScanner : ComponentBase, IDisposable
         // using IAsyncDisposable causes the closing method in BlazorWebViewWindow.xaml.cs to throw an exception
         _dotNetHelper?.Dispose();
         VirtualizedAgGridRef.DisposeAsync();
-
-        if (_module != null)
-        {
-            JSRuntime.InvokeVoidAsync("console.log", $"Disposing {nameof(PointerScanner)} js");
-            _module.DisposeAsync();
-        }
     }
 }
