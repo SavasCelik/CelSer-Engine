@@ -2,19 +2,19 @@
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
 using CelSerEngine.WpfBlazor.Components.AgGrid;
+using CelSerEngine.WpfBlazor.Components.Modals;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using System.Diagnostics;
-using System.Globalization;
 
 namespace CelSerEngine.WpfBlazor.Components.PointerScanner;
 
 public partial class PointerScanner : ComponentBase, IDisposable
 {
     [Parameter]
-    public PointerScanOptionsSubmitModel PointerScanOptionsSubmitModel { get; set; } = default!;
+    public IntPtr SearchedAddress { get; set; }
 
     [Inject]
     private ILogger<PointerScanner> Logger { get; set; } = default!;
@@ -32,9 +32,9 @@ public partial class PointerScanner : ComponentBase, IDisposable
     private ThemeManager ThemeManager { get; set; } = default!;
 
     private VirtualizedAgGrid<Pointer, PointerScanResultItem> VirtualizedAgGridRef { get; set; } = default!;
+    private Modal ModalRef { get; set; } = default!;
     private GridOptions GridOptions { get; }
     private List<Pointer> ScanResultItems { get; }
-    private DotNetObjectReference<PointerScanner>? _dotNetHelper;
 
     private readonly Timer _scanResultsUpdater;
 
@@ -52,36 +52,6 @@ public partial class PointerScanner : ComponentBase, IDisposable
         };
 
         ScanResultItems = [];
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            _dotNetHelper = DotNetObjectReference.Create(this);
-            var pointerScanOptions = new PointerScanOptions
-            {
-                MaxOffset = PointerScanOptionsSubmitModel.MaxOffset,
-                MaxLevel = PointerScanOptionsSubmitModel.MaxLevel,
-                SearchedAddress = new IntPtr(long.Parse(PointerScanOptionsSubmitModel.ScanAddress, NumberStyles.HexNumber))
-            };
-
-            GridOptions.ColumnDefs[1].ArraySize = pointerScanOptions.MaxLevel;
-
-            var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
-            Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
-                pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset, pointerScanOptions.SearchedAddress.ToString("X"));
-            var stopwatch = Stopwatch.StartNew();
-            ScanResultItems.AddRange(await pointerScanner.StartPointerScanAsync(EngineSession.SelectedProcessHandle));
-            stopwatch.Stop();
-            Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
-
-            if (ScanResultItems.Count > 0)
-            {
-                await VirtualizedAgGridRef.ApplyDataAsync();
-                StartScanResultValueUpdater();
-            }
-        }
     }
 
     private void StartScanResultValueUpdater()
@@ -105,13 +75,43 @@ public partial class PointerScanner : ComponentBase, IDisposable
         await VirtualizedAgGridRef.ApplyDataAsync();
     }
 
+    private async Task OnModalReadyAsync()
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            { nameof(ModalPointerScanOptions.SearchedAddress), SearchedAddress.ToString("X") },
+            { nameof(ModalPointerScanOptions.OnPointerScanOptionsSubmit), EventCallback.Factory.Create<PointerScanOptions>(this, OnPointerScanOptionsSubmit) },
+        };
+
+        await ModalRef.ShowAsync<ModalPointerScanOptions>("Pointer scanner options", parameters);
+    }
+
+    private async Task OnPointerScanOptionsSubmit(PointerScanOptions pointerScanOptions)
+    {
+        GridOptions.ColumnDefs[1].ArraySize = pointerScanOptions.MaxLevel;
+
+        var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
+        Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
+            pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset, pointerScanOptions.SearchedAddress.ToString("X"));
+        var stopwatch = Stopwatch.StartNew();
+        ScanResultItems.AddRange(await pointerScanner.StartPointerScanAsync(EngineSession.SelectedProcessHandle));
+        stopwatch.Stop();
+        Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
+
+        if (ScanResultItems.Count > 0)
+        {
+            await VirtualizedAgGridRef.ApplyDataAsync();
+            StartScanResultValueUpdater();
+        }
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {
         StopScanResultValueUpdater();
         _scanResultsUpdater.Dispose();
         // using IAsyncDisposable causes the closing method in BlazorWebViewWindow.xaml.cs to throw an exception
-        _dotNetHelper?.Dispose();
         VirtualizedAgGridRef.DisposeAsync();
+        ModalRef.DisposeAsync();
     }
 }

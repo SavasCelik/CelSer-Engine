@@ -85,11 +85,11 @@ public partial class MainWindow : Window
         });
     }
 
-    public void OpenPointerScanner(PointerScanOptionsSubmitModel pointerScanOptionsSubmitModel)
+    public void OpenPointerScanner(IntPtr searchedAddress)
     {
         var parameters = new Dictionary<string, object?>
         {
-            { nameof(Components.PointerScanner.PointerScanOptionsSubmitModel), pointerScanOptionsSubmitModel }
+            { nameof(Components.PointerScanner.PointerScanner.SearchedAddress), searchedAddress }
         };
         var pointerScanner = new BlazorWebViewWindow(this, typeof(PointerScanner), "Pointer Scanner", parameters: parameters);
         pointerScanner.Show();

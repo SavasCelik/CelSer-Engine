@@ -1,4 +1,6 @@
-﻿<ThemeSetter />
+﻿@using CelSerEngine.WpfBlazor.Components.Modals
+
+<ThemeSetter />
 
 <div class="d-flex vh-100">
     <VirtualizedAgGrid @ref="VirtualizedAgGridRef"
@@ -8,4 +10,5 @@
                        GetRowId="x => x.ModuleNameWithBaseOffset + x.OffsetsDisplayString"
                        GridOptions="GridOptions">
     </VirtualizedAgGrid>
+    <Modal @ref="ModalRef" OnModalReady="OnModalReadyAsync" />
 </div>

@@ -21,6 +21,9 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     [Inject]
     private ThemeManager ThemeManager { get; set; } = default!;
 
+    [Inject]
+    private MainWindow MainWindow { get; set; } = default!;
+
     private Modal ModalRef { get; set; } = default!;
     private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
 
@@ -211,17 +214,6 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
     }
 
-    private async Task ShowPointerScanOptionsModal(TrackedItem selectedTrackedItem)
-    {
-        var parameters = new Dictionary<string, object>
-        {
-            { nameof(ModalPointerScanOptions.ScanAddress), selectedTrackedItem.Item.Address.ToString("X") },
-            //{ nameof(ModalPointerScanOptions.DescriptionChanged), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItems)) },
-        };
-
-        await ModalRef.ShowAsync<ModalPointerScanOptions>("Pointer scanner options", parameters);
-    }
-
     private async Task OnValueChangeRequested(string desiredValue, params TrackedItem[] trackedItems)
     {
         foreach (var trackedItem in trackedItems)
@@ -281,7 +273,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
         if (selectedTrackedItem != null)
         {
-            await ShowPointerScanOptionsModal(selectedTrackedItem);
+            MainWindow.OpenPointerScanner(selectedTrackedItem.Item.Address);
         }
 
         await RefreshDataAsync();
