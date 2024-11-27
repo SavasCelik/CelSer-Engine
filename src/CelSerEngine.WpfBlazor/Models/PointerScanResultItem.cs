@@ -21,6 +21,6 @@ public class PointerScanResultItem
     {
         BaseAddress = pointer.ModuleNameWithBaseOffset;
         OffsetArray = pointer.Offsets.Select(y => y.ToString("X")).Reverse().ToArray();
-        PointsTo = string.Empty;
+        PointsTo = pointer.PointingTo.ToString("X");
     }
 }

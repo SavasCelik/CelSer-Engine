@@ -27,7 +27,7 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
 
     public ScanResultItemsGrid()
     {
-        _scanResultsUpdater = new Timer((e) => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
+        _scanResultsUpdater = new Timer(_ => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
         ScanResultItems = [];
         ContextMenuItems =
         [

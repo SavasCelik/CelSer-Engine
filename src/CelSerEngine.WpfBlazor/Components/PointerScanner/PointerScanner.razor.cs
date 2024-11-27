@@ -36,15 +36,18 @@ public partial class PointerScanner : ComponentBase, IDisposable
     private List<Pointer> ScanResultItems { get; }
     private DotNetObjectReference<PointerScanner>? _dotNetHelper;
 
+    private readonly Timer _scanResultsUpdater;
+
     public PointerScanner()
     {
+        _scanResultsUpdater = new Timer(_ => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
         GridOptions = new GridOptions
         {
             ColumnDefs =
             [
                 new ColumnDef { Field = "BaseAddress", HeaderName = "Address" },
                 new ColumnDef { Field = "OffsetArray", HeaderName = "Offset", IsArray = true, ArraySize = 0 },
-                new ColumnDef { Field = "PointsTo", HeaderName = "Previous Value" }
+                new ColumnDef { Field = "PointsTo", HeaderName = "Points To" }
             ]
         };
 
@@ -72,13 +75,40 @@ public partial class PointerScanner : ComponentBase, IDisposable
             ScanResultItems.AddRange(await pointerScanner.StartPointerScanAsync(EngineSession.SelectedProcessHandle));
             stopwatch.Stop();
             Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
-            await VirtualizedAgGridRef.ApplyDataAsync();
+
+            if (ScanResultItems.Count > 0)
+            {
+                await VirtualizedAgGridRef.ApplyDataAsync();
+                StartScanResultValueUpdater();
+            }
         }
+    }
+
+    private void StartScanResultValueUpdater()
+    {
+        _scanResultsUpdater.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private void StopScanResultValueUpdater()
+    {
+        _scanResultsUpdater.Change(Timeout.Infinite, 0);
+    }
+
+    private async void UpdateVisibleScanResults()
+    {
+        var visibleItems = VirtualizedAgGridRef.GetVisibleItems().ToList();
+
+        if (visibleItems.Count == 0)
+            return;
+
+        NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, visibleItems);
+        await VirtualizedAgGridRef.ApplyDataAsync();
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
+        StopScanResultValueUpdater();
         // using IAsyncDisposable causes the closing method in BlazorWebViewWindow.xaml.cs to throw an exception
         _dotNetHelper?.Dispose();
         VirtualizedAgGridRef.DisposeAsync();
