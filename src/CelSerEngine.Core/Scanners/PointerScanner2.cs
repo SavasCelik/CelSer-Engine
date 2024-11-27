@@ -56,7 +56,7 @@ public abstract class PointerScanner2
                 {
                     ModuleName = _modules[x.ModuleIndex].Name,
                     BaseAddress = _modules[x.ModuleIndex].BaseAddress,
-                    BaseOffset = _stackList.Contains(_modules[x.ModuleIndex].BaseAddress) ? (int)~x.Offset + 1 : (int)x.Offset,
+                    BaseOffset = (int)x.Offset,
                     Offsets = x.TempResults
                 }).ToList();
 
