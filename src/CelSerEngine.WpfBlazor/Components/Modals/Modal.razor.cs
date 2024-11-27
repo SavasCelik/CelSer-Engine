@@ -5,6 +5,9 @@ namespace CelSerEngine.WpfBlazor.Components.Modals;
 
 public partial class Modal : ComponentBase, IAsyncDisposable
 {
+    [Parameter] 
+    public EventCallback OnModalReady { get; set; }
+
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
     private Guid Id { get; set; } = Guid.NewGuid();
@@ -19,6 +22,11 @@ public partial class Modal : ComponentBase, IAsyncDisposable
         {
             _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Modals/Modal.razor.js");
             await _module.InvokeVoidAsync("initModal", Id);
+
+            if (OnModalReady.HasDelegate)
+            {
+                await OnModalReady.InvokeAsync();
+            }
         }
     }
 
