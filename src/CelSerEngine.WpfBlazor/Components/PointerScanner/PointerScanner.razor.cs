@@ -47,7 +47,7 @@ public partial class PointerScanner : ComponentBase, IDisposable
             [
                 new ColumnDef { Field = "BaseAddress", HeaderName = "Address" },
                 new ColumnDef { Field = "OffsetArray", HeaderName = "Offset", IsArray = true, ArraySize = 0 },
-                new ColumnDef { Field = "PointsTo", HeaderName = "Points To" }
+                new ColumnDef { Field = "PointsToWithValue", HeaderName = "Points To" }
             ]
         };
 
@@ -109,6 +109,7 @@ public partial class PointerScanner : ComponentBase, IDisposable
     public void Dispose()
     {
         StopScanResultValueUpdater();
+        _scanResultsUpdater.Dispose();
         // using IAsyncDisposable causes the closing method in BlazorWebViewWindow.xaml.cs to throw an exception
         _dotNetHelper?.Dispose();
         VirtualizedAgGridRef.DisposeAsync();
