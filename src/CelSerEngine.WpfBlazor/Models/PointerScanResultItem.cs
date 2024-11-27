@@ -9,14 +9,6 @@ public class PointerScanResultItem
     public string[] OffsetArray { get; set; }
     public string PointsToWithValue { get; set; }
 
-    [JsonConstructor]
-    public PointerScanResultItem()
-    {
-        BaseAddress = string.Empty;
-        OffsetArray = [];
-        PointsToWithValue = string.Empty;
-    }
-
     public PointerScanResultItem(Pointer pointer)
     {
         BaseAddress = pointer.ModuleNameWithBaseOffset;

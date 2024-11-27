@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace CelSerEngine.WpfBlazor.Components.AgGrid;
 
-public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyncDisposable where TDisplay : new()
+public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyncDisposable
 {
     public HashSet<string> SelectedItems { get; set; } = [];
 
