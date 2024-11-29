@@ -123,6 +123,14 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
         if (firstAddress == lastAddress)
             return Task.CompletedTask;
 
+        if (GridOptions.RowSelection == RowSelection.Single)
+        {
+            SelectedItems.Clear();
+            SelectedItems.Add(lastAddress);
+
+            return Task.CompletedTask;
+        }
+
         foreach (var item in Items)
         {
             var address = GetRowId(item);
@@ -161,6 +169,11 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     [JSInvokable]
     public Task AddSelectedItemAsync(string item)
     {
+        if (GridOptions.RowSelection == RowSelection.Single)
+        {
+            SelectedItems.Clear();
+        }
+
         SelectedItems.Add(item);
 
         return Task.CompletedTask;
