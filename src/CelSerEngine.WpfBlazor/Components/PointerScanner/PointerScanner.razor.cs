@@ -94,7 +94,7 @@ public partial class PointerScanner : ComponentBase, IAsyncDisposable
 
         var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
         Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
-            pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset, pointerScanOptions.SearchedAddress.ToString("X"));
+            pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
         var stopwatch = Stopwatch.StartNew();
         ScanResultItems.AddRange(await pointerScanner.StartPointerScanAsync(EngineSession.SelectedProcessHandle));
         stopwatch.Stop();
