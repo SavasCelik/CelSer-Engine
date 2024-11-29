@@ -1,6 +1,5 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.WpfBlazor.Components.Modals;
-using CelSerEngine.WpfBlazor.Components.PointerScanner;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -242,7 +241,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
     private async Task OnRemoveSelectedItemsContextMenuClicked()
     {
         var selectedIndexes = await _module!.InvokeAsync<int[]>("getSelectedRowIndexes");
-        
+
         foreach (var index in selectedIndexes)
         {
             _trackedItems.RemoveAt(index);
