@@ -35,6 +35,7 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     private DotNetObjectReference<VirtualizedAgGrid<TSource, TDisplay>>? _dotNetHelper;
     private int _lastStartIndex = 0;
     private int _lastItemCount = 0;
+    private bool _disposed;
 
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -54,6 +55,9 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
 
     public async Task ApplyDataAsync()
     {
+        if (_disposed)
+            return;
+
         await _module!.InvokeVoidAsync("itemsChanged", Items.Count);
     }
 
@@ -170,9 +174,12 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
         _dotNetHelper?.Dispose();
 
         if (_module != null)
             await _module.DisposeAsync();
+
+        GC.SuppressFinalize(this);
     }
 }

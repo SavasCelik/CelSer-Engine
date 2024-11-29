@@ -63,5 +63,6 @@ public partial class Modal : ComponentBase, IAsyncDisposable
         {
             await _module.DisposeAsync();
         }
+        GC.SuppressFinalize(this);
     }
 }

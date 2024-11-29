@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace CelSerEngine.WpfBlazor.Components.PointerScanner;
 
-public partial class PointerScanner : ComponentBase, IDisposable
+public partial class PointerScanner : ComponentBase, IAsyncDisposable
 {
     [Parameter]
     public IntPtr SearchedAddress { get; set; }
@@ -106,12 +106,10 @@ public partial class PointerScanner : ComponentBase, IDisposable
     }
 
     /// <inheritdoc />
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         StopScanResultValueUpdater();
-        _scanResultsUpdater.Dispose();
-        // using IAsyncDisposable causes the closing method in BlazorWebViewWindow.xaml.cs to throw an exception
-        VirtualizedAgGridRef.DisposeAsync();
-        ModalRef.DisposeAsync();
+        await _scanResultsUpdater.DisposeAsync();
+        GC.SuppressFinalize(this);
     }
 }

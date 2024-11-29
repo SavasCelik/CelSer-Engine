@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace CelSerEngine.WpfBlazor.Components;
 
-public partial class SelectProcess : ComponentBase, IDisposable
+public partial class SelectProcess : ComponentBase, IAsyncDisposable
 {
     private List<ProcessAdapter> _processes = new();
 
@@ -76,14 +76,15 @@ public partial class SelectProcess : ComponentBase, IDisposable
     }
 
     /// <inheritdoc />
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        // using IAsyncDisposable causes the closing method in BlazorWebViewWindow.xaml.cs to throw an exception
         _dotNetHelper?.Dispose();
 
         if (_module != null)
         {
-            _module.DisposeAsync();
+            await _module.DisposeAsync();
         }
+
+        GC.SuppressFinalize(this);
     }
 }

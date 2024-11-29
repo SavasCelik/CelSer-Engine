@@ -44,9 +44,18 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         blazorWebView.BlazorWebViewInitialized += BlazorWebView_BlazorWebViewInitialized;
-        Closing += async (s, args) =>
+        Closing += (s, args) =>
         {
-            await blazorWebView.DisposeAsync();
+            blazorWebView.RootComponents.Clear();
+            blazorWebView.WebView.Stop();
+            // this is a workaround for a bug in WebView2 that causes a crash when disposing the control
+#pragma warning disable CA2012
+            _ = blazorWebView.DisposeAsync();
+#pragma warning restore CA2012
+            if (blazorWebView.WebView != null!)
+            {
+                blazorWebView.WebView.Dispose();
+            }
         };
     }
 

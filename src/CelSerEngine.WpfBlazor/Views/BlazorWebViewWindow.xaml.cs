@@ -17,12 +17,20 @@ public partial class BlazorWebViewWindow : Window
         Height = height;
         Resources.Add("services", mainWindow.Services);
         blazorWebView.BlazorWebViewInitialized += BlazorWebView_BlazorWebViewInitialized;
-        Closing += async (s, args) =>
+        Closing += (s, args) =>
         {
-            // if this DisposeAsync fails, make sure IAsyncDisposable isn't used in the components that are loaded in the BlazorWebViewWindow.xaml.cs
-            // In case a nested component is using IAsyncDisposable make sure to dispose the nested component in the parent component
-            await blazorWebView.DisposeAsync();
+            blazorWebView.RootComponents.Clear();
+            blazorWebView.WebView.Stop();
+            // this is a workaround for a bug in WebView2 that causes a crash when disposing the control
+#pragma warning disable CA2012
+            _ = blazorWebView.DisposeAsync();
+#pragma warning restore CA2012
+            if (blazorWebView.WebView != null!)
+            {
+                blazorWebView.WebView.Dispose();
+            }
         };
+
         var component = new RootComponent
         {
             ComponentType = componentType,
