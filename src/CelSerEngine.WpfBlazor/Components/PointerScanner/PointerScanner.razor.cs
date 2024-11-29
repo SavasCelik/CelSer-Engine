@@ -89,6 +89,7 @@ public partial class PointerScanner : ComponentBase, IAsyncDisposable
     private async Task OnPointerScanOptionsSubmit(PointerScanOptions pointerScanOptions)
     {
         GridOptions.ColumnDefs[1].ArraySize = pointerScanOptions.MaxLevel;
+       await  VirtualizedAgGridRef.UpdateColumnDefs();
 
         var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
         Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
