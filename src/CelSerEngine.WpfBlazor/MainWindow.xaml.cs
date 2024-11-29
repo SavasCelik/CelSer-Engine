@@ -4,10 +4,8 @@ using CelSerEngine.WpfBlazor.Components.PointerScanner;
 using CelSerEngine.WpfBlazor.Extensions;
 using CelSerEngine.WpfBlazor.Loggers;
 using CelSerEngine.WpfBlazor.Views;
-using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 using System.Windows;
 
 namespace CelSerEngine.WpfBlazor;
@@ -47,7 +45,7 @@ public partial class MainWindow : Window
         {
             blazorWebView.ConfigureWebView();
         };
-        Closing += (s, args) =>
+        Unloaded += (s, args) =>
         {
             blazorWebView.CloseWebView();
         };

@@ -19,7 +19,7 @@ public partial class BlazorWebViewWindow : Window
         {
             blazorWebView.ConfigureWebView();
         };
-        Closing += (s, args) =>
+        Unloaded += (s, args) =>
         {
             blazorWebView.CloseWebView();
         };
