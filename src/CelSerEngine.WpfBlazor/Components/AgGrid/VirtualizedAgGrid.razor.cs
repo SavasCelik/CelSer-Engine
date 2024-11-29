@@ -36,6 +36,7 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     private int _lastStartIndex = 0;
     private int _lastItemCount = 0;
     private bool _disposed;
+    private bool _isUpdating;
 
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -55,10 +56,12 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
 
     public async Task ApplyDataAsync()
     {
-        if (_disposed)
+        if (_disposed || _isUpdating)
             return;
 
+        _isUpdating = true;
         await _module!.InvokeVoidAsync("itemsChanged", Items.Count);
+        _isUpdating = false;
     }
 
     public async Task ShowScanningOverlayAsync()
