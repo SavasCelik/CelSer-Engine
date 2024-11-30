@@ -22,6 +22,9 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     public ICollection<TSource> Items { get; set; } = default!;
 
     [Parameter]
+    public Func<int, int, Task<(ICollection<TSource> items, int totalCount)>>? ServerItems { get; set; }
+
+    [Parameter]
     public Func<TSource, string> GetRowId { get; set; } = default!;
 
     [Parameter]
@@ -35,6 +38,7 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     private DotNetObjectReference<VirtualizedAgGrid<TSource, TDisplay>>? _dotNetHelper;
     private int _lastStartIndex = 0;
     private int _lastItemCount = 0;
+    private (ICollection<TSource> items, int totalItemCount)? _lastServerItems;
     private bool _disposed;
     private bool _isUpdating;
 
@@ -60,7 +64,15 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
             return;
 
         _isUpdating = true;
-        await _module!.InvokeVoidAsync("itemsChanged", Items.Count);
+        var totalItemCount = Items.Count;
+
+        if (ServerItems != null)
+        {
+            _lastServerItems ??= await ServerItems(_lastStartIndex, _lastItemCount);
+            totalItemCount = _lastServerItems.Value.totalItemCount;
+        }
+
+        await _module!.InvokeVoidAsync("itemsChanged", totalItemCount);
         _isUpdating = false;
     }
 
@@ -76,6 +88,11 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
 
     public IEnumerable<TSource> GetVisibleItems()
     {
+        if (ServerItems != null && _lastServerItems != null)
+        {
+            return _lastServerItems.Value.items;
+        }
+
         return Items.Skip(_lastStartIndex).Take(_lastItemCount);
     }
 
@@ -92,18 +109,33 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     }
 
     [JSInvokable]
-    public Task<string> GetItemsAsync(int startIndex, int amount)
+    public async Task<string> GetItemsAsync(int startIndex, int amount, bool forceFetchItems)
     {
         _lastStartIndex = startIndex;
         _lastItemCount = amount;
-        var visibleItems = Items.Skip(startIndex).Take(amount);
 
-        return Task.FromResult(JsonSerializer.Serialize(visibleItems.Select(x => new
+        IEnumerable<TSource> visibleItems;
+
+        if (ServerItems != null)
+        {
+            if ((forceFetchItems || _lastServerItems == null))
+            {
+                _lastServerItems = await ServerItems(startIndex, amount);
+            }
+
+            visibleItems = _lastServerItems.Value.items;
+        }
+        else
+        {
+            visibleItems = Items.Skip(startIndex).Take(amount);
+        }
+
+        return JsonSerializer.Serialize(visibleItems.Select(x => new
         {
             Item = (TDisplay)Activator.CreateInstance(typeof(TDisplay), x)!,
             IsSelected = SelectedItems.Contains(GetRowId(x)),
             RowId = GetRowId(x)
-        })));
+        }));
     }
 
     [JSInvokable]
@@ -185,6 +217,12 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
         SelectedItems.Remove(item);
 
         return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public void InitItemCount(int itemCount)
+    {
+        _lastItemCount = itemCount;
     }
 
     /// <inheritdoc />

@@ -5,7 +5,7 @@ const itemHeight = 25;
 const maxDivHeight = 32000000;
 let totalItemCount = 0;
 
-function initVirtualizedAgGrid(_dotNetHelper, _gridOptions) {
+async function initVirtualizedAgGrid(_dotNetHelper, _gridOptions) {
     dotNetHelper = _dotNetHelper;
 
     const loadingOverlay = class CustomLoadingOverlay {
@@ -77,6 +77,7 @@ function initVirtualizedAgGrid(_dotNetHelper, _gridOptions) {
     clone.classList.remove("ag-hidden");
     verticalViewport = document.querySelector(".ag-body-vertical-scroll-viewport");
     handleEvents();
+    await dotNetHelper.invokeMethodAsync("InitItemCount", getVisibleRowCount());
 }
 
 function handleEvents() {
@@ -129,7 +130,7 @@ async function onResize(entry) {
         if (currentHeight - previousHeight >= itemHeight) {
             entry[0].target.dataset.previousHeight = currentHeight;
             const visibleRowCount = getVisibleRowCount();
-            await loadItemsIntoGrid(getStartIndex(visibleRowCount), visibleRowCount);
+            await loadItemsIntoGrid(getStartIndex(visibleRowCount), visibleRowCount, true);
         }
     } else if (currentHeight < previousHeight) {
         if (previousHeight - currentHeight >= itemHeight) {
@@ -157,11 +158,11 @@ async function itemsChanged(totalCount) {
     document.querySelector(".ag-body-vertical-scroll-container").style.height = `${Math.min(totalItemCount * itemHeight, maxDivHeight)}px`;
     const visibleRowCount = getVisibleRowCount();
     const startIndex = getStartIndex(visibleRowCount);
-    await loadItemsIntoGrid(startIndex, visibleRowCount);
+    await loadItemsIntoGrid(startIndex, visibleRowCount, false);
 }
 
-async function loadItemsIntoGrid(startIndex, rowCount) {
-    const visibleItems = await dotNetHelper.invokeMethodAsync('GetItemsAsync', startIndex, rowCount)
+async function loadItemsIntoGrid(startIndex, rowCount, forceFetchItems) {
+    const visibleItems = await dotNetHelper.invokeMethodAsync('GetItemsAsync', startIndex, rowCount, forceFetchItems)
         .then(x => JSON.parse(x));
     gridApi.setGridOption("rowData", visibleItems);
 
@@ -198,7 +199,7 @@ async function onScroll() {
     }
 
     lastStartIndex = startIndex;
-    const visibleItems = await loadItemsIntoGrid(startIndex, visibleRowCount);
+    const visibleItems = await loadItemsIntoGrid(startIndex, visibleRowCount, true);
 }
 
 function generateColumnDefs(columnDefs) {
