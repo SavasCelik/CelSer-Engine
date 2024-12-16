@@ -11,6 +11,8 @@ namespace CelSerEngine.Core.Scanners;
 
 public abstract class PointerScanner2
 {
+    public const string PointerListExtName = ".ptrlist"; 
+
     private readonly bool _useStacks;
     private IList<ModuleInfo> _modules;
     private int _threadStacks = 2;
@@ -35,10 +37,15 @@ public abstract class PointerScanner2
         _modules = [];
     }
 
-    public async Task<IList<Pointer>> StartPointerScanAsync(SafeProcessHandle processHandle , CancellationToken cancellationToken = default)
+    public async Task<IList<Pointer>> StartPointerScanAsync(SafeProcessHandle processHandle, StorageType storageType = StorageType.InMemory, string? fileName = null, CancellationToken cancellationToken = default)
     {
         if (IntPtr.Size == 4)
             throw new NotImplementedException("32-bit is not supported yet.");
+
+        if (storageType == StorageType.File)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+        }
 
         _modules = NativeApi.GetProcessModules(processHandle);
         FillTheStackList(processHandle);
@@ -47,11 +54,14 @@ public abstract class PointerScanner2
         FillLinkedList();
         InitializeEmptyPathQueue();
 
-        var foundPointers = await Task.Factory.StartNew(() =>
+        var pointersFoundTotal = 0;
+        var foundPointers = new List<Pointer>();
+        await Task.Factory.StartNew(async () =>
         {
-            var scanWorker = new PointerScanWorker(this, cancellationToken);
+            await using IResultStorage workerStorage = CreateStorageForWorker(storageType, 1, fileName);
+            var scanWorker = new PointerScanWorker(this, workerStorage, cancellationToken);
             var scanResult = scanWorker.Start();
-            var foundPointers = scanResult
+            var workersResultPointers = workerStorage.GetResults()
                 .Select(x => new Pointer
                 {
                     ModuleName = _modules[x.ModuleIndex].Name,
@@ -59,13 +69,37 @@ public abstract class PointerScanner2
                     BaseOffset = (int)x.Offset,
                     Offsets = x.TempResults
                 }).ToList();
-
-            return foundPointers;
+            pointersFoundTotal += scanWorker.PointersFound;
+            foundPointers.AddRange(workersResultPointers);
         }, cancellationToken);
-        
+
+        if (storageType == StorageType.File)
+        {
+            await using var writer = new BinaryWriter(File.Open(fileName!, FileMode.Create));
+            writer.Write(_modules.Count);
+
+            foreach (ModuleInfo moduleInfo in _modules)
+            {
+                writer.Write(moduleInfo.ShortName);
+                writer.Write(moduleInfo.BaseAddress);
+            }
+
+            writer.Write(PointerScanOptions.MaxLevel);
+            writer.Write(pointersFoundTotal);
+        }
+
 
         return foundPointers;
     }
+
+    private static IResultStorage CreateStorageForWorker(StorageType storageType, int workerId, string? fileName) =>
+        storageType switch
+        {
+            StorageType.InMemory => new InMemoryStorage(),
+            StorageType.File => new FileStorage(
+                $"{Path.Combine(Path.GetDirectoryName(fileName)!, Path.GetFileNameWithoutExtension(fileName)!)}.{workerId}{PointerListExtName}"),
+            _ => throw new InvalidOperationException("Unsupported storage type")
+        };
 
     public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> firstScanPointers, IntPtr searchedAddress, SafeProcessHandle processHandle)
     {

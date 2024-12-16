@@ -2,19 +2,22 @@
 
 public class PointerScanWorker
 {
+    public int PointersFound { get; set; }
+
     private readonly PointerScanner2 _pointerScanner;
+    private readonly IResultStorage _resultStorage;
     private readonly CancellationToken _cancellationToken;
     private IntPtr[] _tempResults;
     private UIntPtr[] _valueList;
     private int _pathsEvaluated = 0;
-    private int _pointersFound = 0;
     private List<ResultPointer> _results = new List<ResultPointer>();
     private int _maxLevel;
     private int _structSize;
 
-    public PointerScanWorker(PointerScanner2 pointerScanner, CancellationToken cancellationToken)
+    public PointerScanWorker(PointerScanner2 pointerScanner, IResultStorage resultStorage, CancellationToken cancellationToken)
     {
         _pointerScanner = pointerScanner;
+        _resultStorage = resultStorage;
         _cancellationToken = cancellationToken;
         _structSize = pointerScanner.PointerScanOptions.MaxOffset;
         _maxLevel = pointerScanner.PointerScanOptions.MaxLevel;
@@ -221,8 +224,18 @@ public class PointerScanWorker
 
     private void StorePath(int level, int moduleIndex, nint offset)
     {
-        _pointersFound++;
-        _results.Add(new ResultPointer { Level = level, ModuleIndex = moduleIndex, Offset = offset, TempResults = _tempResults.Take(level + 1).ToArray() });
+        PointersFound++;
+        _resultStorage.Save(level, moduleIndex, offset, _tempResults.AsSpan(0, level + 1));
+
+        //_results.Add(new ResultPointer { Level = level, ModuleIndex = moduleIndex, Offset = offset, TempResults = _tempResults.Take(level + 1).ToArray() });
+        //_binaryWriter.Write7BitEncodedInt(moduleIndex);
+        //_binaryWriter.Write7BitEncodedInt(offset.ToInt32());
+        //_binaryWriter.Write7BitEncodedInt(level + 1);
+        //foreach (var tempResult in _tempResults.AsSpan(0, level + 1))
+        //{
+        //    _binaryWriter.Write7BitEncodedInt(tempResult.ToInt32());
+        //}
+
         //var res = new ResultPointer
         //{
         //    Level = level,

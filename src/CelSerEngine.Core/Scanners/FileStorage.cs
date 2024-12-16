@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CelSerEngine.Core.Scanners;
+﻿namespace CelSerEngine.Core.Scanners;
 
 public class FileStorage : IResultStorage
 {
