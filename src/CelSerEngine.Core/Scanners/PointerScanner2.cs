@@ -58,7 +58,8 @@ public abstract class PointerScanner2
         var foundPointers = new List<Pointer>();
         await Task.Factory.StartNew(async () =>
         {
-            await using IResultStorage workerStorage = CreateStorageForWorker(storageType, 1, fileName);
+            const int workerId = 1; // currently only single worker is supported
+            await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerId, fileName);
             var scanWorker = new PointerScanWorker(this, workerStorage, cancellationToken);
             var scanResult = scanWorker.Start();
             var workersResultPointers = workerStorage.GetResults()
