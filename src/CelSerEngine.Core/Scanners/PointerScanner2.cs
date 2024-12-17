@@ -65,7 +65,7 @@ public abstract class PointerScanner2
             var workersResultPointers = workerStorage.GetResults()
                 .Select(x => new Pointer
                 {
-                    ModuleName = _modules[x.ModuleIndex].Name,
+                    ModuleName = _modules[x.ModuleIndex].ShortName,
                     BaseAddress = _modules[x.ModuleIndex].BaseAddress,
                     BaseOffset = (int)x.Offset,
                     Offsets = x.TempResults
