@@ -7,7 +7,9 @@ using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using Microsoft.Win32;
 using System.Diagnostics;
+using Pointer = CelSerEngine.Core.Models.Pointer;
 
 namespace CelSerEngine.WpfBlazor.Components.PointerScanner;
 
@@ -18,6 +20,9 @@ public partial class PointerScanner : ComponentBase, IAsyncDisposable
 
     [Inject]
     private ILogger<PointerScanner> Logger { get; set; } = default!;
+
+    [Inject]
+    private MainWindow MainWindow { get; set; } = default!;
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
@@ -35,6 +40,7 @@ public partial class PointerScanner : ComponentBase, IAsyncDisposable
     private Modal ModalRef { get; set; } = default!;
     private GridOptions GridOptions { get; }
     private List<Pointer> ScanResultItems { get; }
+    private PointerScanResultReader? _pointerScanResultReader;
 
     private readonly Timer _scanResultsUpdater;
 
@@ -86,12 +92,70 @@ public partial class PointerScanner : ComponentBase, IAsyncDisposable
         await ModalRef.ShowAsync<ModalPointerScanOptions>("Pointer scanner options", parameters);
     }
 
+    private Task<(ICollection<Pointer>, int)> GetPointerScanResultsAsync(int startIndex, int amount)
+    {
+        //var pointers = ScanResultItems.Skip(startIndex).Take(amount).ToList();
+        ArgumentNullException.ThrowIfNull(_pointerScanResultReader);
+        var pointers = _pointerScanResultReader.ReadPointers(startIndex, amount).ToList();
+        NativeApi.UpdateAddresses(EngineSession.SelectedProcessHandle, pointers);
+
+        return Task.FromResult<(ICollection<Pointer>, int)>((pointers, _pointerScanResultReader.TotalItemCount));
+    }
+
     private async Task OnPointerScanOptionsSubmit(PointerScanOptions pointerScanOptions)
     {
+        const StorageType storageType = StorageType.File; // currently only allowing file storage
         GridOptions.ColumnDefs[1].ArraySize = pointerScanOptions.MaxLevel;
         await VirtualizedAgGridRef.UpdateColumnDefs();
         await VirtualizedAgGridRef.ShowScanningOverlayAsync();
 
+        if (storageType == StorageType.File)
+        {
+            await FileStoragePointerScan(pointerScanOptions);
+        }
+        else
+        {
+            await InMemoryPointerScan(pointerScanOptions);
+        }
+    }
+
+    private async Task FileStoragePointerScan(PointerScanOptions pointerScanOptions)
+    {
+        var fileName = "";
+        await MainWindow.Dispatcher.InvokeAsync(() =>
+        {
+
+            var saveFileDlg = new SaveFileDialog
+            {
+                DefaultExt = PointerScanner2.PointerListExtName, // Default file extension
+                Filter = $"Pointer List|*{PointerScanner2.PointerListExtName}" // Filter files by extension
+            };
+
+            var result = saveFileDlg.ShowDialog();
+            if (result == true)
+            {
+                fileName = saveFileDlg.FileName;
+            }
+        });
+
+        var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
+        Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
+            pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
+        var stopwatch = Stopwatch.StartNew();
+        await pointerScanner.StartPointerScanAsync(EngineSession.SelectedProcessHandle, StorageType.File, fileName);
+        stopwatch.Stop();
+        Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
+        _pointerScanResultReader = new PointerScanResultReader(fileName);
+
+        if (_pointerScanResultReader.TotalItemCount > 0)
+        {
+            await VirtualizedAgGridRef.ApplyDataAsync();
+            StartScanResultValueUpdater();
+        }
+    }
+
+    private async Task InMemoryPointerScan(PointerScanOptions pointerScanOptions)
+    {
         var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
         Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
             pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
@@ -112,6 +176,7 @@ public partial class PointerScanner : ComponentBase, IAsyncDisposable
     {
         StopScanResultValueUpdater();
         await _scanResultsUpdater.DisposeAsync();
+        _pointerScanResultReader?.Dispose();
         GC.SuppressFinalize(this);
     }
 }

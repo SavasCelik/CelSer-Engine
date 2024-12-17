@@ -8,6 +8,7 @@
                        TSource="CelSerEngine.Core.Models.Pointer"
                        TDisplay="PointerScanResultItem"
                        GetRowId="x => x.ModuleNameWithBaseOffset + x.OffsetsDisplayString"
+                       ServerItems="GetPointerScanResultsAsync"
                        GridOptions="GridOptions">
     </VirtualizedAgGrid>
     <Modal @ref="ModalRef" OnModalReady="OnModalReadyAsync" />
