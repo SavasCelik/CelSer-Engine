@@ -13,19 +13,7 @@ public class PointerScanResultReader : IDisposable
     public PointerScanResultReader(string fileName)
     {
         _modules = [];
-        using var reader = new BinaryReader(File.OpenRead(fileName));
-        var modulesCount = reader.ReadInt32();
-        _modules.Capacity = modulesCount;
-
-        for (var i = 0; i < modulesCount; i++)
-        {
-            var shortName = reader.ReadString();
-            var baseAddress = reader.ReadInt64();
-            _modules.Add(new ModuleInfo { Name = shortName, BaseAddress = new IntPtr(baseAddress) });
-        }
-
-        MaxLevel = reader.ReadInt32();
-        TotalItemCount = reader.ReadInt32();
+        GatherMetaData(fileName);
         const int workerId = 1; // currently only single worker is supported
         _reader = new BinaryReader(File.OpenRead(
             $"{Path.Combine(Path.GetDirectoryName(fileName)!, Path.GetFileNameWithoutExtension(fileName)!)}.{workerId}{PointerScanner2.PointerListExtName}"));
@@ -70,6 +58,23 @@ public class PointerScanResultReader : IDisposable
         _reader.BaseStream.Position = 0;
 
         return pointers;
+    }
+
+    private void GatherMetaData(string fileName)
+    {
+        using var reader = new BinaryReader(File.OpenRead(fileName));
+        var modulesCount = reader.ReadInt32();
+        _modules.Capacity = modulesCount;
+
+        for (var i = 0; i < modulesCount; i++)
+        {
+            var shortName = reader.ReadString();
+            var baseAddress = reader.ReadInt64();
+            _modules.Add(new ModuleInfo { Name = shortName, BaseAddress = new IntPtr(baseAddress) });
+        }
+
+        MaxLevel = reader.ReadInt32();
+        TotalItemCount = reader.ReadInt32();
     }
 
     public void Dispose() => _reader.Dispose();
