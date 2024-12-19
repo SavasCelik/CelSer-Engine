@@ -89,7 +89,6 @@ public abstract class PointerScanner2
             writer.Write(pointersFoundTotal);
         }
 
-
         return foundPointers;
     }
 

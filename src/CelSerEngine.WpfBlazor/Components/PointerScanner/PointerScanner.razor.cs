@@ -138,6 +138,9 @@ public partial class PointerScanner : ComponentBase, IAsyncDisposable
             }
         });
 
+        if (string.IsNullOrEmpty(fileName))
+            return;
+
         var pointerScanner = new DefaultPointerScanner((NativeApi)NativeApi, pointerScanOptions);
         Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
             pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
