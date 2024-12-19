@@ -33,6 +33,8 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
     [Parameter]
     public EventCallback<TSource> OnRowDoubleClicked { get; set; }
 
+    private int TotalItemsCount { get; set; }
+
     private CultureInfo _cultureInfo = new("en-US");
     private IJSObjectReference? _module;
     private DotNetObjectReference<VirtualizedAgGrid<TSource, TDisplay>>? _dotNetHelper;
@@ -64,15 +66,15 @@ public partial class VirtualizedAgGrid<TSource, TDisplay> : ComponentBase, IAsyn
             return;
 
         _isUpdating = true;
-        var totalItemCount = Items.Count;
+        TotalItemsCount = Items.Count;
 
         if (ServerItems != null)
         {
             _lastServerItems ??= await ServerItems(_lastStartIndex, _lastItemCount);
-            totalItemCount = _lastServerItems.Value.totalItemCount;
+            TotalItemsCount = _lastServerItems.Value.totalItemCount;
         }
 
-        await _module!.InvokeVoidAsync("itemsChanged", totalItemCount);
+        await _module!.InvokeVoidAsync("itemsChanged", TotalItemsCount);
         _isUpdating = false;
     }
 
