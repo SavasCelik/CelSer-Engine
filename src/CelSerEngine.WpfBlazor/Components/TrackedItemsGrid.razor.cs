@@ -240,7 +240,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     private async Task OnRemoveSelectedItemsContextMenuClicked()
     {
-        var selectedIndexes = await _module!.InvokeAsync<int[]>("getSelectedRowIndexes");
+        var selectedIndexes = (await _module!.InvokeAsync<int[]>("getSelectedRowIndexes")).OrderByDescending(x => x);
 
         foreach (var index in selectedIndexes)
         {
@@ -262,8 +262,6 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
         await RefreshDataAsync();
     }
-
-
 
     private async Task OnPointerScanForThisAddressContextMenuClicked()
     {
