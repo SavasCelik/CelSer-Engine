@@ -15,8 +15,7 @@ public class PointerScanResultReader : IDisposable
         _modules = [];
         GatherMetaData(fileName);
         const int workerId = 1; // currently only single worker is supported
-        _reader = new BinaryReader(File.OpenRead(
-            $"{Path.Combine(Path.GetDirectoryName(fileName)!, Path.GetFileNameWithoutExtension(fileName)!)}.{workerId}{PointerScanner2.PointerListExtName}"));
+        _reader = new BinaryReader(File.OpenRead($"{fileName}.{workerId}"));
     }
 
     public IEnumerable<Pointer> ReadPointers(int startIndex, int amount)

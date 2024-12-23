@@ -96,8 +96,7 @@ public abstract class PointerScanner2
         storageType switch
         {
             StorageType.InMemory => new InMemoryStorage(),
-            StorageType.File => new FileStorage(
-                $"{Path.Combine(Path.GetDirectoryName(fileName)!, Path.GetFileNameWithoutExtension(fileName)!)}.{workerId}{PointerListExtName}"),
+            StorageType.File => new FileStorage($"{fileName}.{workerId}"),
             _ => throw new InvalidOperationException("Unsupported storage type")
         };
 
