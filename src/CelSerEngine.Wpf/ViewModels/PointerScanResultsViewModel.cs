@@ -46,7 +46,7 @@ public partial class PointerScanResultsViewModel : ObservableRecipient
         //var foundPointers = await _pointerScanner.ScanForPointersAsync(pointerScanOptions, _currentCts.Token);
         //FoundPointers = foundPointers;
         var pointerScanner = new DefaultPointerScanner((NativeApi)_nativeApi, pointerScanOptions);
-        FoundPointers = await pointerScanner.StartPointerScanAsync(selectedProcess.GetProcessHandle(_nativeApi), _currentCts.Token);
+        FoundPointers = await pointerScanner.StartPointerScanAsync(selectedProcess.GetProcessHandle(_nativeApi), cancellationToken: _currentCts.Token);
         ProgressBarGridVisibility = Visibility.Collapsed;
         _currentCts = null;
     }

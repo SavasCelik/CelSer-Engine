@@ -2,8 +2,9 @@
 
 <VirtualizedAgGrid @ref="VirtualizedAgGridRef"
                    Items="ScanResultItems"
-                   TItem="CelSerEngine.Core.Models.MemorySegment"
+                   TSource="CelSerEngine.Core.Models.MemorySegment"
+                   TDisplay="ScanResultItem"
                    GetRowId='(x) => x.Address.ToString("X")'
-                   OnRowDoubleClicked="OnScanResultItemDoubleClicked"
-                   SerializableItem='(x) => new { Address = x.Address.ToString("X"), x.Value, PreviousValue = x.InitialValue }'>
+                   GridOptions="GridOptions"
+                   OnRowDoubleClicked="OnScanResultItemDoubleClicked">
 </VirtualizedAgGrid>

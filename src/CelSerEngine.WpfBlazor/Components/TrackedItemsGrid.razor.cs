@@ -1,6 +1,5 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.WpfBlazor.Components.Modals;
-using CelSerEngine.WpfBlazor.Components.PointerScanner;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -20,6 +19,9 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     [Inject]
     private ThemeManager ThemeManager { get; set; } = default!;
+
+    [Inject]
+    private MainWindow MainWindow { get; set; } = default!;
 
     private Modal ModalRef { get; set; } = default!;
     private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
@@ -211,17 +213,6 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         await ModalRef.ShowAsync<ModalDescriptionChange>("Change Description", parameters);
     }
 
-    private async Task ShowPointerScanOptionsModal(TrackedItem selectedTrackedItem)
-    {
-        var parameters = new Dictionary<string, object>
-        {
-            { nameof(ModalPointerScanOptions.ScanAddress), selectedTrackedItem.Item.Address.ToString("X") },
-            //{ nameof(ModalPointerScanOptions.DescriptionChanged), EventCallback.Factory.Create<string>(this, (desiredDescription) => OnDescriptionChangeRequested(desiredDescription, selectedTrackedItems)) },
-        };
-
-        await ModalRef.ShowAsync<ModalPointerScanOptions>("Pointer scanner options", parameters);
-    }
-
     private async Task OnValueChangeRequested(string desiredValue, params TrackedItem[] trackedItems)
     {
         foreach (var trackedItem in trackedItems)
@@ -249,8 +240,8 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
     private async Task OnRemoveSelectedItemsContextMenuClicked()
     {
-        var selectedIndexes = await _module!.InvokeAsync<int[]>("getSelectedRowIndexes");
-        
+        var selectedIndexes = (await _module!.InvokeAsync<int[]>("getSelectedRowIndexes")).OrderByDescending(x => x);
+
         foreach (var index in selectedIndexes)
         {
             _trackedItems.RemoveAt(index);
@@ -272,8 +263,6 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
         await RefreshDataAsync();
     }
 
-
-
     private async Task OnPointerScanForThisAddressContextMenuClicked()
     {
         var selectedTrackedItems = await GetSelectedTrackedItems();
@@ -281,7 +270,7 @@ public partial class TrackedItemsGrid : ComponentBase, IAsyncDisposable
 
         if (selectedTrackedItem != null)
         {
-            await ShowPointerScanOptionsModal(selectedTrackedItem);
+            MainWindow.OpenPointerScanner(selectedTrackedItem.Item.Address);
         }
 
         await RefreshDataAsync();

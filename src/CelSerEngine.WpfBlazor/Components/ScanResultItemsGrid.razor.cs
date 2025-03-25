@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using CelSerEngine.WpfBlazor.Components.AgGrid;
 using CelSerEngine.WpfBlazor.Models;
 using Microsoft.AspNetCore.Components;
 
@@ -16,7 +17,8 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
     [Inject]
     private INativeApi NativeApi { get; set; } = default!;
 
-    private VirtualizedAgGrid<MemorySegment> VirtualizedAgGridRef { get; set; } = default!;
+    private VirtualizedAgGrid<MemorySegment, ScanResultItem> VirtualizedAgGridRef { get; set; } = default!;
+    private GridOptions GridOptions { get; set; }
     private List<MemorySegment> ScanResultItems { get; set; }
     private ICollection<ContextMenuItem> ContextMenuItems { get; set; }
 
@@ -25,7 +27,7 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
 
     public ScanResultItemsGrid()
     {
-        _scanResultsUpdater = new Timer((e) => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
+        _scanResultsUpdater = new Timer(_ => UpdateVisibleScanResults(), null, Timeout.Infinite, 0);
         ScanResultItems = [];
         ContextMenuItems =
         [
@@ -35,6 +37,25 @@ public partial class ScanResultItemsGrid : ComponentBase, IAsyncDisposable
                 OnClick = EventCallback.Factory.Create(this, ContextMenuItemClickedAsync)
             },
         ];
+
+        GridOptions = new GridOptions
+        {
+            ColumnDefs =
+            [
+                new ColumnDef { Field = "Address", HeaderName = "Address" },
+                new ColumnDef { Field = "Value", HeaderName = "Value" },
+                new ColumnDef { Field = "PreviousValue", HeaderName = "Previous Value" }
+            ],
+            RowSelection = RowSelection.Multiple,
+            GetRowStyleFunc = $$"""
+                                    function(item)
+                                    {
+                                        return item.{{nameof(ScanResultItem.PreviousValue)}} !== item.{{nameof(ScanResultItem.Value)}}
+                                        ? { color: 'red' }
+                                        : { color: 'inherit' };
+                                    }
+                                """
+        };
     }
 
     public async Task AddScanResultItemsAsync(IEnumerable<MemorySegment> items)

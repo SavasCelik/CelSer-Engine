@@ -24,6 +24,7 @@ public static class WpfWindowExtension
         {
             owner.IsEnabled = true;
             owner.Activated -= onActivate;
+            owner.Focus();
         };
 
         window.Show();

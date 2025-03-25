@@ -4,10 +4,8 @@ using CelSerEngine.WpfBlazor.Components.PointerScanner;
 using CelSerEngine.WpfBlazor.Extensions;
 using CelSerEngine.WpfBlazor.Loggers;
 using CelSerEngine.WpfBlazor.Views;
-using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 using System.Windows;
 
 namespace CelSerEngine.WpfBlazor;
@@ -43,31 +41,14 @@ public partial class MainWindow : Window
 
         InitializeComponent();
 
-        blazorWebView.BlazorWebViewInitialized += BlazorWebView_BlazorWebViewInitialized;
-        Closing += async (s, args) =>
+        blazorWebView.BlazorWebViewInitialized += (s, args) =>
         {
-            await blazorWebView.DisposeAsync();
+            blazorWebView.ConfigureWebView();
         };
-    }
-
-    private void BlazorWebView_BlazorWebViewInitialized(object? sender, BlazorWebViewInitializedEventArgs e)
-    {
-        blazorWebView.WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-        blazorWebView.WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
-        blazorWebView.WebView.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
-        blazorWebView.WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false;
-        blazorWebView.WebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
-        blazorWebView.WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
-        blazorWebView.WebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-
-        if (Debugger.IsAttached)
+        Unloaded += (s, args) =>
         {
-            blazorWebView.WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = true;
-            blazorWebView.WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
-        }
-
-        blazorWebView.Focus();
-        blazorWebView.WebView.Focus();
+            blazorWebView.CloseWebView();
+        };
     }
 
     public void OpenProcessSelector()
@@ -85,11 +66,11 @@ public partial class MainWindow : Window
         });
     }
 
-    public void OpenPointerScanner(PointerScanOptionsSubmitModel pointerScanOptionsSubmitModel)
+    public void OpenPointerScanner(IntPtr searchedAddress)
     {
         var parameters = new Dictionary<string, object?>
         {
-            { nameof(Components.PointerScanner.PointerScanOptionsSubmitModel), pointerScanOptionsSubmitModel }
+            { nameof(Components.PointerScanner.PointerScanner.SearchedAddress), searchedAddress }
         };
         var pointerScanner = new BlazorWebViewWindow(this, typeof(PointerScanner), "Pointer Scanner", parameters: parameters);
         pointerScanner.Show();
