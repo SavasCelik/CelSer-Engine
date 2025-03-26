@@ -9,9 +9,28 @@ namespace CelSerEngine.WpfReact;
 
 public class ReactWebView : Control
 {
+    /// <summary>
+    /// The backing store for the <see cref="ReactWebViewInitialized"/> event.
+    /// </summary>
+    public static readonly DependencyProperty ReactWebViewInitializedProperty = DependencyProperty.Register(
+        name: nameof(ReactWebViewInitialized),
+        propertyType: typeof(EventHandler),
+        ownerType: typeof(ReactWebView));
+
+    /// <summary>
+    /// Allows customizing the web view after it is created.
+    /// </summary>
+    public EventHandler ReactWebViewInitialized
+    {
+        get => (EventHandler)GetValue(ReactWebViewInitializedProperty);
+        set => SetValue(ReactWebViewInitializedProperty, value);
+    }
+
     private const string WebViewTemplateChildName = "WebView";
     private WebView2Control? _webview;
     private ReactWebViewManager? _webViewManager;
+    public WebView2Control WebView => _webview!;
+
 
     public ReactWebView()
     {
@@ -43,6 +62,7 @@ public class ReactWebView : Control
         await _webview!.EnsureCoreWebView2Async(_coreWebView2Environment);
         ApplyDefaultWebViewSettings();
         _webViewManager = new ReactWebViewManager(null!, _webview);
+        ReactWebViewInitialized?.Invoke(this, EventArgs.Empty);
     }
 
     private static string? GetWebView2UserDataFolder()

@@ -19,5 +19,11 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        reactWebView.ReactWebViewInitialized += ReactWebView_ReactWebViewInitialized;
+    }
+
+    private void ReactWebView_ReactWebViewInitialized(object? sender, EventArgs e)
+    {
+        reactWebView.WebView.Source = new Uri("http://localhost:49356/");
     }
 }
