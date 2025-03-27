@@ -27,6 +27,11 @@ public class ReactWebViewManager
         };
         _trackedRefsById = new ConcurrentDictionary<long, object>();
         webView.CoreWebView2.WebMessageReceived += MessageReceived;
+        webView.CoreWebView2.NavigationStarting += (sender, e) =>
+        {
+            // maybe clear on if e.NavigationKind == CoreWebView2NavigationKind.Reload?
+            _trackedRefsById.Clear();
+        };
     }
 
     public void MessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -46,10 +51,6 @@ public class ReactWebViewManager
         else if (receivedMessage.MethodName == "DetachDotNetObject")
         {
             DetachDotNetObject(receivedMessage);
-        }
-        else if (receivedMessage.MethodName == "RefreshApp")
-        {
-            _trackedRefsById.Clear();
         }
         else if (receivedMessage.DotNetObjectId != null)
         {
