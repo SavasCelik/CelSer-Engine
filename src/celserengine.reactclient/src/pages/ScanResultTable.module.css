@@ -1,0 +1,49 @@
+.row[data-selected] {
+  background-color: var(--mantine-primary-color-light);
+}
+
+.row[data-selected]:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--mantine-primary-color-light-hover),
+    #fff 5%
+  );
+}
+
+.resizer {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+th {
+  padding: 2px 4px;
+  position: relative;
+  font-weight: bold;
+  text-align: center;
+  height: 30px;
+}
+
+.resizer.ltr {
+  right: 0;
+}
+
+.resizer.isResizing {
+  background: blue;
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .resizer {
+    opacity: 0;
+  }
+
+  *:hover > .resizer {
+    opacity: 1;
+  }
+}

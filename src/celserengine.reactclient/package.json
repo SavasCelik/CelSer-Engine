@@ -10,8 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mantine/core": "^7.17.3",
+    "@mantine/hooks": "^7.17.3",
+    "@mantine/vanilla-extract": "^7.17.3",
+    "@tabler/icons-react": "^3.31.0",
+    "@tanstack/react-table": "^8.21.2",
+    "lucide-react": "^0.485.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-resizable-panels": "^2.1.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
