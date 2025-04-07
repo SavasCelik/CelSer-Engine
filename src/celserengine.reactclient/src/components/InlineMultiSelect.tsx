@@ -1,4 +1,10 @@
-import { Group, Input, MantineSize, Select, SelectProps } from "@mantine/core";
+import {
+  Group,
+  Input,
+  MantineSize,
+  MultiSelect,
+  MultiSelectProps,
+} from "@mantine/core";
 import { useId } from "@mantine/hooks";
 
 const spacing: Record<MantineSize, string> = {
@@ -9,7 +15,7 @@ const spacing: Record<MantineSize, string> = {
   xl: "20px",
 };
 
-export default function InlineSelect(props: SelectProps) {
+export default function InlineSelect(props: MultiSelectProps) {
   const uuid = useId(props.id);
   return (
     <>
@@ -26,7 +32,7 @@ export default function InlineSelect(props: SelectProps) {
             {props.label}
           </Input.Label>
         )}
-        <Select
+        <MultiSelect
           flex={1}
           {...{
             ...props,

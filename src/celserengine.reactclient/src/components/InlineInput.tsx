@@ -31,7 +31,7 @@ export default function InlineInput(props: TextInputProps) {
           {props.label}
         </Input.Label>
       )}
-      <TextInput {...{ ...props, label: undefined, id: uuid }} />
+      <TextInput {...{ ...props, label: undefined, id: uuid }} flex={1} />
     </Group>
   );
 }
