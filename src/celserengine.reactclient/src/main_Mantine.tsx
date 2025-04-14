@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 //import './index.css'
 import Index from "./pages/Index.tsx";
 import "@mantine/core/styles.css";
-import { MantineProvider, createTheme, rem } from "@mantine/core";
+import { MantineProvider, createTheme } from "@mantine/core";
 
 const theme = createTheme({
   fontSizes: {
@@ -43,5 +43,5 @@ createRoot(document.getElementById("root")!).render(
     <MantineProvider theme={theme} defaultColorScheme="dark">
       <Index />
     </MantineProvider>
-  </StrictMode>
+  </StrictMode>,
 );

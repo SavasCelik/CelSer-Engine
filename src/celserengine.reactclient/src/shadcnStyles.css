@@ -123,7 +123,7 @@
   --ce-primary-800: #016960;
   --ce-primary-900: #024d43;
   --text-sm: 13px;
-  /* shadcn */
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -198,5 +198,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    scrollbar-color: var(--muted-foreground) transparent;
   }
 }

@@ -207,7 +207,7 @@ function NewScanResultTable() {
         header: "Value",
       },
     ],
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -248,7 +248,7 @@ function NewScanResultTable() {
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </Table.Th>
                 ))}
