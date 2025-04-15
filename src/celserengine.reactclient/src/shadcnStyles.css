@@ -203,3 +203,18 @@
     scrollbar-color: var(--muted-foreground) transparent;
   }
 }
+
+.stickyTableHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.stickyTableHeader:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom: 1px solid var(--sidebar-ring);
+}

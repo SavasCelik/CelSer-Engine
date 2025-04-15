@@ -105,11 +105,11 @@ function TrackedItemsTable() {
         {freezeTable.getPreFilteredRowModel().rows.length} Total Rows Selected
       </div> */}
       <Table>
-        <TableHeader>
+        <TableHeader className="stickyTableHeader bg-muted">
           {freezeTable.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="bg-muted">
+                <TableHead key={header.id}>
                   <div className="flex items-center">
                     {flexRender(
                       header.column.columnDef.header,

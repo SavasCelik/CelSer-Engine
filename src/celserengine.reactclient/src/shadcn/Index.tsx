@@ -98,7 +98,7 @@ export default function Index() {
   });
 
   return (
-    <div className="bg-card flex h-screen flex-col p-2">
+    <div className="bg-card flex h-screen flex-col p-3">
       {/* Title bar */}
       <div className="text-center text-xs">0x0000GAC4 - OneDrive.exe</div>
 
@@ -113,24 +113,22 @@ export default function Index() {
           <ScanResultTableShadCn />
 
           {/* Right panel - Search options */}
-          <div className="flex w-[330px] flex-col gap-2">
+          <div className="mt-5 flex w-[330px] flex-col gap-2">
             <div className="relative">
-              <Search className="text-muted-foreground pointer-events-none absolute top-1.5 left-2 w-4" />
+              <Search className="text-muted-foreground pointer-events-none absolute top-0 left-2 h-7.5 w-4" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-8 pl-8"
+                className="h-7.5 pr-8 pl-8"
               />
               <X
-                className="text-muted-foreground absolute top-1.5 right-2 w-4 cursor-pointer"
+                className="text-muted-foreground absolute top-0 right-2 h-7.5 w-4 cursor-pointer"
                 onClick={() => setSearchQuery("")}
               />
             </div>
 
             <div className="flex gap-1">
-              <Button className="active:scale-[0.97]" variant="default">
-                First Scan
-              </Button>
+              <Button variant="default">First Scan</Button>
               <Button variant="outline">New Scan</Button>
             </div>
 
@@ -139,7 +137,7 @@ export default function Index() {
                 Scan Type
               </Label>
               <Select defaultValue="exact">
-                <SelectTrigger id="scanType" className="w-full">
+                <SelectTrigger id="scanType" className="w-full" size="xs">
                   <SelectValue placeholder="Scan Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -153,7 +151,7 @@ export default function Index() {
                 Value Type
               </Label>
               <Select defaultValue="integer">
-                <SelectTrigger id="valueType" className="w-full">
+                <SelectTrigger id="valueType" className="w-full" size="xs">
                   <SelectValue placeholder="Value Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -167,7 +165,7 @@ export default function Index() {
                 Memory Scan Options
               </div>
               <Select defaultValue="all">
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full" size="xs">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
@@ -176,21 +174,25 @@ export default function Index() {
               </Select>
               <div className="flex items-center gap-2">
                 <Label htmlFor="startAddress">Start</Label>
-                <Input id="startAddress" defaultValue="0" className="w-full" />
+                <Input
+                  id="startAddress"
+                  defaultValue="0"
+                  className="h-7.5 w-full"
+                />
               </div>
               <div className="flex items-center gap-2">
                 <Label htmlFor="stopAddress">Stop</Label>
                 <Input
                   id="stopAddress"
                   defaultValue="7FFFFFFFFFFFFFFF"
-                  className="w-full"
+                  className="h-7.5 w-full"
                 />
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="writeable">Writeable</Label>
                   <Select defaultValue="yes">
-                    <SelectTrigger id="writeable" className="w-full">
+                    <SelectTrigger id="writeable" className="w-full" size="xs">
                       <SelectValue placeholder="Yes" />
                     </SelectTrigger>
                     <SelectContent>
@@ -203,7 +205,7 @@ export default function Index() {
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="executable">Executable</Label>
                   <Select defaultValue="dontcare">
-                    <SelectTrigger id="executable" className="w-full">
+                    <SelectTrigger id="executable" className="w-full" size="xs">
                       <SelectValue placeholder="Don't Care" />
                     </SelectTrigger>
                     <SelectContent>
@@ -216,7 +218,11 @@ export default function Index() {
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="copyOnWrite">Copy On Write</Label>
                   <Select defaultValue="no">
-                    <SelectTrigger id="copyOnWrite" className="w-full">
+                    <SelectTrigger
+                      id="copyOnWrite"
+                      className="w-full"
+                      size="xs"
+                    >
                       <SelectValue placeholder="No" />
                     </SelectTrigger>
                     <SelectContent>
