@@ -25,5 +25,6 @@ public partial class MainWindow : Window
     private void ReactWebView_ReactWebViewInitialized(object? sender, EventArgs e)
     {
         reactWebView.WebView.Source = new Uri("http://localhost:49356/");
+        reactWebView.WebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
     }
 }
