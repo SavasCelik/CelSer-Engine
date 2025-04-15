@@ -10,6 +10,24 @@ namespace CelSerEngine.WpfReact;
 public class ReactWebView : Control
 {
     /// <summary>
+    /// The backing store for the <see cref="Services"/> property.
+    /// </summary>
+    public static readonly DependencyProperty ServicesProperty = DependencyProperty.Register(
+        name: nameof(Services),
+        propertyType: typeof(IServiceProvider),
+        ownerType: typeof(ReactWebView));
+
+    /// <summary>
+    /// Gets or sets an <see cref="IServiceProvider"/> containing services to be used by this control and also by application code.
+    /// This property must be set to a valid value for the Razor components to start.
+    /// </summary>
+    public IServiceProvider Services
+    {
+        get => (IServiceProvider)GetValue(ServicesProperty);
+        set => SetValue(ServicesProperty, value);
+    }
+
+    /// <summary>
     /// The backing store for the <see cref="ReactWebViewInitialized"/> event.
     /// </summary>
     public static readonly DependencyProperty ReactWebViewInitializedProperty = DependencyProperty.Register(
@@ -61,7 +79,7 @@ public class ReactWebView : Control
                 options: new CoreWebView2EnvironmentOptions() { AreBrowserExtensionsEnabled = true });
         await _webview!.EnsureCoreWebView2Async(_coreWebView2Environment);
         ApplyDefaultWebViewSettings();
-        _webViewManager = new ReactWebViewManager(null!, _webview);
+        _webViewManager = new ReactWebViewManager(Services, _webview);
         ReactWebViewInitialized?.Invoke(this, EventArgs.Empty);
     }
 

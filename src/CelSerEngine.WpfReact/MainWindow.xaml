@@ -10,6 +10,6 @@
         Height="800"
         WindowStartupLocation="CenterScreen">
     <Grid>
-        <local:ReactWebView x:Name="reactWebView" />
+        <local:ReactWebView x:Name="reactWebView" Services="{DynamicResource services}" />
     </Grid>
 </Window>

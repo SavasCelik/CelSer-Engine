@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -16,8 +17,13 @@ namespace CelSerEngine.WpfReact;
 /// </summary>
 public partial class MainWindow : Window
 {
+    public IServiceProvider Services { get; set; }
+
     public MainWindow()
     {
+        var serviceCollection = new ServiceCollection();
+        Services = serviceCollection.BuildServiceProvider();
+        Resources.Add("services", Services);
         InitializeComponent();
         reactWebView.ReactWebViewInitialized += ReactWebView_ReactWebViewInitialized;
     }
