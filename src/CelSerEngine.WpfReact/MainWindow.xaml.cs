@@ -22,6 +22,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         var serviceCollection = new ServiceCollection();
+        serviceCollection.AddWpfReactWebView();
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);
         InitializeComponent();

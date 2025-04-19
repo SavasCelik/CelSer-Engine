@@ -1,4 +1,5 @@
-﻿using Microsoft.Web.WebView2.Core;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Web.WebView2.Core;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -79,6 +80,8 @@ public class ReactWebView : Control
                 options: new CoreWebView2EnvironmentOptions() { AreBrowserExtensionsEnabled = true });
         await _webview!.EnsureCoreWebView2Async(_coreWebView2Environment);
         ApplyDefaultWebViewSettings();
+        var reactJsRuntime = Services.GetRequiredService<ReactJsRuntime>();
+        reactJsRuntime.AttachToWebView(_webview.CoreWebView2);
         _webViewManager = new ReactWebViewManager(Services, _webview);
         ReactWebViewInitialized?.Invoke(this, EventArgs.Empty);
     }
