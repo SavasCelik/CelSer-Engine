@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { jsInteropObj } from "./JsInterop";
 
-class DotNetObject {
+export class DotNetObject {
   constructor(private objectId: number) {}
   invokeMethod<T>(methodName: string, ...args: any[]) {
     return jsInteropObj.invokeDotNetMethodAsync<T>(

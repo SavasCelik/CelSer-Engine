@@ -13,8 +13,10 @@ import { createColumnHelper, type SortingState } from "@tanstack/react-table";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { Toggle } from "@/components/ui/toggle";
-import ScanResultTableShadCn from "./components/ScanResultItemsTable";
+import ScanResultItemsTable from "./components/ScanResultItemsTable";
 import TrackedItemsTable from "./components/TrackedItemsTable";
+import ScanConstraintsForm from "./components/ScanContraintsForm";
+import { useDotNet } from "./utils/useDotNet";
 
 type AddressRow = {
   address: string;
@@ -27,6 +29,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("lol");
   const [addressSorting, setAddressSorting] = useState<SortingState>([]);
   const [freezeSorting, setFreezeSorting] = useState<SortingState>([]);
+  const dotNetObj = useDotNet("App", "AppController");
 
   // Sample data for the address table
   const addressData = useMemo<AddressRow[]>(
@@ -88,10 +91,11 @@ function App() {
         {/* Upper panel */}
         <div className="flex flex-row gap-2">
           {/* Left panel - Memory addresses */}
-          <ScanResultTableShadCn />
+          <ScanResultItemsTable />
 
           {/* Right panel - Search options */}
-          <div className="mt-5 flex w-[330px] flex-col gap-2">
+          <ScanConstraintsForm dotNetObj={dotNetObj} />
+          {/* <div className="mt-5 flex w-[330px] flex-col gap-2">
             <div className="relative">
               <Search className="text-muted-foreground pointer-events-none absolute top-0 left-2 h-7.5 w-4" />
               <Input
@@ -253,7 +257,7 @@ function App() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Bottom table */}

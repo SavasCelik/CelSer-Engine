@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -19,13 +19,21 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
+import { useDotNet } from "@/utils/useDotNet";
+import { useQuery } from "@tanstack/react-query";
+
+type RusultItem = {
+  address: string;
+  value: string;
+  prevValue: string;
+  highlighted?: boolean;
+};
 
 const addresses = [
   { address: "1DBC293A66C", value: "89", prevValue: "89" },
@@ -126,7 +134,7 @@ const addresses = [
   { address: "1DBC4374E98", value: "89", prevValue: "89" },
 ];
 
-function ScanResultTableShadCn() {
+function ScanResultItemsTable() {
   const columns = useMemo(
     () => [
       {
@@ -139,12 +147,35 @@ function ScanResultTableShadCn() {
         header: "Value",
       },
       {
-        accessorKey: "prevValue",
+        accessorKey: "previousValue",
         header: "Previous Value",
       },
     ],
     []
   );
+  const dotNetObj = useDotNet(
+    "ScanResultItemsTable",
+    "ScanResultItemsController"
+  );
+
+  useEffect(() => {
+    console.log("dotNetObj changed", dotNetObj);
+  }, [dotNetObj]);
+
+  const query = useQuery<RusultItem[]>({
+    queryKey: ["ScanResultItemsTable", dotNetObj],
+    queryFn: async () => {
+      if (!dotNetObj) {
+        return [];
+      }
+
+      return await dotNetObj!.invokeMethod("GetScanResultItems");
+    },
+  });
+
+  if (query.data) {
+    console.log("got data");
+  }
 
   //   const data = useMemo(() => addresses, []);
   const [data, _setData] = useState(addresses);
@@ -154,7 +185,7 @@ function ScanResultTableShadCn() {
   });
 
   const table = useReactTable({
-    data,
+    data: query.data || [],
     columns,
     columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
@@ -284,4 +315,4 @@ export const MemoizedTableBody = React.memo(
     prev.table.options.data.length === next.table.options.data.length
 ) as typeof TableBodyNormal;
 
-export default ScanResultTableShadCn;
+export default ScanResultItemsTable;
