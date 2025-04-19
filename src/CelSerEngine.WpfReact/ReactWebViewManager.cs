@@ -59,7 +59,7 @@ public class ReactWebViewManager
         else
         {
             throw new InvalidOperationException($"Unknown method: {receivedMessage.MethodName}");
-        }
+        }        
     }
 
     private void AttachDotNetObject(ReceivedMessage receivedMessage)
@@ -68,8 +68,19 @@ public class ReactWebViewManager
         var className = methodArgs[0].GetString()!;
         var componentId = methodArgs[1].GetString()!;
         var classNameType = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(a => a.GetTypes())
-            .FirstOrDefault(t => t.Name == className && typeof(ReactControllerBase).IsAssignableFrom(t));
+            .SelectMany(a => a.GetExportedTypes())
+            .FirstOrDefault(t => t.Name == className);
+
+        if (classNameType == null)
+        {
+            throw new TypeLoadException($"The class '{className}' does not exist in the current application domain.");
+        }
+
+        if (!typeof(ReactControllerBase).IsAssignableFrom(classNameType))
+        {
+            throw new InvalidOperationException($"The class '{className}' must inherit from '{nameof(ReactControllerBase)}'.");
+        }
+
         var dotNetObjectId = Interlocked.Increment(ref _nextObjectReferenceId);
         var instanceOfClass = (ReactControllerBase)ActivatorUtilities.CreateInstance(_serviceProvider, classNameType!);
         instanceOfClass.ComponentId = componentId;
@@ -126,9 +137,14 @@ public class ReactWebViewManager
         var response = new ResponseMessage
         {
             AsyncCallId = asyncCallId,
-            ReposeJson = JsonSerializer.Serialize(result)
+            ReposeJson = JsonSerializer.Serialize(result, _jsonSerializerOptions)
         };
-        _webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, _jsonSerializerOptions));
+
+        //_webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, _jsonSerializerOptions));
+        _webView.Dispatcher.Invoke(() =>
+        {
+            _webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, _jsonSerializerOptions));
+        });
     }
     private void EndInvokeDotNetAfterTask(Task task, int asyncCallId)
     {
@@ -161,10 +177,7 @@ public class ReactWebViewManager
             return element.GetDouble();
         }
 
-        // Add more types as needed
-
-        // For unsupported types, throw an exception
-        throw new InvalidOperationException($"Unsupported type: {targetType.Name}");
+        return JsonSerializer.Deserialize(element, targetType);
     }
 }
 
