@@ -3,6 +3,7 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CelSerEngine.WpfReact;
 
@@ -23,7 +24,11 @@ public class ReactWebViewManager
         _jsonSerializerOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters =
+            {
+                new JsonStringEnumConverter()
+            }
         };
         _trackedRefsById = new ConcurrentDictionary<long, object>();
         webView.CoreWebView2.WebMessageReceived += MessageReceived;
@@ -152,7 +157,7 @@ public class ReactWebViewManager
         EndInvokeDotNet(asyncCallId, result);
     }
 
-    private static object? ConvertJsonElement(JsonElement element, Type targetType)
+    private object? ConvertJsonElement(JsonElement element, Type targetType)
     {
         if (element.ValueKind == JsonValueKind.Null)
         {
@@ -177,7 +182,7 @@ public class ReactWebViewManager
             return element.GetDouble();
         }
 
-        return JsonSerializer.Deserialize(element, targetType);
+        return JsonSerializer.Deserialize(element, targetType, _jsonSerializerOptions);
     }
 }
 
