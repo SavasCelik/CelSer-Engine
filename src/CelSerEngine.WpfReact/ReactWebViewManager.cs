@@ -113,6 +113,14 @@ public class ReactWebViewManager
 
         if (method == null)
         {
+            var errorResponse = new ResponseMessage
+            {
+                AsyncCallId = receivedMessage.AsyncCallId,
+                IsSuccess = false,
+                ReposeJson = JsonSerializer.Serialize($"Method: {instance.GetType()}.{receivedMessage.MethodName} not found!", _jsonSerializerOptions)
+            };
+            EndInvokeDotNet(errorResponse);
+            
             return;
         }
 
@@ -145,12 +153,18 @@ public class ReactWebViewManager
             ReposeJson = JsonSerializer.Serialize(result, _jsonSerializerOptions)
         };
 
+        EndInvokeDotNet(response);
+    }
+
+    private void EndInvokeDotNet(ResponseMessage responseMessage)
+    {
         //_webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, _jsonSerializerOptions));
         _webView.Dispatcher.Invoke(() =>
         {
-            _webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, _jsonSerializerOptions));
+            _webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(responseMessage, _jsonSerializerOptions));
         });
     }
+
     private void EndInvokeDotNetAfterTask(Task task, int asyncCallId)
     {
         var result = _taskGenericsUtil.GetTaskResult(task);
@@ -197,5 +211,6 @@ internal class ReceivedMessage
 internal class ResponseMessage
 {
     public int AsyncCallId { get; set; }
+    public bool IsSuccess { get; set; } = true;
     public string ReposeJson { get; set; } = string.Empty;
 }
