@@ -64,9 +64,6 @@ class JsInterop {
       const responseParsed = JSON.parse(response.reposeJson);
 
       if (!response.isSuccess) {
-        console.error(
-          `Error in async call ${response.asyncCallId}: ${responseParsed}`
-        );
         asyncCall.reject(new Error(responseParsed));
         return;
       }
