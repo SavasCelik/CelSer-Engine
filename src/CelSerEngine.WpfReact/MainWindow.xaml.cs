@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CelSerEngine.Core.Native;
+using CelSerEngine.Shared.Services.MemoryScan;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,6 +25,11 @@ public partial class MainWindow : Window
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddWpfReactWebView();
+        serviceCollection.AddLogging();
+        serviceCollection.AddSingleton<ProcessSelectionTracker>();
+        serviceCollection.AddSingleton<IMemoryScanService, MemoryScanService>();
+        serviceCollection.AddSingleton<INativeApi, NativeApi>();
+
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);
         InitializeComponent();

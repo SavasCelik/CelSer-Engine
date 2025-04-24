@@ -19,27 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Check, Search, X } from "lucide-react";
+import { Check, Loader2Icon, Search, X } from "lucide-react";
 import { Toggle } from "./ui/toggle";
 import { DotNetObject } from "../utils/useDotNet";
 import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const maxIntPtrString = "7FFFFFFFFFFFFFFF";
 const maxIntPtr = BigInt(`0x${maxIntPtrString}`);
-const memoryTypesArr = [
-  {
-    id: "image",
-    label: "Image",
-  },
-  {
-    id: "private",
-    label: "Private",
-  },
-  {
-    id: "mapped",
-    label: "Mapped",
-  },
-] as const;
 
 const scanCompareTypes = [
   {
@@ -99,6 +86,44 @@ const scanCompareTypes = [
   },
 ] as const;
 
+const scanValueTypes = [
+  {
+    id: "short",
+    label: "Short (2 Bytes)",
+  },
+  {
+    id: "integer",
+    label: "Integer (4 Bytes)",
+  },
+  {
+    id: "float",
+    label: "Float (4 Bytes)",
+  },
+  {
+    id: "long",
+    label: "Long (8 Bytes)",
+  },
+  {
+    id: "double",
+    label: "Double (8 Bytes)",
+  },
+] as const;
+
+const memoryTypesArr = [
+  {
+    id: "image",
+    label: "Image",
+  },
+  {
+    id: "private",
+    label: "Private",
+  },
+  {
+    id: "mapped",
+    label: "Mapped",
+  },
+] as const;
+
 const formSchema = z
   .object({
     scanValue: z.string().optional(),
@@ -119,7 +144,7 @@ const formSchema = z
     stopAddress: z.string().refine((val) => validateHexAddress(val), {
       message: "Stop address must be a valid hex value.",
     }),
-    writeable: z.enum(["yes", "no", "dontcare"], {
+    writable: z.enum(["yes", "no", "dontcare"], {
       errorMap: () => ({ message: "Please select a writeable option." }),
     }),
     executable: z.enum(["yes", "no", "dontcare"], {
@@ -189,7 +214,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
       scanValueType: "integer",
       startAddress: "0",
       stopAddress: maxIntPtrString,
-      writeable: "yes",
+      writable: "yes",
       executable: "dontcare",
       copyOnWrite: "no",
       memoryTypes: ["image", "private"],
@@ -207,29 +232,33 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
         return Promise.reject();
       }
 
-      return dotNetObj.invokeMethod("OnFirstScan", values);
+      if (isFirstScan) {
+        return dotNetObj.invokeMethod("OnFirstScan", values);
+      } else {
+        return dotNetObj.invokeMethod("OnNextScan", values);
+      }
     },
-    onSuccess: () => {
-      setIsFirstScan(false);
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const cancelScanMutation = useMutation({
+    mutationFn: () => {
+      if (!dotNetObj) {
+        return Promise.reject();
+      }
+
+      return dotNetObj.invokeMethod("CancelScan");
     },
   });
 
   function onFirstScan(values: FormDataType) {
+    mutation.mutate(values, { onSuccess: () => setIsFirstScan(false) });
+  }
+
+  function onNextScan(values: FormDataType) {
     mutation.mutate(values);
-
-    //     const { mutate } = useMutation(
-    //       mutationFn: (event) => {
-    // dotNetObj?.invokeMethod("OnFirstScan", values)
-    //       }
-    //       // (values: FormDataType) => dotNetObj?.invokeMethod("OnFirstScan", values),
-    //       // {
-    //       //   onSuccess: () => {
-    //       //     setIsFirstScan(false);
-    //       //   },
-    //       // }
-    //     );
-
-    // mutate(values);
   }
 
   return (
@@ -246,9 +275,21 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           SearchInputField(form, "scanValue")
         ) : null}
         <div className="flex gap-1">
-          {isFirstScan ? (
+          {mutation.isPending ? (
             <Button
               type="button"
+              variant="destructive"
+              disabled={cancelScanMutation.isPending}
+              onClick={() => cancelScanMutation.mutate()}
+            >
+              {cancelScanMutation.isPending && (
+                <Loader2Icon className="animate-spin" />
+              )}
+              Cancel
+            </Button>
+          ) : isFirstScan ? (
+            <Button
+              type="submit"
               variant="default"
               onClick={form.handleSubmit(onFirstScan)}
             >
@@ -256,7 +297,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
             </Button>
           ) : (
             <>
-              <Button type="button" variant="default">
+              <Button
+                type="submit"
+                variant="default"
+                onClick={form.handleSubmit(onNextScan)}
+              >
                 Next Scan
               </Button>
               <Button type="button" variant="outline">
@@ -302,9 +347,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="123">Integer (4 Bytes)</SelectItem>
-                  <SelectItem value="integer">Integer (4 Bytes)</SelectItem>
-                  <SelectItem value="float">Float (4 Bytes)</SelectItem>
+                  {scanValueTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -355,10 +402,10 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
         <div className="grid grid-cols-3 gap-2">
           <FormField
             control={form.control}
-            name="writeable"
+            name="writable"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Writeable</FormLabel>
+                <FormLabel>Writable</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}

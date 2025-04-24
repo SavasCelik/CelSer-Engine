@@ -173,10 +173,6 @@ function ScanResultItemsTable() {
     },
   });
 
-  if (query.data) {
-    console.log("got data");
-  }
-
   //   const data = useMemo(() => addresses, []);
   const [data, _setData] = useState(addresses);
   const [pagination, setPagination] = React.useState<PaginationState>({
