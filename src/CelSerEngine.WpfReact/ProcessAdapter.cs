@@ -70,10 +70,10 @@ public class ProcessAdapter : IDisposable
 
     protected virtual void Dispose(bool disposing)
     {
-        if (ProcessHandle.IsInvalid)
+        if (_processHandle != null && _processHandle.IsInvalid)
         {
             // Free the handle
-            ProcessHandle.Dispose();
+            _processHandle.Dispose();
         }
     }
 }

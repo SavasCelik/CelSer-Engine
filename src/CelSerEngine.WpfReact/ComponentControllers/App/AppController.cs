@@ -58,7 +58,7 @@ public class AppController : ReactControllerBase
         selectedProcess.ProcessHandle = nativeApi.OpenProcess(selectedProcess.Process.Id);
     }
 
-    public async Task OnFirstScan(MemoryScanSettings memoryScanSettings)
+    public async Task OnFirstScanAsync(MemoryScanSettings memoryScanSettings)
     {
         var userInput = memoryScanSettings.ScanValue;
 
@@ -128,7 +128,7 @@ public class AppController : ReactControllerBase
         _scanCancellationTokenSource = null;
     }
 
-    public async Task CancelScan()
+    public async Task CancelScanAsync()
     {
         if (_scanCancellationTokenSource != null)
         {

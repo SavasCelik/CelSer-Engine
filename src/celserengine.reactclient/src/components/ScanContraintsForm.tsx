@@ -233,9 +233,9 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
       }
 
       if (isFirstScan) {
-        return dotNetObj.invokeMethod("OnFirstScan", values);
+        return dotNetObj.invokeMethod("OnFirstScanAsync", values);
       } else {
-        return dotNetObj.invokeMethod("OnNextScan", values);
+        return dotNetObj.invokeMethod("OnNextScanAsync", values);
       }
     },
     onError: (error) => {
@@ -249,7 +249,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
         return Promise.reject();
       }
 
-      return dotNetObj.invokeMethod("CancelScan");
+      return dotNetObj.invokeMethod("CancelScanAsync");
     },
   });
 
