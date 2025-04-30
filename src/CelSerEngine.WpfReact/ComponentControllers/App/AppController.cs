@@ -30,7 +30,7 @@ public class AppController : ReactControllerBase
     private readonly IProgress<float> _progressBarUpdater;
     private float _progressBarValue;
     private CancellationTokenSource? _scanCancellationTokenSource;
-    private List<MemorySegment> _scanResultItems;
+    private ScanResultItemsTable _scanResultItemsTable;
 
     public AppController(
         ReactJsRuntime reactJsRuntime,
@@ -45,13 +45,13 @@ public class AppController : ReactControllerBase
         _memoryScanService = memoryScanService;
         _progressBarUpdater = new Progress<float>(newValue =>
         {
-            if (newValue - _progressBarValue >= 1)
+            if (newValue - _progressBarValue >= 1 || (newValue == 0 && newValue != _progressBarValue))
             {
                 _progressBarValue = newValue;
                 _ = UpdateFrontEndProgressBarAsync();
             }
         });
-        _scanResultItems = [];
+        _scanResultItemsTable = new ScanResultItemsTable();
         var process = Process.GetProcessesByName("SmallGame").First();
         var selectedProcess = new ProcessAdapter(process);
         processSelectionTracker.SelectedProcess = selectedProcess;
@@ -123,7 +123,35 @@ public class AppController : ReactControllerBase
         sw.Stop();
         _logger.LogInformation("Scan completed found: {count} addresses in: {duration} ms", results.Count, sw.ElapsedMilliseconds);
         _progressBarUpdater.Report(100);
-        _scanResultItems = results.Select(x => new MemorySegment(x)).ToList();
+        _scanResultItemsTable.ScanResultItems = results.Select(x => new MemorySegment(x)).ToList();
+        _progressBarUpdater.Report(0);
+        _scanCancellationTokenSource = null;
+    }
+
+    public async Task OnNextScanAsync(MemoryScanSettings memoryScanSettings)
+    {
+        var userInput = memoryScanSettings.ScanValue;
+
+        if (memoryScanSettings.ScanCompareType == ScanCompareType.ValueBetween)
+        {
+            userInput = $"{memoryScanSettings.FromValue}-{memoryScanSettings.ToValue}";
+        }
+
+        _scanCancellationTokenSource = new CancellationTokenSource();
+        var token = _scanCancellationTokenSource.Token;
+        _logger.LogInformation("Next scan started...");
+        var sw = Stopwatch.StartNew();
+        var scanConstraint = new ScanConstraint(memoryScanSettings.ScanCompareType, memoryScanSettings.ScanValueType, userInput);
+        var results = await _memoryScanService.FilterMemorySegmentsByScanConstraintAsync(
+            _scanResultItemsTable.ScanResultItems.Cast<IMemorySegment>().ToList(),
+            scanConstraint,
+            _processSelectionTracker.SelectedProcessHandle,
+            _progressBarUpdater,
+            token);
+        sw.Stop();
+        _logger.LogInformation("Scan completed found: {count} addresses in: {duration} ms", results.Count, sw.ElapsedMilliseconds);
+        _progressBarUpdater.Report(100);
+        _scanResultItemsTable.ScanResultItems = results.Select(x => new MemorySegment(x)).ToList();
         _progressBarUpdater.Report(0);
         _scanCancellationTokenSource = null;
     }
@@ -134,6 +162,13 @@ public class AppController : ReactControllerBase
         {
             await _scanCancellationTokenSource.CancelAsync();
         }
+    }
+
+    public object GetScanResultItems(int page, int pageSize)
+    {
+        var scanResultItems = _scanResultItemsTable.GetScanResultItems(page, pageSize);
+
+        return new { Items = scanResultItems, TotalCount = _scanResultItemsTable.ScanResultItems.Count };
     }
 
     private async Task UpdateFrontEndProgressBarAsync()
