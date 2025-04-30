@@ -35,18 +35,16 @@ function App() {
         {/* Progress bar */}
         <Progress value={progressBarValue} />
 
-        {/* Main content */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Upper panel */}
-          <div className="flex flex-row gap-2">
-            {/* Left panel - Memory addresses */}
-            <ScanResultItemsTable />
+        <div className="flex flex-row gap-2">
+          {/* Left panel - Memory addresses */}
+          <ScanResultItemsTable dotNetObj={dotNetObj} />
 
-            {/* Right panel - Search options */}
-            <ScanConstraintsForm dotNetObj={dotNetObj} />
-          </div>
+          {/* Right panel - Search options */}
+          <ScanConstraintsForm dotNetObj={dotNetObj} />
+        </div>
 
-          {/* Bottom table */}
+        {/* Bottom table */}
+        <div className="mt-2 flex-1 overflow-auto rounded-lg border-1 ">
           <TrackedItemsTable />
         </div>
       </div>
