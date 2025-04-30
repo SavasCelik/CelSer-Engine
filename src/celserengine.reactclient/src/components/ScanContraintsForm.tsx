@@ -278,12 +278,12 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
       <form autoComplete="off" className="mt-5 flex w-[330px] flex-col gap-2">
         {selectedScanType === "valueBetween" ? (
           <>
-            {SearchInputField(form, "fromValue")}
-            {SearchInputField(form, "toValue")}
+            {SearchInputField(form, "fromValue", "From Value")}
+            {SearchInputField(form, "toValue", "To Value")}
           </>
         ) : scanCompareTypes.find((type) => type.id === selectedScanType)
             ?.hasSearchValue ? (
-          SearchInputField(form, "scanValue")
+          SearchInputField(form, "scanValue", "Value")
         ) : null}
         <div className="flex gap-1">
           {onScanMutation.isPending ? (
@@ -545,7 +545,8 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
 
 function SearchInputField(
   form: UseFormReturn<FormDataType>,
-  inputName: keyof FormDataType
+  inputName: keyof FormDataType,
+  placeholder: string
 ) {
   return (
     <FormField
@@ -556,7 +557,11 @@ function SearchInputField(
           <FormControl>
             <div className="relative">
               <Search className="text-muted-foreground pointer-events-none absolute top-0 left-2 h-7.5 w-4" />
-              <Input className="h-7.5 pr-8 pl-8" {...field} />
+              <Input
+                className="h-7.5 pr-8 pl-8"
+                {...field}
+                placeholder={placeholder}
+              />
               {field.value && (
                 <X
                   className="text-muted-foreground absolute top-0 right-2 h-7.5 w-4 cursor-pointer"
