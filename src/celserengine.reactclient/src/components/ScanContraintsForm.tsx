@@ -22,7 +22,7 @@ import {
 import { Check, Loader2Icon, Search, X } from "lucide-react";
 import { Toggle } from "./ui/toggle";
 import { DotNetObject } from "../utils/useDotNet";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const maxIntPtrString = "7FFFFFFFFFFFFFFF";
@@ -225,8 +225,9 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
   const availableScanCompareTypes = isFirstScan
     ? scanCompareTypes.slice(0, 5)
     : scanCompareTypes.filter((type) => type.id !== "unknownInitialValue");
+  const queryClient = useQueryClient();
 
-  const mutation = useMutation({
+  const onScanMutation = useMutation({
     mutationFn: (values: FormDataType) => {
       if (!dotNetObj) {
         return Promise.reject();
@@ -241,6 +242,9 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
     onError: (error) => {
       toast.error(error.message);
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ScanResultItemsTable"] });
+    },
   });
 
   const cancelScanMutation = useMutation({
@@ -254,16 +258,23 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
   });
 
   function onFirstScan(values: FormDataType) {
-    mutation.mutate(values, { onSuccess: () => setIsFirstScan(false) });
+    onScanMutation.mutate(values, {
+      onSuccess: () => {
+        setIsFirstScan(false);
+      },
+    });
   }
 
   function onNextScan(values: FormDataType) {
-    mutation.mutate(values);
+    onScanMutation.mutate(values);
   }
+
+  const isCancellingScan =
+    cancelScanMutation.isPending ||
+    (cancelScanMutation.isSuccess && onScanMutation.isPending);
 
   return (
     <Form {...form}>
-      <div>{mutation.status}</div>
       <form autoComplete="off" className="mt-5 flex w-[330px] flex-col gap-2">
         {selectedScanType === "valueBetween" ? (
           <>
@@ -275,16 +286,14 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           SearchInputField(form, "scanValue")
         ) : null}
         <div className="flex gap-1">
-          {mutation.isPending ? (
+          {onScanMutation.isPending ? (
             <Button
               type="button"
               variant="destructive"
-              disabled={cancelScanMutation.isPending}
+              disabled={isCancellingScan}
               onClick={() => cancelScanMutation.mutate()}
             >
-              {cancelScanMutation.isPending && (
-                <Loader2Icon className="animate-spin" />
-              )}
+              {isCancellingScan && <Loader2Icon className="animate-spin" />}
               Cancel
             </Button>
           ) : isFirstScan ? (

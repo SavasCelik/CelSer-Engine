@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   PaginationState,
   useReactTable,
 } from "@tanstack/react-table";
@@ -25,8 +24,8 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
-import { useDotNet } from "@/utils/useDotNet";
 import { useQuery } from "@tanstack/react-query";
+import { DotNetObject } from "../utils/useDotNet";
 
 type RusultItem = {
   address: string;
@@ -35,106 +34,16 @@ type RusultItem = {
   highlighted?: boolean;
 };
 
-const addresses = [
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC438B418", value: "89", prevValue: "89" },
-  { address: "1DBC43A5848", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC43B2870", value: "89", prevValue: "89" },
-  { address: "1DBC486B514", value: "89", prevValue: "89" },
-  { address: "1DBC486BE54", value: "89", prevValue: "89" },
-  { address: "1DBC486C214", value: "89", prevValue: "11" },
-  { address: "1DBC4873344", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC4873734", value: "89", prevValue: "89" },
-  { address: "1DBC48739A4", value: "89", prevValue: "89" },
-  { address: "1DBC4874124", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC438B418", value: "89", prevValue: "89" },
-  { address: "1DBC43A5848", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC43B2870", value: "89", prevValue: "89" },
-  { address: "1DBC486B514", value: "89", prevValue: "89" },
-  { address: "1DBC486BE54", value: "89", prevValue: "89" },
-  { address: "1DBC486C214", value: "89", prevValue: "11" },
-  { address: "1DBC4873344", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC4873734", value: "89", prevValue: "89" },
-  { address: "1DBC48739A4", value: "89", prevValue: "89" },
-  { address: "1DBC4874124", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC438B418", value: "89", prevValue: "89" },
-  { address: "1DBC43A5848", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC43B2870", value: "89", prevValue: "89" },
-  { address: "1DBC486B514", value: "89", prevValue: "89" },
-  { address: "1DBC486BE54", value: "89", prevValue: "89" },
-  { address: "1DBC486C214", value: "89", prevValue: "11" },
-  { address: "1DBC4873344", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC4873734", value: "89", prevValue: "89" },
-  { address: "1DBC48739A4", value: "89", prevValue: "89" },
-  { address: "1DBC4874124", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC438B418", value: "89", prevValue: "89" },
-  { address: "1DBC43A5848", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC43B2870", value: "89", prevValue: "89" },
-  { address: "1DBC486B514", value: "89", prevValue: "89" },
-  { address: "1DBC486BE54", value: "89", prevValue: "89" },
-  { address: "1DBC486C214", value: "89", prevValue: "11" },
-  { address: "1DBC4873344", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC4873734", value: "89", prevValue: "89" },
-  { address: "1DBC48739A4", value: "89", prevValue: "89" },
-  { address: "1DBC4874124", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC438B418", value: "89", prevValue: "89" },
-  { address: "1DBC43A5848", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC43B2870", value: "89", prevValue: "89" },
-  { address: "1DBC486B514", value: "89", prevValue: "89" },
-  { address: "1DBC486BE54", value: "89", prevValue: "89" },
-  { address: "1DBC486C214", value: "89", prevValue: "11" },
-  { address: "1DBC4873344", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC4873734", value: "89", prevValue: "89" },
-  { address: "1DBC48739A4", value: "89", prevValue: "89" },
-  { address: "1DBC4874124", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-  { address: "1DBC438B418", value: "89", prevValue: "89" },
-  { address: "1DBC43A5848", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC43B2870", value: "89", prevValue: "89" },
-  { address: "1DBC486B514", value: "89", prevValue: "89" },
-  { address: "1DBC486BE54", value: "89", prevValue: "89" },
-  { address: "1DBC486C214", value: "89", prevValue: "11" },
-  { address: "1DBC4873344", value: "89", prevValue: "89", highlighted: true },
-  { address: "1DBC4873734", value: "89", prevValue: "89" },
-  { address: "1DBC48739A4", value: "89", prevValue: "89" },
-  { address: "1DBC4874124", value: "89", prevValue: "89" },
-  { address: "1DBC293A66C", value: "89", prevValue: "89" },
-  { address: "1DBC2A1EBC8", value: "89", prevValue: "89" },
-  { address: "1DBC4374E98", value: "89", prevValue: "89" },
-];
+type ScanResultResponse = {
+  items: RusultItem[];
+  totalCount: number;
+};
 
-function ScanResultItemsTable() {
+interface ScanResultItemsTableProps {
+  dotNetObj: DotNetObject | null;
+}
+
+function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
   const columns = useMemo(
     () => [
       {
@@ -153,41 +62,35 @@ function ScanResultItemsTable() {
     ],
     []
   );
-  const dotNetObj = useDotNet(
-    "ScanResultItemsTable",
-    "ScanResultItemsController"
-  );
-
-  useEffect(() => {
-    console.log("dotNetObj changed", dotNetObj);
-  }, [dotNetObj]);
-
-  const query = useQuery<RusultItem[]>({
-    queryKey: ["ScanResultItemsTable", dotNetObj],
-    queryFn: async () => {
-      if (!dotNetObj) {
-        return [];
-      }
-
-      return await dotNetObj!.invokeMethod("GetScanResultItems");
-    },
-  });
-
-  //   const data = useMemo(() => addresses, []);
-  const [data, _setData] = useState(addresses);
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 13,
   });
 
+  const query = useQuery<ScanResultResponse>({
+    queryKey: ["ScanResultItemsTable", { pagination }],
+    queryFn: async () => {
+      if (!dotNetObj) {
+        return { items: [], totalCount: 0 };
+      }
+
+      return await dotNetObj!.invokeMethod(
+        "GetScanResultItems",
+        pagination.pageIndex,
+        pagination.pageSize
+      );
+    },
+  });
+
   const table = useReactTable({
-    data: query.data || [],
+    data: query.data?.items ?? [],
     columns,
     columnResizeMode: "onChange",
+    rowCount: query.data?.totalCount ?? 0,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
     autoResetPageIndex: false,
+    manualPagination: true,
     state: {
       pagination,
     },
@@ -221,13 +124,6 @@ function ScanResultItemsTable() {
                           onDoubleClick: () => header.column.resetSize(),
                           onMouseDown: header.getResizeHandler(),
                           onTouchStart: header.getResizeHandler(),
-                          //   className: `${classes.resizer} ${
-                          //     table.options.columnResizeDirection == "ltr"
-                          //       ? classes.ltr
-                          //       : classes.ltr
-                          //   } ${
-                          //     header.column.getIsResizing() && classes.isResizing
-                          //   }`,
                         }}
                       />
                     </TableHead>
