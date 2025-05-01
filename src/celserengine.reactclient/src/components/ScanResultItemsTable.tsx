@@ -136,13 +136,14 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
               ))}
             </TableHeader>
             <TableBody>
-              {query.isFetching || isScanPending ? (
+              {(query.isFetching && query.data?.totalCount == 0) ||
+              isScanPending ? (
                 Array.from({ length: pagination.pageSize }).map((_, index) => (
                   <TableRow
                     key={"skeleton-row-" + index}
                     className="hover:bg-transparent"
                   >
-                    <TableCell colSpan={columns.length}>
+                    <TableCell colSpan={columns.length} className="p-2">
                       <Skeleton className="h-[10.55px]" />
                     </TableCell>
                   </TableRow>
@@ -213,7 +214,7 @@ function TableBodyNormal({ table }: { table: TTable<any> }) {
         >
           {row.getVisibleCells().map((cell) => {
             return (
-              <TableCell key={cell.id} className="p-1">
+              <TableCell key={cell.id}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </TableCell>
             );
