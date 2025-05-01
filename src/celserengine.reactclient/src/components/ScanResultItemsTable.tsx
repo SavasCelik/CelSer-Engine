@@ -101,7 +101,9 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
   return (
     <>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="text-center text-sm">Found </div>
+        <div className="text-center text-sm">
+          Found {query.data?.totalCount}
+        </div>
         <div className="flex-1 overflow-auto rounded-lg border-1">
           <Table>
             <TableHeader>
