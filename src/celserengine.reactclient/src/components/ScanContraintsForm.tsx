@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { z } from "zod";
@@ -259,6 +259,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
   });
 
   const newScanMutation = useMutation({
+    mutationKey: ["NewScan"],
     mutationFn: () => {
       if (!dotNetObj) {
         return Promise.reject();

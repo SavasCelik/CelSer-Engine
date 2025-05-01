@@ -6,7 +6,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Table as TTable } from "@tanstack/react-table";
-import { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -45,7 +44,7 @@ interface ScanResultItemsTableProps {
 }
 
 function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
-  const columns = useMemo(
+  const columns = React.useMemo(
     () => [
       {
         accessorKey: "address",
@@ -69,6 +68,18 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
   });
 
   const isScanPending = useIsMutating({ mutationKey: ["OnScan"] });
+  const isNewScanPending = useIsMutating({ mutationKey: ["NewScan"] });
+
+  React.useEffect(() => {
+    //reset page index when scans are done
+    if (isScanPending === 0 && isNewScanPending === 0) {
+      setPagination((prev) => ({
+        ...prev,
+        pageIndex: 0,
+      }));
+    }
+  }, [isScanPending, isNewScanPending]);
+
   const query = useQuery<ScanResultResponse>({
     queryKey: ["ScanResultItemsTable", { pagination }],
     queryFn: async () => {
