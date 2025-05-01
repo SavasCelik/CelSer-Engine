@@ -235,9 +235,9 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
       }
 
       if (isFirstScan) {
-        return dotNetObj.invokeMethod("OnFirstScanAsync", values);
+        return dotNetObj.invokeMethod("FirstScanAsync", values);
       } else {
-        return dotNetObj.invokeMethod("OnNextScanAsync", values);
+        return dotNetObj.invokeMethod("NextScanAsync", values);
       }
     },
     onError: (error) => {

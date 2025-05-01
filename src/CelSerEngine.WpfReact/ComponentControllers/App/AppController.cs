@@ -58,7 +58,7 @@ public class AppController : ReactControllerBase
         selectedProcess.ProcessHandle = nativeApi.OpenProcess(selectedProcess.Process.Id);
     }
 
-    public async Task OnFirstScanAsync(MemoryScanSettings memoryScanSettings)
+    public async Task FirstScanAsync(MemoryScanSettings memoryScanSettings)
     {
         var userInput = memoryScanSettings.ScanValue;
 
@@ -128,7 +128,7 @@ public class AppController : ReactControllerBase
         _scanCancellationTokenSource = null;
     }
 
-    public async Task OnNextScanAsync(MemoryScanSettings memoryScanSettings)
+    public async Task NextScanAsync(MemoryScanSettings memoryScanSettings)
     {
         var userInput = memoryScanSettings.ScanValue;
 
@@ -154,6 +154,11 @@ public class AppController : ReactControllerBase
         _scanResultItemsTable.ScanResultItems = results.Select(x => new MemorySegment(x)).ToList();
         _progressBarUpdater.Report(0);
         _scanCancellationTokenSource = null;
+    }
+
+    public void NewScan()
+    {
+        _scanResultItemsTable.ScanResultItems.Clear();
     }
 
     public async Task CancelScanAsync()
