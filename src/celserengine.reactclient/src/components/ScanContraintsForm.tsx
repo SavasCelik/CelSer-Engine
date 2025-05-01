@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { z } from "zod";
@@ -258,9 +258,27 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
     },
   });
 
+  const newScanMutation = useMutation({
+    mutationFn: () => {
+      if (!dotNetObj) {
+        return Promise.reject();
+      }
+
+      return dotNetObj.invokeMethod("NewScan");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ScanResultItemsTable"] });
+      form.setValue("scanCompareType", scanCompareTypes[0].id);
+      setIsFirstScan(true);
+    },
+  });
+
   function onFirstScan(values: FormDataType) {
     onScanMutation.mutate(values, {
       onSuccess: () => {
+        if (selectedScanType == "unknownInitialValue") {
+          form.setValue("scanCompareType", scanCompareTypes[0].id);
+        }
         setIsFirstScan(false);
       },
     });
@@ -268,11 +286,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
 
   function onNextScan(values: FormDataType) {
     onScanMutation.mutate(values);
-    }
+  }
 
-    const isCancellingScan =
-        cancelScanMutation.isPending ||
-        (cancelScanMutation.isSuccess && onScanMutation.isPending);
+  const isCancellingScan =
+    cancelScanMutation.isPending ||
+    (cancelScanMutation.isSuccess && onScanMutation.isPending);
 
   return (
     <Form {...form}>
@@ -285,7 +303,9 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
         ) : scanCompareTypes.find((type) => type.id === selectedScanType)
             ?.hasSearchValue ? (
           SearchInputField(form, "scanValue", "Value")
-        ) : null}
+        ) : (
+          <div className="h-7.5"></div>
+        )}
         <div className="flex gap-1">
           {onScanMutation.isPending ? (
             <Button
@@ -293,6 +313,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
               variant="destructive"
               disabled={isCancellingScan}
               onClick={() => cancelScanMutation.mutate()}
+              className="transition-none"
             >
               {isCancellingScan && <Loader2Icon className="animate-spin" />}
               Cancel
@@ -314,7 +335,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
               >
                 Next Scan
               </Button>
-              <Button type="button" variant="outline">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => newScanMutation.mutate()}
+              >
                 New Scan
               </Button>
             </>
@@ -326,9 +351,9 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           render={({ field }) => (
             <FormItem className="flex items-center gap-0">
               <FormLabel className="w-[90px]">Scan Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger className="w-full" size="xs">
+                  <SelectTrigger {...field} className="w-full" size="xs">
                     <SelectValue placeholder="Scan Type" />
                   </SelectTrigger>
                 </FormControl>
@@ -350,9 +375,14 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           render={({ field }) => (
             <FormItem className="flex items-center gap-0">
               <FormLabel className="w-[90px]">Value Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger className="w-full" size="xs">
+                  <SelectTrigger
+                    disabled={!isFirstScan}
+                    {...field}
+                    className="w-full"
+                    size="xs"
+                  >
                     <SelectValue placeholder="Value Type" />
                   </SelectTrigger>
                 </FormControl>
@@ -372,7 +402,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           Memory Scan Options
         </div>
         <Select defaultValue="all">
-          <SelectTrigger className="w-full" size="xs">
+          <SelectTrigger disabled={!isFirstScan} className="w-full" size="xs">
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>
@@ -387,7 +417,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
               <FormLabel>Start</FormLabel>
               <div className="flex flex-col w-full">
                 <FormControl>
-                  <Input {...field} className="h-7.5 w-full" />
+                  <Input
+                    disabled={!isFirstScan}
+                    {...field}
+                    className="h-7.5 w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </div>
@@ -402,7 +436,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
               <FormLabel>Start</FormLabel>
               <div className="flex flex-col w-full">
                 <FormControl>
-                  <Input {...field} className="h-7.5 w-full" />
+                  <Input
+                    disabled={!isFirstScan}
+                    {...field}
+                    className="h-7.5 w-full"
+                  />
                 </FormControl>
                 <FormMessage />
               </div>
@@ -416,12 +454,14 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Writable</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="w-full" size="xs">
+                    <SelectTrigger
+                      disabled={!isFirstScan}
+                      {...field}
+                      className="w-full"
+                      size="xs"
+                    >
                       <SelectValue placeholder="Yes" />
                     </SelectTrigger>
                   </FormControl>
@@ -441,12 +481,14 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Executable</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="w-full" size="xs">
+                    <SelectTrigger
+                      disabled={!isFirstScan}
+                      {...field}
+                      className="w-full"
+                      size="xs"
+                    >
                       <SelectValue placeholder="Don't Care" />
                     </SelectTrigger>
                   </FormControl>
@@ -466,12 +508,14 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Copy On Write</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="w-full" size="xs">
+                    <SelectTrigger
+                      disabled={!isFirstScan}
+                      {...field}
+                      className="w-full"
+                      size="xs"
+                    >
                       <SelectValue placeholder="No" />
                     </SelectTrigger>
                   </FormControl>
@@ -504,6 +548,8 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
                           <FormItem key={item.id}>
                             <FormControl>
                               <Toggle
+                                disabled={!isFirstScan}
+                                {...field}
                                 variant="primary"
                                 pressed={field.value?.includes(item.id)}
                                 className={
@@ -566,7 +612,10 @@ function SearchInputField(
               {field.value && (
                 <X
                   className="text-muted-foreground absolute top-0 right-2 h-7.5 w-4 cursor-pointer"
-                  onClick={() => form.setValue(inputName, "")}
+                  onClick={() => {
+                    form.setValue(inputName, "");
+                    form.setFocus(inputName);
+                  }}
                 />
               )}
             </div>
