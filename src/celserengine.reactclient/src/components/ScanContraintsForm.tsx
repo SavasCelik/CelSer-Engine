@@ -228,6 +228,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
   const queryClient = useQueryClient();
 
   const onScanMutation = useMutation({
+    mutationKey: ["OnScan"],
     mutationFn: (values: FormDataType) => {
       if (!dotNetObj) {
         return Promise.reject();
@@ -267,11 +268,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
 
   function onNextScan(values: FormDataType) {
     onScanMutation.mutate(values);
-  }
+    }
 
-  const isCancellingScan =
-    cancelScanMutation.isPending ||
-    (cancelScanMutation.isSuccess && onScanMutation.isPending);
+    const isCancellingScan =
+        cancelScanMutation.isPending ||
+        (cancelScanMutation.isSuccess && onScanMutation.isPending);
 
   return (
     <Form {...form}>

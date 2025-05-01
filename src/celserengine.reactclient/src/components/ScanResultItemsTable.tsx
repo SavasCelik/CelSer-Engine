@@ -24,8 +24,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useIsMutating, useQuery } from "@tanstack/react-query";
 import { DotNetObject } from "../utils/useDotNet";
+import { Skeleton } from "./ui/skeleton";
 
 type RusultItem = {
   address: string;
@@ -67,6 +68,7 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
     pageSize: 13,
   });
 
+  const isScanPending = useIsMutating({ mutationKey: ["OnScan"] });
   const query = useQuery<ScanResultResponse>({
     queryKey: ["ScanResultItemsTable", { pagination }],
     queryFn: async () => {
@@ -99,7 +101,7 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
   return (
     <>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="text-center text-sm">Found 89,325</div>
+        <div className="text-center text-sm">Found </div>
         <div className="flex-1 overflow-auto rounded-lg border-1">
           <Table>
             <TableHeader>
@@ -132,7 +134,26 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getState().columnSizingInfo.isResizingColumn ? (
+              {query.isFetching || isScanPending ? (
+                Array.from({ length: pagination.pageSize }).map((_, index) => (
+                  <TableRow
+                    key={"skeleton-row-" + index}
+                    className="hover:bg-transparent"
+                  >
+                    <TableCell colSpan={columns.length}>
+                      <Skeleton className="h-[10.55px]" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : query.isError ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length}>
+                    <div className="flex h-10 items-center justify-center text-sm text-red-500">
+                      Error loading data
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : table.getState().columnSizingInfo.isResizingColumn ? (
                 <MemoizedTableBody table={table} />
               ) : (
                 <TableBodyNormal table={table} />
