@@ -198,26 +198,24 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
                 />
               </PaginationItem>
               <PaginationItem>
-                <PaginationItem>
-                  <Input
-                    className="size-8 p-0 text-center"
-                    value={table.getState().pagination.pageIndex}
-                    onChange={(val) => {
-                      let pageIndexDesired = Number(val.target.value) || 0;
-                      const pageCount = table.getPageCount();
-                      if (pageIndexDesired > pageCount - 1) {
-                        pageIndexDesired = pageCount - 1;
-                      } else if (pageIndexDesired < 0) {
-                        pageIndexDesired = 0;
-                      }
+                <Input
+                  className="size-8 p-0 text-center"
+                  value={table.getState().pagination.pageIndex}
+                  onChange={(val) => {
+                    let pageIndexDesired = Number(val.target.value) || 0;
+                    const pageCount = table.getPageCount();
+                    if (pageIndexDesired > pageCount - 1) {
+                      pageIndexDesired = pageCount - 1;
+                    } else if (pageIndexDesired < 0) {
+                      pageIndexDesired = 0;
+                    }
 
-                      setPagination((prev) => ({
-                        ...prev,
-                        pageIndex: pageIndexDesired,
-                      }));
-                    }}
-                  />
-                </PaginationItem>
+                    setPagination((prev) => ({
+                      ...prev,
+                      pageIndex: pageIndexDesired,
+                    }));
+                  }}
+                />
               </PaginationItem>
               <PaginationItem>
                 <PaginationNext
