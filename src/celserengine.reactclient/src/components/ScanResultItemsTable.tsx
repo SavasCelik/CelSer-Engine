@@ -3,6 +3,7 @@ import {
   flexRender,
   getCoreRowModel,
   PaginationState,
+  RowSelectionState,
   useReactTable,
 } from "@tanstack/react-table";
 import { Table as TTable } from "@tanstack/react-table";
@@ -18,7 +19,6 @@ import {
   Pagination,
   PaginationContent,
   PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useIsMutating, useQuery } from "@tanstack/react-query";
 import { DotNetObject } from "../utils/useDotNet";
 import { Skeleton } from "./ui/skeleton";
+import { Input } from "./ui/input";
 
 type RusultItem = {
   address: string;
@@ -66,7 +67,7 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
     pageIndex: 0,
     pageSize: 13,
   });
-
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const isScanPending = useIsMutating({ mutationKey: ["OnScan"] });
   const isNewScanPending = useIsMutating({ mutationKey: ["NewScan"] });
 
@@ -102,19 +103,27 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
     rowCount: query.data?.totalCount ?? 0,
     getCoreRowModel: getCoreRowModel(),
     onPaginationChange: setPagination,
+    onRowSelectionChange: setRowSelection,
     autoResetPageIndex: false,
     manualPagination: true,
     state: {
       pagination,
+      rowSelection,
     },
+    getRowId: (row) => row.address,
   });
+  const [totalCount, setTotalCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (query.data && totalCount !== query.data.totalCount) {
+      setTotalCount(query.data.totalCount);
+    }
+  }, [query.data, totalCount]);
 
   return (
     <>
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="text-center text-sm">
-          Found {query.data?.totalCount}
-        </div>
+      <div className="flex flex-1 flex-col overflow-hidden min-h-[455px]">
+        <div className="text-center text-sm">Found: {totalCount}</div>
         <div className="flex-1 overflow-auto rounded-lg border-1">
           <Table>
             <TableHeader>
@@ -175,7 +184,7 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
             </TableBody>
           </Table>
         </div>
-        <div>
+        <div className="mt-1">
           <Pagination>
             <PaginationContent>
               <PaginationItem>
@@ -189,9 +198,26 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
                 />
               </PaginationItem>
               <PaginationItem>
-                <PaginationLink href="#" isActive>
-                  {table.getState().pagination.pageIndex}
-                </PaginationLink>
+                <PaginationItem>
+                  <Input
+                    className="size-8 p-0 text-center"
+                    value={table.getState().pagination.pageIndex}
+                    onChange={(val) => {
+                      let pageIndexDesired = Number(val.target.value) || 0;
+                      const pageCount = table.getPageCount();
+                      if (pageIndexDesired > pageCount - 1) {
+                        pageIndexDesired = pageCount - 1;
+                      } else if (pageIndexDesired < 0) {
+                        pageIndexDesired = 0;
+                      }
+
+                      setPagination((prev) => ({
+                        ...prev,
+                        pageIndex: pageIndexDesired,
+                      }));
+                    }}
+                  />
+                </PaginationItem>
               </PaginationItem>
               <PaginationItem>
                 <PaginationNext
@@ -212,13 +238,51 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
 }
 
 function TableBodyNormal({ table }: { table: TTable<any> }) {
+  const lastSelectedIndexRef = React.useRef<number | null>(null);
+  const rowSelection = table.getState().rowSelection;
+  const rowModel = table.getRowModel();
+
+  const handleRowClick = (index: number, event: React.MouseEvent) => {
+    const isShiftKey = event.shiftKey;
+    const isCtrlKey = event.ctrlKey || event.metaKey; // Support both Ctrl and Command (Mac)
+    let newRowSelection: RowSelectionState = {};
+
+    if (isShiftKey && lastSelectedIndexRef.current !== null) {
+      // Get the range of rows to select
+      const start = Math.min(lastSelectedIndexRef.current, index);
+      const end = Math.max(lastSelectedIndexRef.current, index);
+
+      // Preserve existing selections
+      newRowSelection = { ...rowSelection };
+
+      // Select all rows in the range
+      for (let i = start; i <= end; i++) {
+        const currentRow = rowModel.rows[i];
+        newRowSelection[currentRow.id] = true;
+      }
+    } else if (isCtrlKey) {
+      // For Ctrl+click, toggle the clicked row's selection state
+      // while preserving other selections
+      const selectedRow = rowModel.rows[index];
+      newRowSelection = { ...rowSelection };
+      newRowSelection[selectedRow.id] = !newRowSelection[selectedRow.id];
+    } else {
+      // For single click, select only the clicked row
+      const selectedRow = rowModel.rows[index];
+      newRowSelection[selectedRow.id] = true;
+    }
+
+    // Update last selected index
+    lastSelectedIndexRef.current = index;
+    table.setRowSelection(newRowSelection);
+  };
+
   return (
     <>
-      {table.getRowModel().rows.map((row) => (
+      {rowModel.rows.map((row) => (
         <TableRow
           key={row.id}
-          //   className={classes.row}
-          onClick={() => row.toggleSelected()}
+          onClick={(e) => handleRowClick(row.index, e)}
           data-state={row.getIsSelected() && "selected"}
           data-selected={row.getIsSelected() || undefined}
           className="hover:data-[state=selected]:bg-primary/50 data-[state=selected]:bg-primary/60"
