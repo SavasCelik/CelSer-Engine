@@ -82,7 +82,6 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     enableRowFreezing: false,
-    getRowId: (row) => row.address,
     state: {
       frozenRows,
       rowSelection,

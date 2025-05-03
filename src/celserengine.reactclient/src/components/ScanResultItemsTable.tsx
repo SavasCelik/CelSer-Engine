@@ -75,16 +75,6 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
   const isScanPending = useIsMutating({ mutationKey: ["OnScan"] });
   const isNewScanPending = useIsMutating({ mutationKey: ["NewScan"] });
 
-  React.useEffect(() => {
-    //reset page index when scans are done
-    if (isScanPending === 0 && isNewScanPending === 0) {
-      setPagination((prev) => ({
-        ...prev,
-        pageIndex: 0,
-      }));
-    }
-  }, [isScanPending, isNewScanPending]);
-
   const query = useQuery<ScanResultResponse>({
     queryKey: ["ScanResultItemsTable", { pagination }],
     queryFn: async () => {
@@ -117,6 +107,14 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
     getRowId: (row) => row.address,
   });
   const [totalCount, setTotalCount] = React.useState(0);
+
+  React.useEffect(() => {
+    //reset page index and selection when scans are done
+    if (isScanPending === 0 && isNewScanPending === 0) {
+      table.resetRowSelection();
+      table.resetPagination();
+    }
+  }, [isScanPending, isNewScanPending, table]);
 
   React.useEffect(() => {
     if (query.data && totalCount !== query.data.totalCount) {
@@ -311,6 +309,7 @@ function TableBodyNormal({
           key={row.id}
           onDoubleClick={() => addTrackedItemMutation.mutate(row.id)}
           onClick={(e) => handleRowClick(row.index, e)}
+          // onClick={(e) => row.toggleSelected()}
           data-state={row.getIsSelected() && "selected"}
           data-selected={row.getIsSelected() || undefined}
           className="hover:data-[state=selected]:bg-primary/50 data-[state=selected]:bg-primary/60"
