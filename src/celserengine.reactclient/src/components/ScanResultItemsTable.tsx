@@ -23,7 +23,12 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
-import { useIsMutating, useQuery } from "@tanstack/react-query";
+import {
+  useIsMutating,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { DotNetObject } from "../utils/useDotNet";
 import { Skeleton } from "./ui/skeleton";
 import { Input } from "./ui/input";
@@ -32,7 +37,6 @@ type RusultItem = {
   address: string;
   value: string;
   prevValue: string;
-  highlighted?: boolean;
 };
 
 type ScanResultResponse = {
@@ -177,9 +181,9 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
                   </TableCell>
                 </TableRow>
               ) : table.getState().columnSizingInfo.isResizingColumn ? (
-                <MemoizedTableBody table={table} />
+                <MemoizedTableBody table={table} dotNetObj={dotNetObj} />
               ) : (
-                <TableBodyNormal table={table} />
+                <TableBodyNormal table={table} dotNetObj={dotNetObj} />
               )}
             </TableBody>
           </Table>
@@ -235,7 +239,13 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
   );
 }
 
-function TableBodyNormal({ table }: { table: TTable<any> }) {
+function TableBodyNormal({
+  table,
+  dotNetObj,
+}: {
+  table: TTable<RusultItem>;
+  dotNetObj: DotNetObject | null;
+}) {
   const lastSelectedIndexRef = React.useRef<number | null>(null);
   const rowSelection = table.getState().rowSelection;
   const rowModel = table.getRowModel();
@@ -274,12 +284,32 @@ function TableBodyNormal({ table }: { table: TTable<any> }) {
     lastSelectedIndexRef.current = index;
     table.setRowSelection(newRowSelection);
   };
+  const queryClient = useQueryClient();
+  const addTrackedItemMutation = useMutation({
+    mutationFn: (address: string) => {
+      if (!dotNetObj) {
+        return Promise.reject();
+      }
+
+      const { pagination } = table.getState();
+      return dotNetObj.invokeMethod(
+        "AddTrackedItem",
+        address,
+        pagination.pageIndex,
+        pagination.pageSize
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["TrackedItemsTable"] });
+    },
+  });
 
   return (
     <>
       {rowModel.rows.map((row) => (
         <TableRow
           key={row.id}
+          onDoubleClick={() => addTrackedItemMutation.mutate(row.id)}
           onClick={(e) => handleRowClick(row.index, e)}
           data-state={row.getIsSelected() && "selected"}
           data-selected={row.getIsSelected() || undefined}

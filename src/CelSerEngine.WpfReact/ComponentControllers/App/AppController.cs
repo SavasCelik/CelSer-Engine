@@ -31,6 +31,7 @@ public class AppController : ReactControllerBase
     private float _progressBarValue;
     private CancellationTokenSource? _scanCancellationTokenSource;
     private ScanResultItemsTable _scanResultItemsTable;
+    private List<MemorySegment> _trackedItems;
 
     public AppController(
         ReactJsRuntime reactJsRuntime,
@@ -56,6 +57,7 @@ public class AppController : ReactControllerBase
         var selectedProcess = new ProcessAdapter(process);
         processSelectionTracker.SelectedProcess = selectedProcess;
         selectedProcess.ProcessHandle = nativeApi.OpenProcess(selectedProcess.Process.Id);
+        _trackedItems = [];
     }
 
     public async Task FirstScanAsync(MemoryScanSettings memoryScanSettings)
@@ -171,9 +173,38 @@ public class AppController : ReactControllerBase
 
     public object GetScanResultItems(int page, int pageSize)
     {
-        var scanResultItems = _scanResultItemsTable.GetScanResultItems(page, pageSize);
+        var scanResultItems = _scanResultItemsTable.GetScanResultItems(page, pageSize)
+            .Select(x => new ScanResultItemReact
+            {
+                Address = x.Address.ToString("X8"),
+                Value = x.Value,
+                PreviousValue = x.InitialValue
+            });
 
         return new { Items = scanResultItems, TotalCount = _scanResultItemsTable.ScanResultItems.Count };
+    }
+
+    public void AddTrackedItem(string memoryAddressHexString, int pageIndex, int pageSize)
+    {
+        var visibleScanResultItems = _scanResultItemsTable.GetScanResultItems(pageIndex, pageSize);
+        var selectedItem = visibleScanResultItems
+            .Where(x => x.Address.ToString("X8") == memoryAddressHexString)
+            .FirstOrDefault();
+
+        if (selectedItem != null)
+        { 
+            _trackedItems.Add(new MemorySegment(selectedItem));
+        }
+    }
+
+    public object[] GetTrackedItems()
+    {
+        return _trackedItems.Select(x => new 
+        {
+            Description = "Description",
+            Address = x.Address.ToString("X8"),
+            Value = x.Value
+        }).ToArray();
     }
 
     private async Task UpdateFrontEndProgressBarAsync()

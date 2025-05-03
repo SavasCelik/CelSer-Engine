@@ -11,17 +11,10 @@ public class ScanResultItemsTable
         ScanResultItems = [];
     }
 
-    public List<ScanResultItemReact> GetScanResultItems(int page, int pageSize)
+    public IEnumerable<MemorySegment> GetScanResultItems(int page, int pageSize)
     {
         return ScanResultItems
             .Skip(page * pageSize)
-            .Take(pageSize)
-            .Select( x => new ScanResultItemReact
-            {
-                Address = x.Address.ToString("X8"),
-                Value = x.Value,
-                PreviousValue = x.InitialValue
-            }
-            ).ToList();
+            .Take(pageSize);
     }
 }

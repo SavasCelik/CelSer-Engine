@@ -1,11 +1,12 @@
+import React from "react";
 import { Switch } from "@/components/ui/switch";
 import {
-  createColumnHelper,
+  ColumnDef,
   flexRender,
   getCoreRowModel,
+  RowSelectionState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -14,91 +15,87 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DotNetObject } from "@/utils/useDotNet";
+import { useQuery } from "@tanstack/react-query";
+import {
+  FrozenRowsFeature,
+  FrozenRowsState,
+} from "../tanstack-table-features/FrozenRows";
 
 type FreezeRow = {
   freeze: boolean;
   description: string;
   address: string;
-  value: number;
+  value: string;
 };
 
-function TrackedItemsTable() {
-  const [rowSelection, setRowSelection] = useState({});
-  const freezeData = useMemo<FreezeRow[]>(
-    () => [
-      {
-        freeze: false,
-        description: "Description",
-        address: "D48257F820",
-        value: 1,
-      },
-      {
-        freeze: true,
-        description: "Description",
-        address: "D48258F168",
-        value: 1,
-      },
-      ...Array(10)
-        .fill(0)
-        .map(() => ({
-          freeze: false,
-          description: "Description",
-          address: "D48257F8F8",
-          value: 1,
-        })),
-    ],
-    []
-  );
+interface TrackedItemsTableProps {
+  dotNetObj: DotNetObject | null;
+}
 
-  // Column definitions for freeze table
-  const freezeColumnHelper = createColumnHelper<FreezeRow>();
-  const freezeColumns = useMemo(
+function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const [frozenRows, setFrozenRows] = React.useState<FrozenRowsState>({});
+  const query = useQuery<FreezeRow[]>({
+    queryKey: ["TrackedItemsTable"],
+    queryFn: async () => {
+      if (!dotNetObj) {
+        return [];
+      }
+
+      return await dotNetObj!.invokeMethod("GetTrackedItems");
+    },
+  });
+
+  const columns = React.useMemo<ColumnDef<FreezeRow>[]>(
     () => [
-      freezeColumnHelper.accessor("freeze", {
+      {
+        accessorKey: "freeze",
         header: "Freeze",
         cell: ({ row }) => (
           <Switch
             className="cursor-pointer"
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              onClick: row.getToggleSelectedHandler(),
-            }}
+            checked={row.getIsFrozen()}
+            onClick={() => row.toggleFrozen()}
           />
         ),
-      }),
-      freezeColumnHelper.accessor("description", {
+      },
+      {
+        accessorKey: "description",
         header: "Description",
-        cell: (info) => info.getValue(),
-      }),
-      freezeColumnHelper.accessor("address", {
+      },
+      {
+        accessorKey: "address",
         header: "Address",
-        cell: (info) => info.getValue(),
-      }),
-      freezeColumnHelper.accessor("value", {
+      },
+      {
+        accessorKey: "value",
         header: "Value",
-        cell: (info) => info.getValue(),
-      }),
+      },
     ],
     []
   );
 
-  // Set up freeze table
-  const freezeTable = useReactTable({
-    data: freezeData,
-    columns: freezeColumns,
+  const trackedItemsTable = useReactTable({
+    data: query.data || [],
+    columns: columns,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
+    enableRowFreezing: false,
+    getRowId: (row) => row.address,
     state: {
+      frozenRows,
       rowSelection,
     },
-    enableRowSelection: true,
+    onFrozenRowsChange: setFrozenRows,
+    getRowFreezeValue: (row) => row.value,
+    _features: [FrozenRowsFeature],
   });
 
   return (
     <Table>
       <TableHeader className="stickyTableHeader bg-muted">
-        {freezeTable.getHeaderGroups().map((headerGroup) => (
+        {trackedItemsTable.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => (
               <TableHead key={header.id}>
@@ -114,7 +111,7 @@ function TrackedItemsTable() {
         ))}
       </TableHeader>
       <TableBody>
-        {freezeTable.getRowModel().rows.map((row) => (
+        {trackedItemsTable.getRowModel().rows.map((row) => (
           <TableRow key={row.id}>
             {row.getVisibleCells().map((cell) => (
               <TableCell key={cell.id}>

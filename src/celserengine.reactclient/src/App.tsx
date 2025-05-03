@@ -45,7 +45,7 @@ function App() {
 
         {/* Bottom table */}
         <div className="mt-2 flex-1 overflow-auto rounded-lg border-1 ">
-          <TrackedItemsTable />
+          <TrackedItemsTable dotNetObj={dotNetObj} />
         </div>
       </div>
     </>
