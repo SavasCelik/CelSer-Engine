@@ -35,6 +35,13 @@ public class ReactWebViewManager
         webView.CoreWebView2.NavigationStarting += (sender, e) =>
         {
             // maybe clear on if e.NavigationKind == CoreWebView2NavigationKind.Reload?
+
+            // Dispose all tracked references before clearing them
+            foreach (var trackedRefDisposable in _trackedRefsById.Values.OfType<IDisposable>())
+            {
+                trackedRefDisposable.Dispose();
+            }
+
             _trackedRefsById.Clear();
         };
     }
@@ -97,7 +104,13 @@ public class ReactWebViewManager
     private void DetachDotNetObject(ReceivedMessage receivedMessage)
     {
         long dotNetObjectId = JsonSerializer.Deserialize<long>(receivedMessage.MethodArguments)!;
-        var isDetached = _trackedRefsById.TryRemove(dotNetObjectId, out _);
+        var isDetached = _trackedRefsById.TryRemove(dotNetObjectId, out var detachedObject);
+
+        if (detachedObject is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+
         var response = new ResponseMessage
         {
             AsyncCallId = receivedMessage.AsyncCallId,
