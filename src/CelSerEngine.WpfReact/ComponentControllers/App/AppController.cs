@@ -21,7 +21,7 @@ public enum MemoryType
     Mapped
 }
 
-public class AppController : ReactControllerBase
+public class AppController : ReactControllerBase, IDisposable
 {
     private readonly ReactJsRuntime _reactJsRuntime;
     private readonly ILogger<AppController> _logger;
@@ -53,11 +53,13 @@ public class AppController : ReactControllerBase
             }
         });
         _scanResultItemsTable = new ScanResultItemsTable();
+        _trackedItems = [];
+
+        _processSelectionTracker.OnChange += UpdateSelectedProcessTextAsync;
         var process = Process.GetProcessesByName("SmallGame").First();
         var selectedProcess = new ProcessAdapter(process);
-        processSelectionTracker.SelectedProcess = selectedProcess;
+        _processSelectionTracker.SelectedProcess = selectedProcess;
         selectedProcess.ProcessHandle = nativeApi.OpenProcess(selectedProcess.Process.Id);
-        _trackedItems = [];
     }
 
     public async Task FirstScanAsync(MemoryScanSettings memoryScanSettings)
@@ -210,5 +212,16 @@ public class AppController : ReactControllerBase
     private async Task UpdateFrontEndProgressBarAsync()
     {
         await _reactJsRuntime.InvokeVoidAsync(ComponentId, "updateProgressBar", _progressBarValue);
+    }
+
+    private async void UpdateSelectedProcessTextAsync()
+    {
+        var selectedProcess = _processSelectionTracker.SelectedProcess;
+        await _reactJsRuntime.InvokeVoidAsync(ComponentId, "updateSelectedProcessText", selectedProcess?.DisplayString ?? "");
+    }
+
+    public void Dispose()
+    {
+        _processSelectionTracker.OnChange -= UpdateSelectedProcessTextAsync;
     }
 }

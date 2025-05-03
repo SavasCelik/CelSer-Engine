@@ -7,18 +7,31 @@ import { useDotNet } from "./utils/useDotNet";
 import { jsInteropObj } from "./utils/JsInterop";
 
 const componentId = "App";
+const noProcessSelectedText = "- No Process Selected -";
 
 function App() {
   const dotNetObj = useDotNet(componentId, "AppController");
   const [progressBarValue, setProgressBarValue] = useState(0);
+  const [selectedProcessText, setSelectedProcessText] = useState<string>(
+    noProcessSelectedText
+  );
 
   useEffect(() => {
     const updateProgressBar = (value: number) => {
       setProgressBarValue(value);
     };
 
+    const updateSelectedProcessText = (processName: string) => {
+      if (!processName) {
+        processName = noProcessSelectedText;
+      }
+
+      setSelectedProcessText(processName);
+    };
+
     jsInteropObj.registerComponent(componentId, {
       updateProgressBar,
+      updateSelectedProcessText,
     });
 
     return () => {
@@ -30,7 +43,7 @@ function App() {
     <>
       <div className="bg-card flex h-screen flex-col p-3">
         {/* Title bar */}
-        <div className="text-center text-xs">0x0000GAC4 - OneDrive.exe</div>
+        <div className="text-center text-xs">{selectedProcessText}</div>
 
         {/* Progress bar */}
         <Progress value={progressBarValue} />
