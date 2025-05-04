@@ -125,7 +125,7 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
 
   return (
     <>
-      <div className="flex flex-1 flex-col overflow-hidden min-h-[455px]">
+      <div className="flex min-h-[455px] flex-1 flex-col overflow-hidden">
         <div className="text-center text-sm">Found: {totalCount}</div>
         <div className="flex-1 overflow-auto rounded-lg border-1">
           <Table>
@@ -275,8 +275,6 @@ function TableBodyNormal({
           onClick={(e) => handleRowSelection(row.index, e)}
           // onClick={(e) => row.toggleSelected()}
           data-state={row.getIsSelected() && "selected"}
-          data-selected={row.getIsSelected() || undefined}
-          className="hover:data-[state=selected]:bg-primary/50 data-[state=selected]:bg-primary/60"
         >
           {row.getVisibleCells().map((cell) => {
             return (

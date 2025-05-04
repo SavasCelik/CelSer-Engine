@@ -21,6 +21,7 @@ import {
   FrozenRowsFeature,
   FrozenRowsState,
 } from "../tanstack-table-features/FrozenRows";
+import { useTableRowSelection } from "@/hooks/use-table-row-selection";
 
 type FreezeRow = {
   freeze: boolean;
@@ -54,7 +55,7 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
         header: "Freeze",
         cell: ({ row }) => (
           <Switch
-            className="cursor-pointer"
+            className="dark:data-[state=unchecked]:bg-card cursor-pointer"
             checked={row.getIsFrozen()}
             onClick={() => row.toggleFrozen()}
           />
@@ -91,6 +92,8 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
     _features: [FrozenRowsFeature],
   });
 
+  const handleRowSelection = useTableRowSelection(trackedItemsTable);
+
   return (
     <Table>
       <TableHeader className="stickyTableHeader bg-muted">
@@ -111,7 +114,11 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
       </TableHeader>
       <TableBody>
         {trackedItemsTable.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
+          <TableRow
+            key={row.id}
+            onClick={(e) => handleRowSelection(row.index, e)}
+            data-state={row.getIsSelected() && "selected"}
+          >
             {row.getVisibleCells().map((cell) => (
               <TableCell key={cell.id}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
