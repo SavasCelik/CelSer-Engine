@@ -32,6 +32,7 @@ import {
 import { DotNetObject } from "../utils/useDotNet";
 import { Skeleton } from "./ui/skeleton";
 import { Input } from "./ui/input";
+import { useTableRowSelection } from "@/hooks/use-table-row-selection";
 
 type RusultItem = {
   address: string;
@@ -244,44 +245,7 @@ function TableBodyNormal({
   table: TTable<RusultItem>;
   dotNetObj: DotNetObject | null;
 }) {
-  const lastSelectedIndexRef = React.useRef<number | null>(null);
-  const rowSelection = table.getState().rowSelection;
-  const rowModel = table.getRowModel();
-
-  const handleRowClick = (index: number, event: React.MouseEvent) => {
-    const isShiftKey = event.shiftKey;
-    const isCtrlKey = event.ctrlKey || event.metaKey; // Support both Ctrl and Command (Mac)
-    let newRowSelection: RowSelectionState = {};
-
-    if (isShiftKey && lastSelectedIndexRef.current !== null) {
-      // Get the range of rows to select
-      const start = Math.min(lastSelectedIndexRef.current, index);
-      const end = Math.max(lastSelectedIndexRef.current, index);
-
-      // Preserve existing selections
-      newRowSelection = { ...rowSelection };
-
-      // Select all rows in the range
-      for (let i = start; i <= end; i++) {
-        const currentRow = rowModel.rows[i];
-        newRowSelection[currentRow.id] = true;
-      }
-    } else if (isCtrlKey) {
-      // For Ctrl+click, toggle the clicked row's selection state
-      // while preserving other selections
-      const selectedRow = rowModel.rows[index];
-      newRowSelection = { ...rowSelection };
-      newRowSelection[selectedRow.id] = !newRowSelection[selectedRow.id];
-    } else {
-      // For single click, select only the clicked row
-      const selectedRow = rowModel.rows[index];
-      newRowSelection[selectedRow.id] = true;
-    }
-
-    // Update last selected index
-    lastSelectedIndexRef.current = index;
-    table.setRowSelection(newRowSelection);
-  };
+  const handleRowSelection = useTableRowSelection(table);
   const queryClient = useQueryClient();
   const addTrackedItemMutation = useMutation({
     mutationFn: (address: string) => {
@@ -304,11 +268,11 @@ function TableBodyNormal({
 
   return (
     <>
-      {rowModel.rows.map((row) => (
+      {table.getRowModel().rows.map((row) => (
         <TableRow
           key={row.id}
           onDoubleClick={() => addTrackedItemMutation.mutate(row.id)}
-          onClick={(e) => handleRowClick(row.index, e)}
+          onClick={(e) => handleRowSelection(row.index, e)}
           // onClick={(e) => row.toggleSelected()}
           data-state={row.getIsSelected() && "selected"}
           data-selected={row.getIsSelected() || undefined}
