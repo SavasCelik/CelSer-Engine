@@ -55,7 +55,7 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
         header: "Freeze",
         cell: ({ row }) => (
           <Switch
-            className="dark:data-[state=unchecked]:bg-card cursor-pointer"
+            className="cursor-pointer"
             checked={row.getIsFrozen()}
             onClick={() => row.toggleFrozen()}
           />
@@ -95,7 +95,15 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
   const handleRowSelection = useTableRowSelection(trackedItemsTable);
 
   return (
-    <Table>
+    <Table
+      onKeyUp={(e) => {
+        if (e.code === "Space") {
+          trackedItemsTable.toggleFreezeOnSelection();
+        }
+      }}
+      tabIndex={0}
+      className="focus-visible:outline-none"
+    >
       <TableHeader className="stickyTableHeader bg-muted">
         {trackedItemsTable.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>

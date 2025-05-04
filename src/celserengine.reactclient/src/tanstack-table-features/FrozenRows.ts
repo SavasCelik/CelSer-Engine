@@ -8,6 +8,7 @@ import {
   memo,
   getMemoOptions,
   RowModel,
+  Updater,
 } from "@tanstack/react-table";
 
 export type FrozenRowsState = Record<string, string>;
@@ -29,7 +30,9 @@ export interface RowFrozenRow {
 }
 
 export interface FrozenRowsInstance<TData extends RowData> {
+  setFrozenRows: (updater: Updater<FrozenRowsState>) => void;
   getFrozenRowModel: () => RowModel<TData>;
+  toggleFreezeOnSelection: () => void;
 }
 
 // Extend the TableState to include frozenRows
@@ -64,6 +67,8 @@ export const FrozenRowsFeature: TableFeature<any> = {
   },
 
   createTable: <TData extends RowData>(table: Table<TData>): void => {
+    table.setFrozenRows = (updater) =>
+      table.options.onFrozenRowsChange?.(updater);
     table.getFrozenRowModel = memo(
       () => [table.getState().frozenRows, table.getCoreRowModel()],
       (rowSelection, rowModel) => {
@@ -79,6 +84,30 @@ export const FrozenRowsFeature: TableFeature<any> = {
       },
       getMemoOptions(table.options, "debugTable", "getFrozenRowModel")
     );
+
+    table.toggleFreezeOnSelection = () => {
+      table.setFrozenRows((old) => {
+        const frozenRows = { ...old };
+        const preGroupedFlatRows = table.getSelectedRowModel().flatRows;
+
+        // check if every row in preGroupedFlatRows is already frozen
+        const shouldFreeze = preGroupedFlatRows.some((row) => {
+          return frozenRows[row.id] == undefined;
+        });
+
+        if (shouldFreeze) {
+          preGroupedFlatRows.forEach((row) => {
+            frozenRows[row.id] = row.freezeValue;
+          });
+        } else {
+          preGroupedFlatRows.forEach((row) => {
+            delete frozenRows[row.id];
+          });
+        }
+
+        return frozenRows;
+      });
+    };
   },
 
   createRow: <TData extends RowData>(
