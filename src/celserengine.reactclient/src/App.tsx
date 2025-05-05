@@ -44,10 +44,10 @@ function App() {
 
   return (
     <>
-      <div className="bg-card flex h-screen flex-col p-3">
+      <div className="bg-card flex h-screen flex-col p-2">
         <div className="flex gap-2">
           <Button
-            className={cn("p-1 hover:animate-none dark:bg-neutral-600", {
+            className={cn("p-1 hover:animate-none dark:bg-neutral-700", {
               "animate-blink": selectedProcessText === noProcessSelectedText,
             })}
             variant="outline"
