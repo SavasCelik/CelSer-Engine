@@ -203,30 +203,6 @@ type ScanConstraintsFormProps = {
 };
 
 function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
-  // When the error message should be cleared when the user starts typing i could use this solution: https://github.com/orgs/react-hook-form/discussions/7333
-  const form = useForm<FormDataType>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      scanValue: "",
-      fromValue: "",
-      toValue: "",
-      scanCompareType: scanCompareTypes[0].id,
-      scanValueType: "integer",
-      startAddress: "0",
-      stopAddress: maxIntPtrString,
-      writable: "yes",
-      executable: "dontcare",
-      copyOnWrite: "no",
-      memoryTypes: ["image", "private"],
-    },
-  });
-  const selectedScanType = form.watch("scanCompareType");
-  const [isFirstScan, setIsFirstScan] = useState(true);
-  const availableScanCompareTypes = isFirstScan
-    ? scanCompareTypes.slice(0, 5)
-    : scanCompareTypes.filter((type) => type.id !== "unknownInitialValue");
-  const queryClient = useQueryClient();
-
   const onScanMutation = useMutation({
     mutationKey: ["OnScan"],
     mutationFn: (values: FormDataType) => {
@@ -244,17 +220,12 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
       toast.error(error.message);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ScanResultItemsTable"] });
-    },
-  });
-
-  const cancelScanMutation = useMutation({
-    mutationFn: () => {
-      if (!dotNetObj) {
-        return Promise.reject();
-      }
-
-      return dotNetObj.invokeMethod("CancelScanAsync");
+      return queryClient.invalidateQueries(
+        {
+          queryKey: ["ScanResultItemsTable"],
+        },
+        { cancelRefetch: false }
+      );
     },
   });
 
@@ -268,9 +239,48 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
       return dotNetObj.invokeMethod("NewScan");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ScanResultItemsTable"] });
+      return queryClient.invalidateQueries({
+        queryKey: ["ScanResultItemsTable"],
+      });
+    },
+    onSettled: () => {
       form.setValue("scanCompareType", scanCompareTypes[0].id);
       setIsFirstScan(true);
+    },
+  });
+
+  // When the error message should be cleared when the user starts typing i could use this solution: https://github.com/orgs/react-hook-form/discussions/7333
+  const form = useForm<FormDataType>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      scanValue: "",
+      fromValue: "",
+      toValue: "",
+      scanCompareType: scanCompareTypes[0].id,
+      scanValueType: "integer",
+      startAddress: "0",
+      stopAddress: maxIntPtrString,
+      writable: "yes",
+      executable: "dontcare",
+      copyOnWrite: "no",
+      memoryTypes: ["image", "private"],
+    },
+    disabled: onScanMutation.isPending || newScanMutation.isPending,
+  });
+  const selectedScanType = form.watch("scanCompareType");
+  const [isFirstScan, setIsFirstScan] = useState(true);
+  const availableScanCompareTypes = isFirstScan
+    ? scanCompareTypes.slice(0, 5)
+    : scanCompareTypes.filter((type) => type.id !== "unknownInitialValue");
+  const queryClient = useQueryClient();
+
+  const cancelScanMutation = useMutation({
+    mutationFn: () => {
+      if (!dotNetObj) {
+        return Promise.reject();
+      }
+
+      return dotNetObj.invokeMethod("CancelScanAsync");
     },
   });
 
@@ -416,7 +426,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           render={({ field }) => (
             <FormItem className="flex items-center gap-2">
               <FormLabel>Start</FormLabel>
-              <div className="flex flex-col w-full">
+              <div className="flex w-full flex-col">
                 <FormControl>
                   <Input
                     disabled={!isFirstScan}
@@ -435,7 +445,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           render={({ field }) => (
             <FormItem className="flex items-center gap-2">
               <FormLabel>Start</FormLabel>
-              <div className="flex flex-col w-full">
+              <div className="flex w-full flex-col">
                 <FormControl>
                   <Input
                     disabled={!isFirstScan}

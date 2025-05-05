@@ -27,6 +27,7 @@ public class AppController : ReactControllerBase, IDisposable
     private readonly ILogger<AppController> _logger;
     private readonly ProcessSelectionTracker _processSelectionTracker;
     private readonly IMemoryScanService _memoryScanService;
+    private readonly INativeApi _nativeApi;
     private readonly IProgress<float> _progressBarUpdater;
     private float _progressBarValue;
     private CancellationTokenSource? _scanCancellationTokenSource;
@@ -44,6 +45,7 @@ public class AppController : ReactControllerBase, IDisposable
         _logger = logger;
         _processSelectionTracker = processSelectionTracker;
         _memoryScanService = memoryScanService;
+        _nativeApi = nativeApi;
         _progressBarUpdater = new Progress<float>(newValue =>
         {
             if (newValue - _progressBarValue >= 1 || (newValue == 0 && newValue != _progressBarValue))
@@ -175,15 +177,20 @@ public class AppController : ReactControllerBase, IDisposable
 
     public object GetScanResultItems(int page, int pageSize)
     {
-        var scanResultItems = _scanResultItemsTable.GetScanResultItems(page, pageSize)
+        var scanResultItems = _scanResultItemsTable.GetScanResultItems(page, pageSize);
+        _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, scanResultItems);
+
+        return new
+        {
+            Items = scanResultItems
             .Select(x => new ScanResultItemReact
             {
                 Address = x.Address.ToString("X8"),
                 Value = x.Value,
                 PreviousValue = x.InitialValue
-            });
-
-        return new { Items = scanResultItems, TotalCount = _scanResultItemsTable.ScanResultItems.Count };
+            }),
+            TotalCount = _scanResultItemsTable.ScanResultItems.Count
+        };
     }
 
     public void AddTrackedItem(string memoryAddressHexString, int pageIndex, int pageSize)
@@ -194,14 +201,14 @@ public class AppController : ReactControllerBase, IDisposable
             .FirstOrDefault();
 
         if (selectedItem != null)
-        { 
+        {
             _trackedItems.Add(new MemorySegment(selectedItem));
         }
     }
 
     public object[] GetTrackedItems()
     {
-        return _trackedItems.Select(x => new 
+        return _trackedItems.Select(x => new
         {
             Description = "Description",
             Address = x.Address.ToString("X8"),

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import {
+  keepPreviousData,
   useIsMutating,
   useMutation,
   useQuery,
@@ -37,7 +38,7 @@ import { useTableRowSelection } from "@/hooks/use-table-row-selection";
 type RusultItem = {
   address: string;
   value: string;
-  prevValue: string;
+  previousValue: string;
 };
 
 type ScanResultResponse = {
@@ -75,6 +76,7 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const isScanPending = useIsMutating({ mutationKey: ["OnScan"] });
   const isNewScanPending = useIsMutating({ mutationKey: ["NewScan"] });
+  const [totalCount, setTotalCount] = React.useState(0);
 
   const query = useQuery<ScanResultResponse>({
     queryKey: ["ScanResultItemsTable", { pagination }],
@@ -89,6 +91,8 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
         pagination.pageSize
       );
     },
+    refetchInterval: totalCount > 0 ? 1000 : false,
+    placeholderData: keepPreviousData,
   });
 
   const table = useReactTable({
@@ -101,19 +105,21 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
     onRowSelectionChange: setRowSelection,
     autoResetPageIndex: false,
     manualPagination: true,
+    // initialState: {
+    //   pagination
+    // },
     state: {
       pagination,
       rowSelection,
     },
     getRowId: (row) => row.address,
   });
-  const [totalCount, setTotalCount] = React.useState(0);
 
   React.useEffect(() => {
     //reset page index and selection when scans are done
     if (isScanPending === 0 && isNewScanPending === 0) {
       table.resetRowSelection();
-      table.resetPagination();
+      table.resetPageIndex();
     }
   }, [isScanPending, isNewScanPending, table]);
 
@@ -159,8 +165,7 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
               ))}
             </TableHeader>
             <TableBody>
-              {(query.isFetching && query.data?.totalCount == 0) ||
-              isScanPending ? (
+              {isScanPending ? (
                 Array.from({ length: pagination.pageSize }).map((_, index) => (
                   <TableRow
                     key={"skeleton-row-" + index}
@@ -213,10 +218,7 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
                       pageIndexDesired = 0;
                     }
 
-                    setPagination((prev) => ({
-                      ...prev,
-                      pageIndex: pageIndexDesired,
-                    }));
+                    table.setPageIndex(pageIndexDesired);
                   }}
                 />
               </PaginationItem>
@@ -275,6 +277,9 @@ function TableBodyNormal({
           onClick={(e) => handleRowSelection(row.index, e)}
           // onClick={(e) => row.toggleSelected()}
           data-state={row.getIsSelected() && "selected"}
+          className={cn({
+            "text-red-700": row.original.value != row.original.previousValue,
+          })}
         >
           {row.getVisibleCells().map((cell) => {
             return (
