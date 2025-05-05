@@ -203,6 +203,12 @@ type ScanConstraintsFormProps = {
 };
 
 function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
+  const [isFirstScan, setIsFirstScan] = useState(true);
+  const availableScanCompareTypes = isFirstScan
+    ? scanCompareTypes.slice(0, 5)
+    : scanCompareTypes.filter((type) => type.id !== "unknownInitialValue");
+  const queryClient = useQueryClient();
+
   const onScanMutation = useMutation({
     mutationKey: ["OnScan"],
     mutationFn: (values: FormDataType) => {
@@ -268,11 +274,6 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
     disabled: onScanMutation.isPending || newScanMutation.isPending,
   });
   const selectedScanType = form.watch("scanCompareType");
-  const [isFirstScan, setIsFirstScan] = useState(true);
-  const availableScanCompareTypes = isFirstScan
-    ? scanCompareTypes.slice(0, 5)
-    : scanCompareTypes.filter((type) => type.id !== "unknownInitialValue");
-  const queryClient = useQueryClient();
 
   const cancelScanMutation = useMutation({
     mutationFn: () => {
