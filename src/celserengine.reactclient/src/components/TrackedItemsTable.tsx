@@ -37,6 +37,8 @@ interface TrackedItemsTableProps {
 function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [frozenRows, setFrozenRows] = React.useState<FrozenRowsState>({});
+  const [shouldRefetch, setShouldRefetch] = React.useState(false);
+
   const query = useQuery<FreezeRow[]>({
     queryKey: ["TrackedItemsTable"],
     queryFn: async () => {
@@ -46,7 +48,17 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
 
       return await dotNetObj!.invokeMethod("GetTrackedItems");
     },
+    refetchInterval: shouldRefetch ? 1000 : false,
   });
+
+  React.useEffect(() => {
+    console.log("TrackedItemsTable query data");
+    if (query.data?.length === 0) {
+      setShouldRefetch(false);
+    } else {
+      setShouldRefetch(true);
+    }
+  }, [query.data?.length]);
 
   const columns = React.useMemo<ColumnDef<FreezeRow>[]>(
     () => [

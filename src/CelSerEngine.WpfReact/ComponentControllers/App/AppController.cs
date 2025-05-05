@@ -208,6 +208,8 @@ public class AppController : ReactControllerBase, IDisposable
 
     public object[] GetTrackedItems()
     {
+        _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, _trackedItems);
+
         return _trackedItems.Select(x => new
         {
             Description = "Description",
