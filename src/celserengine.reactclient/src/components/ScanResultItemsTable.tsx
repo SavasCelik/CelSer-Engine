@@ -91,7 +91,8 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
         pagination.pageSize
       );
     },
-    refetchInterval: totalCount > 0 ? 1000 : false,
+    refetchInterval:
+      totalCount > 0 && !isScanPending && !isNewScanPending ? 1000 : false,
     placeholderData: keepPreviousData,
   });
 
