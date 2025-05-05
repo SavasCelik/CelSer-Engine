@@ -5,6 +5,9 @@ import TrackedItemsTable from "./components/TrackedItemsTable";
 import ScanConstraintsForm from "./components/ScanContraintsForm";
 import { useDotNet } from "./utils/useDotNet";
 import { jsInteropObj } from "./utils/JsInterop";
+import { Button } from "./components/ui/button";
+import SelectProcessIcon from "./assets/SelectProcess.png";
+import { cn } from "./lib/utils";
 
 const componentId = "App";
 const noProcessSelectedText = "- No Process Selected -";
@@ -42,11 +45,24 @@ function App() {
   return (
     <>
       <div className="bg-card flex h-screen flex-col p-3">
-        {/* Title bar */}
-        <div className="text-center text-xs">{selectedProcessText}</div>
+        <div className="flex gap-2">
+          <Button
+            className={cn("p-1 hover:animate-none dark:bg-neutral-600", {
+              "animate-blink": selectedProcessText === noProcessSelectedText,
+            })}
+            variant="outline"
+          >
+            <img className="h-[25px]" src={SelectProcessIcon}></img>
+          </Button>
 
-        {/* Progress bar */}
-        <Progress value={progressBarValue} />
+          <div className="flex-1">
+            {/* Title bar */}
+            <div className="text-center text-xs">{selectedProcessText}</div>
+
+            {/* Progress bar */}
+            <Progress className="h-3.5" value={progressBarValue} />
+          </div>
+        </div>
 
         <div className="flex flex-row gap-2">
           {/* Left panel - Memory addresses */}
@@ -57,7 +73,7 @@ function App() {
         </div>
 
         {/* Bottom table */}
-        <div className="mt-2 flex-1 overflow-auto rounded-lg border-1 ">
+        <div className="mt-2 flex-1 overflow-auto rounded-lg border-1">
           <TrackedItemsTable dotNetObj={dotNetObj} />
         </div>
       </div>
