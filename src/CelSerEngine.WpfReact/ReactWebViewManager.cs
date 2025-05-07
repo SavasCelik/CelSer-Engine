@@ -2,6 +2,7 @@
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using System.Collections.Concurrent;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -64,6 +65,10 @@ public class ReactWebViewManager
         {
             DetachDotNetObject(receivedMessage);
         }
+        else if (receivedMessage.MethodName == "BindComponentReferences")
+        {
+            BindComponentReferences(receivedMessage);
+        }
         else if (receivedMessage.DotNetObjectId != null)
         {
             BeginInvokeDotNet(receivedMessage);
@@ -111,12 +116,44 @@ public class ReactWebViewManager
             disposable.Dispose();
         }
 
-        var response = new ResponseMessage
-        {
-            AsyncCallId = receivedMessage.AsyncCallId,
-            ReposeJson = JsonSerializer.Serialize(isDetached)
-        };
         EndInvokeDotNet(receivedMessage.AsyncCallId, isDetached);
+    }
+
+    private void BindComponentReferences(ReceivedMessage receivedMessage)
+    {
+        var instance = _trackedRefsById[receivedMessage.DotNetObjectId!.Value];
+
+        if (instance == null)
+        {
+            EndInvokeDotNet(receivedMessage.AsyncCallId, "instance not found!", isSuccess: false);
+
+            return;
+        }
+
+        var componentRefsJson = JsonSerializer.Deserialize<JsonElement[]>(receivedMessage.MethodArguments)!;
+        var injectPropertiesByName = instance.GetType()
+        .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+        .Where(prop => prop.IsDefined(typeof(InjectComponentAttribute)))
+        .ToDictionary(x => x.Name);
+
+        foreach (var componentRefJson in componentRefsJson)
+        {
+            var componentControllerName = componentRefJson[0].GetString();
+            var componentInstanceId = componentRefJson[1].GetInt64();
+            if (componentControllerName != null && injectPropertiesByName.TryGetValue(componentControllerName, out var property))
+            {
+                var componentRef = _trackedRefsById[componentInstanceId];
+                property.SetValue(instance, componentRef);
+            }
+            else
+            {
+                EndInvokeDotNet(receivedMessage.AsyncCallId, $"Component reference '{componentControllerName}' not found!", isSuccess: false);
+
+                return;
+            }
+        }
+
+        EndInvokeDotNet(receivedMessage.AsyncCallId, true);
     }
 
     private void BeginInvokeDotNet(ReceivedMessage receivedMessage)
@@ -126,13 +163,7 @@ public class ReactWebViewManager
 
         if (method == null)
         {
-            var errorResponse = new ResponseMessage
-            {
-                AsyncCallId = receivedMessage.AsyncCallId,
-                IsSuccess = false,
-                ReposeJson = JsonSerializer.Serialize($"Method: {instance.GetType()}.{receivedMessage.MethodName} not found!", _jsonSerializerOptions)
-            };
-            EndInvokeDotNet(errorResponse);
+            EndInvokeDotNet(receivedMessage.AsyncCallId, $"Method: {instance.GetType()}.{receivedMessage.MethodName} not found!", isSuccess: false);
             
             return;
         }
@@ -158,11 +189,12 @@ public class ReactWebViewManager
         }
     }
 
-    private void EndInvokeDotNet(int asyncCallId, object? result)
+    private void EndInvokeDotNet(int asyncCallId, object? result, bool isSuccess = true)
     {
         var response = new ResponseMessage
         {
             AsyncCallId = asyncCallId,
+            IsSuccess = isSuccess,
             ReposeJson = JsonSerializer.Serialize(result, _jsonSerializerOptions)
         };
 

@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { jsInteropObj } from "./JsInterop";
 
 export class DotNetObject {
-  constructor(private objectId: number) {}
+  constructor(
+    private objectId: number,
+    private dotNetClassName: string,
+    private componentId: string
+  ) {}
   invokeMethod<T>(methodName: string, ...args: any[]) {
     return jsInteropObj.invokeDotNetMethodAsync<T>(
       this.objectId,
@@ -11,7 +15,23 @@ export class DotNetObject {
     );
   }
 
+  bindComponentReferences<T>(dotNetObjects: DotNetObject[]) {
+    return jsInteropObj.invokeDotNetMethodAsync<T>(
+      this.objectId,
+      "BindComponentReferences",
+      JSON.stringify(
+        dotNetObjects.map((obj) => [obj.dotNetClassName, obj.objectId])
+      )
+    );
+  }
+
+  registerComponent(obj: any) {
+    jsInteropObj.registerComponent(this.componentId, obj);
+    this.invokeMethod("OnComponentRegisteredMethods", this.componentId);
+  }
+
   async detach() {
+    jsInteropObj.unregisterComponent(this.componentId);
     await jsInteropObj.detachDotNetObjectAsync(this.objectId);
   }
 }
@@ -68,7 +88,11 @@ export function useDotNet(
         await dotNetObjectRef.current.detach();
       }
 
-      dotNetObjectRef.current = new DotNetObject(dotNetObjectId);
+      dotNetObjectRef.current = new DotNetObject(
+        dotNetObjectId,
+        dotNetClassName,
+        componentId
+      );
 
       // Since we are using strict mode, the component may be mounted and unmounted multiple times.
       // We need to check if the component is still mounted before setting the state.
