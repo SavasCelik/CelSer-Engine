@@ -48,9 +48,17 @@ type ScanResultResponse = {
 
 interface ScanResultItemsTableProps {
   dotNetObj: DotNetObject | null;
+  addTrackedItem: (
+    address: string,
+    pageIndex: number,
+    pageSize: number
+  ) => Promise<void>;
 }
 
-function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
+function ScanResultItemsTable({
+  dotNetObj,
+  addTrackedItem,
+}: ScanResultItemsTableProps) {
   const columns = React.useMemo(
     () => [
       {
@@ -186,9 +194,15 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
                   </TableCell>
                 </TableRow>
               ) : table.getState().columnSizingInfo.isResizingColumn ? (
-                <MemoizedTableBody table={table} dotNetObj={dotNetObj} />
+                <MemoizedTableBody
+                  table={table}
+                  addTrackedItem={addTrackedItem}
+                />
               ) : (
-                <TableBodyNormal table={table} dotNetObj={dotNetObj} />
+                <TableBodyNormal
+                  table={table}
+                  addTrackedItem={addTrackedItem}
+                />
               )}
             </TableBody>
           </Table>
@@ -243,26 +257,22 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
 
 function TableBodyNormal({
   table,
-  dotNetObj,
+  addTrackedItem,
 }: {
   table: TTable<RusultItem>;
-  dotNetObj: DotNetObject | null;
+  addTrackedItem: (
+    address: string,
+    pageIndex: number,
+    pageSize: number
+  ) => Promise<void>;
 }) {
   const handleRowSelection = useTableRowSelection(table);
   const queryClient = useQueryClient();
   const addTrackedItemMutation = useMutation({
     mutationFn: (address: string) => {
-      if (!dotNetObj) {
-        return Promise.reject();
-      }
-
       const { pagination } = table.getState();
-      return dotNetObj.invokeMethod(
-        "AddTrackedItem",
-        address,
-        pagination.pageIndex,
-        pagination.pageSize
-      );
+
+      return addTrackedItem(address, pagination.pageIndex, pagination.pageSize);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["TrackedItemsTable"] });

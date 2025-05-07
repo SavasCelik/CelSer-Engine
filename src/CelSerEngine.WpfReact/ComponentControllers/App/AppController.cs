@@ -1,8 +1,11 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
+using CelSerEngine.WpfReact.ComponentControllers.ScanResultItems;
+using CelSerEngine.WpfReact.ComponentControllers.TrackedItems;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.IO;
 using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.App;
@@ -31,8 +34,13 @@ public class AppController : ReactControllerBase, IDisposable
     private readonly IProgress<float> _progressBarUpdater;
     private float _progressBarValue;
     private CancellationTokenSource? _scanCancellationTokenSource;
-    private ScanResultItemsTable _scanResultItemsTable;
-    private List<MemorySegment> _trackedItems;
+    private IList<ModuleInfo> _modules;
+
+    [InjectComponent]
+    public ScanResultItemsController ScanResultItemsController { get; set; } = default!;
+
+    [InjectComponent]
+    public TrackedItemsController TrackedItemsController { get; set; } = default!;
 
     public AppController(
         ReactJsRuntime reactJsRuntime,
@@ -54,14 +62,17 @@ public class AppController : ReactControllerBase, IDisposable
                 _ = UpdateFrontEndProgressBarAsync();
             }
         });
-        _scanResultItemsTable = new ScanResultItemsTable();
-        _trackedItems = [];
+        _modules = [];
 
-        _processSelectionTracker.OnChange += UpdateSelectedProcessTextAsync;
+        _processSelectionTracker.OnChange += SelectedProcessChanged;
+    }
+
+    public override void OnComponentRegisteredMethods()
+    {
         var process = Process.GetProcessesByName("SmallGame").First();
         var selectedProcess = new ProcessAdapter(process);
         _processSelectionTracker.SelectedProcess = selectedProcess;
-        selectedProcess.ProcessHandle = nativeApi.OpenProcess(selectedProcess.Process.Id);
+        selectedProcess.ProcessHandle = _nativeApi.OpenProcess(selectedProcess.Process.Id);
     }
 
     public async Task FirstScanAsync(MemoryScanSettings memoryScanSettings)
@@ -129,7 +140,7 @@ public class AppController : ReactControllerBase, IDisposable
         sw.Stop();
         _logger.LogInformation("Scan completed found: {count} addresses in: {duration} ms", results.Count, sw.ElapsedMilliseconds);
         _progressBarUpdater.Report(100);
-        _scanResultItemsTable.ScanResultItems = results.Select(x => new MemorySegment(x)).ToList();
+        ScanResultItemsController.ScanResultItems = results.Select(x => new MemorySegment(x)).ToList();
         _progressBarUpdater.Report(0);
         _scanCancellationTokenSource = null;
     }
@@ -149,7 +160,7 @@ public class AppController : ReactControllerBase, IDisposable
         var sw = Stopwatch.StartNew();
         var scanConstraint = new ScanConstraint(memoryScanSettings.ScanCompareType, memoryScanSettings.ScanValueType, userInput);
         var results = await _memoryScanService.FilterMemorySegmentsByScanConstraintAsync(
-            _scanResultItemsTable.ScanResultItems.Cast<IMemorySegment>().ToList(),
+            ScanResultItemsController.ScanResultItems.Cast<IMemorySegment>().ToList(),
             scanConstraint,
             _processSelectionTracker.SelectedProcessHandle,
             _progressBarUpdater,
@@ -157,14 +168,14 @@ public class AppController : ReactControllerBase, IDisposable
         sw.Stop();
         _logger.LogInformation("Scan completed found: {count} addresses in: {duration} ms", results.Count, sw.ElapsedMilliseconds);
         _progressBarUpdater.Report(100);
-        _scanResultItemsTable.ScanResultItems = results.Select(x => new MemorySegment(x)).ToList();
+        ScanResultItemsController.ScanResultItems = results.Select(x => new MemorySegment(x)).ToList();
         _progressBarUpdater.Report(0);
         _scanCancellationTokenSource = null;
     }
 
     public void NewScan()
     {
-        _scanResultItemsTable.ScanResultItems.Clear();
+        ScanResultItemsController.ScanResultItems.Clear();
     }
 
     public async Task CancelScanAsync()
@@ -175,47 +186,17 @@ public class AppController : ReactControllerBase, IDisposable
         }
     }
 
-    public object GetScanResultItems(int page, int pageSize)
-    {
-        var scanResultItems = _scanResultItemsTable.GetScanResultItems(page, pageSize);
-        _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, scanResultItems);
-
-        return new
-        {
-            Items = scanResultItems
-            .Select(x => new ScanResultItemReact
-            {
-                Address = x.Address.ToString("X8"),
-                Value = x.Value,
-                PreviousValue = x.InitialValue
-            }),
-            TotalCount = _scanResultItemsTable.ScanResultItems.Count
-        };
-    }
-
     public void AddTrackedItem(string memoryAddressHexString, int pageIndex, int pageSize)
     {
-        var visibleScanResultItems = _scanResultItemsTable.GetScanResultItems(pageIndex, pageSize);
+        var visibleScanResultItems = ScanResultItemsController.GetScanResultItemsByPage(pageIndex, pageSize);
         var selectedItem = visibleScanResultItems
             .Where(x => x.Address.ToString("X8") == memoryAddressHexString)
             .FirstOrDefault();
 
         if (selectedItem != null)
         {
-            _trackedItems.Add(new MemorySegment(selectedItem));
+            TrackedItemsController.Items.Add(new MemorySegment(selectedItem));
         }
-    }
-
-    public object[] GetTrackedItems()
-    {
-        _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, _trackedItems);
-
-        return _trackedItems.Select(x => new
-        {
-            Description = "Description",
-            Address = x.Address.ToString("X8"),
-            Value = x.Value
-        }).ToArray();
     }
 
     private async Task UpdateFrontEndProgressBarAsync()
@@ -223,14 +204,26 @@ public class AppController : ReactControllerBase, IDisposable
         await _reactJsRuntime.InvokeVoidAsync(ComponentId, "updateProgressBar", _progressBarValue);
     }
 
-    private async void UpdateSelectedProcessTextAsync()
+    private async void SelectedProcessChanged()
+    {
+        await UpdateSelectedProcessText();
+        UpdateModules();
+    }
+
+    private async Task UpdateSelectedProcessText()
     {
         var selectedProcess = _processSelectionTracker.SelectedProcess;
         await _reactJsRuntime.InvokeVoidAsync(ComponentId, "updateSelectedProcessText", selectedProcess?.DisplayString ?? "");
     }
 
+    private void UpdateModules()
+    {
+        _modules = _nativeApi.GetProcessModules(_processSelectionTracker.SelectedProcessHandle);
+        var moduleNames = _modules.Select(x => Path.GetFileName(x.Name)).ToList();
+    }
+
     public void Dispose()
     {
-        _processSelectionTracker.OnChange -= UpdateSelectedProcessTextAsync;
+        _processSelectionTracker.OnChange -= SelectedProcessChanged;
     }
 }

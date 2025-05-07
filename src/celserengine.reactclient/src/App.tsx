@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import ScanResultItemsTable from "./components/ScanResultItemsTable";
 import TrackedItemsTable from "./components/TrackedItemsTable";
 import ScanConstraintsForm from "./components/ScanContraintsForm";
 import { useDotNet } from "./utils/useDotNet";
-import { jsInteropObj } from "./utils/JsInterop";
 import { Button } from "./components/ui/button";
 import SelectProcessIcon from "./assets/SelectProcess.png";
 import { cn } from "./lib/utils";
@@ -14,12 +13,24 @@ const noProcessSelectedText = "- No Process Selected -";
 
 function App() {
   const dotNetObj = useDotNet(componentId, "AppController");
+  const dotNetObjScanResultItems = useDotNet(
+    "Scan",
+    "ScanResultItemsController"
+  );
+  const dotNetObjTrackedItems = useDotNet(
+    "TrackedItems",
+    "TrackedItemsController"
+  );
   const [progressBarValue, setProgressBarValue] = useState(0);
   const [selectedProcessText, setSelectedProcessText] = useState<string>(
     noProcessSelectedText
   );
 
   useEffect(() => {
+    if (!dotNetObj) {
+      return;
+    }
+
     const updateProgressBar = (value: number) => {
       setProgressBarValue(value);
     };
@@ -32,15 +43,38 @@ function App() {
       setSelectedProcessText(processName);
     };
 
-    jsInteropObj.registerComponent(componentId, {
+    dotNetObj.registerComponent({
       updateProgressBar,
       updateSelectedProcessText,
     });
+  }, [dotNetObj]);
 
-    return () => {
-      jsInteropObj.unregisterComponent(componentId);
-    };
-  }, []);
+  useEffect(() => {
+    if (!dotNetObj || !dotNetObjScanResultItems || !dotNetObjTrackedItems) {
+      return;
+    }
+
+    dotNetObj.bindComponentReferences([
+      dotNetObjScanResultItems,
+      dotNetObjTrackedItems,
+    ]);
+  }, [dotNetObj, dotNetObjScanResultItems, dotNetObjTrackedItems]);
+
+  const addTrackedItem = useCallback(
+    (address: string, pageIndex: number, pageSize: number) => {
+      if (!dotNetObj) {
+        return Promise.reject("DotNet object is not initialized.");
+      }
+
+      return dotNetObj.invokeMethod<void>(
+        "AddTrackedItem",
+        address,
+        pageIndex,
+        pageSize
+      );
+    },
+    [dotNetObj]
+  );
 
   return (
     <>
@@ -51,6 +85,9 @@ function App() {
               "animate-blink": selectedProcessText === noProcessSelectedText,
             })}
             variant="outline"
+            onClick={() => {
+              dotNetObj?.invokeMethod("Test", "testing");
+            }}
           >
             <img className="h-[25px]" src={SelectProcessIcon}></img>
           </Button>
@@ -65,8 +102,10 @@ function App() {
         </div>
 
         <div className="flex flex-row gap-2">
-          {/* Left panel - Memory addresses */}
-          <ScanResultItemsTable dotNetObj={dotNetObj} />
+          <ScanResultItemsTable
+            dotNetObj={dotNetObjScanResultItems}
+            addTrackedItem={addTrackedItem}
+          />
 
           {/* Right panel - Search options */}
           <ScanConstraintsForm dotNetObj={dotNetObj} />
@@ -74,7 +113,7 @@ function App() {
 
         {/* Bottom table */}
         <div className="mt-2 flex-1 overflow-auto rounded-lg border-1">
-          <TrackedItemsTable dotNetObj={dotNetObj} />
+          <TrackedItemsTable dotNetObj={dotNetObjTrackedItems} />
         </div>
       </div>
     </>
