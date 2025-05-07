@@ -168,13 +168,20 @@ public class ReactWebViewManager
             return;
         }
 
-        var parameterTypes = method.GetParameters().Select(p => p.ParameterType).ToArray();
+        var methodParams = method.GetParameters().ToArray();
         var paramsSend = JsonSerializer.Deserialize<JsonElement[]>(receivedMessage.MethodArguments)!;
-        var convertedParams = new object?[parameterTypes.Length];
+        var convertedParams = new object?[methodParams.Length];
 
-        for (int i = 0; i < parameterTypes.Length; i++)
+        for (var i = 0; i < methodParams.Length; i++)
         {
-            convertedParams[i] = ConvertJsonElement(paramsSend[i], parameterTypes[i]);
+            if (paramsSend.Length <= i)
+            {
+                throw new Exception(methodParams[i].HasDefaultValue 
+                    ? "Optional parameters are not supported"
+                    : $"Expected argument missing {i} for method {method.Name}");
+            }
+
+            convertedParams[i] = ConvertJsonElement(paramsSend[i], methodParams[i].ParameterType);
         }
 
         var methodResponse = method.Invoke(instance, convertedParams);
