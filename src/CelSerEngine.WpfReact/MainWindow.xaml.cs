@@ -1,16 +1,12 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
 using Microsoft.Extensions.DependencyInjection;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
+#if !DEBUG
+using Microsoft.Web.WebView2.Core;
+using System.IO;
+#endif
 
 namespace CelSerEngine.WpfReact;
 
@@ -38,7 +34,22 @@ public partial class MainWindow : Window
 
     private void ReactWebView_ReactWebViewInitialized(object? sender, EventArgs e)
     {
+#if DEBUG
         reactWebView.WebView.Source = new Uri("http://localhost:49356/");
+#else
+        const string HostName = "CelSer-Engine";
+        var reactClientPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ReactClient");
+        reactWebView.WebView.CoreWebView2.SetVirtualHostNameToFolderMapping(HostName, reactClientPath, CoreWebView2HostResourceAccessKind.Allow);
+
+        if (Directory.Exists(reactClientPath))
+        {
+            reactWebView.WebView.Source = new Uri($"https://{HostName}/index.html");
+        }
+        else
+        {
+            MessageBox.Show("The React client could not be found. Please ensure it has been built and published to the correct location.");
+        }
+#endif
         reactWebView.WebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
     }
 }

@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+	<ReactClientRoot>..\CelSerEngine.ReactClient</ReactClientRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +19,44 @@
   <ItemGroup>
     <ProjectReference Include="..\CelSerEngine.Core\CelSerEngine.Core.csproj" />
     <ProjectReference Include="..\CelSerEngine.Shared\CelSerEngine.Shared.csproj" />
+	  <ProjectReference Include="..\CelSerEngine.ReactClient\celserengine.reactclient.esproj">
+		  <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+	  </ProjectReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+
+	
+	<!--https://learn.microsoft.com/en-us/aspnet/core/client-side/spa/intro?view=aspnetcore-7.0&preserve-view=true#developing-single-page-apps-->
+	<Target Name="PublishReact" AfterTargets="ComputeFilesToPublish">
+		<Message Importance="high" Text="Copying React Client Files..." />
+		<!-- Include the newly-built files in the publish output -->
+		<ItemGroup>
+			<DistFiles Include="$(ReactClientRoot)\dist\**" />
+			<ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+				<RelativePath>ReactClient\%(RecursiveDir)%(FileName)%(Extension)</RelativePath>
+				<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+				<ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+			</ResolvedFileToPublish>
+		</ItemGroup>
+	</Target>
+
+	<!--<Target Name="TimeoutTest" AfterTargets="Build">
+		<Message Text="Timeout start" Importance="high" />
+		<Exec Command="ping -n 60 127.0.0.1 > nul" ContinueOnError="true" Timeout="10000"/>
+		<Message Text="Done" Importance="high" />
+		
+	</Target>-->
+
+	<!--<Target Name="TestMessage" AfterTargets="Build">
+		<Message Text="***** Copying React Client Files *****" Importance="high" />
+		<MSBuild Projects="..\CelSerEngine.ReactClient\celserengine.reactclient.esproj" Targets="Build" Properties="Configuration=Release" />
+		<ItemGroup>
+			<ReactClientFiles Include="..\CelSerEngine.ReactClient\dist\**\*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(ReactClientFiles)" DestinationFolder="$(MSBuildProjectDirectory)\reactApp\%(RecursiveDir)" />
+	</Target>-->
 
 </Project>
