@@ -195,7 +195,7 @@ public class AppController : ReactControllerBase, IDisposable
 
         if (selectedItem != null)
         {
-            TrackedItemsController.Items.Add(new MemorySegment(selectedItem));
+            TrackedItemsController.Items.Add(new TrackedItem(selectedItem));
         }
     }
 

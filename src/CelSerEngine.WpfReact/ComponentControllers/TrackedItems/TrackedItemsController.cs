@@ -5,7 +5,7 @@ namespace CelSerEngine.WpfReact.ComponentControllers.TrackedItems;
 
 public class TrackedItemsController : ReactControllerBase
 {
-    public List<MemorySegment> Items { get; set; }
+    public List<TrackedItem> Items { get; set; }
 
     private readonly ProcessSelectionTracker _processSelectionTracker;
     private readonly INativeApi _nativeApi;
@@ -23,20 +23,20 @@ public class TrackedItemsController : ReactControllerBase
         {
             foreach (var index in indices)
             {
-                _nativeApi.WriteMemory(_processSelectionTracker.SelectedProcessHandle, Items[index], newValue);
+                _nativeApi.WriteMemory(_processSelectionTracker.SelectedProcessHandle, Items[index].MemorySegment, newValue);
             }
         }
     }
 
     public object[] GetTrackedItems()
     {
-        _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, Items);
+        _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, Items.Select(x => x.MemorySegment));
 
         return Items.Select(x => new
         {
-            Description = "Description",
-            Address = x.Address.ToString("X8"),
-            Value = x.Value
+            Description = x.Description,
+            Address = x.MemorySegment.Address.ToString("X8"),
+            Value = x.MemorySegment.Value
         }).ToArray();
     }
 }
