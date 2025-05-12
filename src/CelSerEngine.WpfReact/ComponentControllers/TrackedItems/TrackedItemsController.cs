@@ -26,6 +26,13 @@ public class TrackedItemsController : ReactControllerBase
                 _nativeApi.WriteMemory(_processSelectionTracker.SelectedProcessHandle, Items[index].MemorySegment, newValue);
             }
         }
+        else if (string.Equals(propertyKey, nameof(TrackedItem.Description), StringComparison.InvariantCultureIgnoreCase))
+        {
+            foreach (var index in indices)
+            {
+                Items[index].Description = newValue;
+            }
+        }
     }
 
     public object[] GetTrackedItems()
