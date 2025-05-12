@@ -23,7 +23,7 @@ import {
 } from "../tanstack-table-features/FrozenRows";
 import { useTableRowSelection } from "@/hooks/use-table-row-selection";
 import { TrackedItem } from "@/types/TrackedItem";
-import { TrackedItemDialog } from "./TrackedItemDialog";
+const TrackedItemDialog = React.lazy(() => import("./TrackedItemDialog"));
 
 interface TrackedItemsTableProps {
   dotNetObj: DotNetObject | null;
@@ -156,13 +156,15 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
         </TableBody>
       </Table>
 
-      <TrackedItemDialog
-        rows={trackedItemsTable.getSelectedRowModel().rows}
-        trackedItemKey={selectedTrackedItemKey}
-        dotNetObj={dotNetObj}
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-      />
+      {isDialogOpen && (
+        <TrackedItemDialog
+          rows={trackedItemsTable.getSelectedRowModel().rows}
+          trackedItemKey={selectedTrackedItemKey}
+          dotNetObj={dotNetObj}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+        />
+      )}
     </>
   );
 }

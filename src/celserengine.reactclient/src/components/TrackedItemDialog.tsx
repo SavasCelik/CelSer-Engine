@@ -39,7 +39,7 @@ const formSchema = z.object({
 });
 type FormDataType = z.infer<typeof formSchema>;
 
-export function TrackedItemDialog({
+export default function TrackedItemDialog({
   rows,
   trackedItemKey,
   dotNetObj,
