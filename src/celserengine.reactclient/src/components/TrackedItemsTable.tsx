@@ -50,7 +50,6 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
   });
 
   React.useEffect(() => {
-    console.log("TrackedItemsTable query data");
     if (query.data?.length === 0) {
       setShouldRefetch(false);
     } else {
