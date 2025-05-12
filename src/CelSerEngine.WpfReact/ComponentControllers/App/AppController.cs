@@ -31,6 +31,7 @@ public class AppController : ReactControllerBase, IDisposable
     private readonly ProcessSelectionTracker _processSelectionTracker;
     private readonly IMemoryScanService _memoryScanService;
     private readonly INativeApi _nativeApi;
+    private readonly MainWindow _mainWindow;
     private readonly IProgress<float> _progressBarUpdater;
     private float _progressBarValue;
     private CancellationTokenSource? _scanCancellationTokenSource;
@@ -47,13 +48,15 @@ public class AppController : ReactControllerBase, IDisposable
         ILogger<AppController> logger,
         ProcessSelectionTracker processSelectionTracker,
         IMemoryScanService memoryScanService,
-        INativeApi nativeApi)
+        INativeApi nativeApi,
+        MainWindow mainWindow)
     {
         _reactJsRuntime = reactJsRuntime;
         _logger = logger;
         _processSelectionTracker = processSelectionTracker;
         _memoryScanService = memoryScanService;
         _nativeApi = nativeApi;
+        _mainWindow = mainWindow;
         _progressBarUpdater = new Progress<float>(newValue =>
         {
             if (newValue - _progressBarValue >= 1 || (newValue == 0 && newValue != _progressBarValue))
@@ -197,6 +200,12 @@ public class AppController : ReactControllerBase, IDisposable
         {
             TrackedItemsController.Items.Add(new TrackedItem(selectedItem));
         }
+    }
+
+    public void OpenProcessSelector()
+    {
+        var processSelector = new SelectProcessWindow(_mainWindow);
+        processSelector.Show();
     }
 
     private async Task UpdateFrontEndProgressBarAsync()

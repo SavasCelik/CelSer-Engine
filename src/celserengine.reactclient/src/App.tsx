@@ -86,7 +86,7 @@ function App() {
             })}
             variant="outline"
             onClick={() => {
-              dotNetObj?.invokeMethod("Test", "testing");
+              dotNetObj?.invokeMethod("OpenProcessSelector");
             }}
           >
             <img className="h-[25px]" src={SelectProcessIcon}></img>
