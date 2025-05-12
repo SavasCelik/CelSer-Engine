@@ -22,13 +22,8 @@ import {
   FrozenRowsState,
 } from "../tanstack-table-features/FrozenRows";
 import { useTableRowSelection } from "@/hooks/use-table-row-selection";
-
-type FreezeRow = {
-  freeze: boolean;
-  description: string;
-  address: string;
-  value: string;
-};
+import { TrackedItem } from "@/types/TrackedItem";
+import { TrackedItemDialog } from "./TrackedItemDialog";
 
 interface TrackedItemsTableProps {
   dotNetObj: DotNetObject | null;
@@ -38,8 +33,11 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [frozenRows, setFrozenRows] = React.useState<FrozenRowsState>({});
   const [shouldRefetch, setShouldRefetch] = React.useState(false);
+  const [selectedTrackedItemKey, setSelectedTrackedItemKey] =
+    React.useState<keyof TrackedItem>("value");
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
-  const query = useQuery<FreezeRow[]>({
+  const query = useQuery<TrackedItem[]>({
     queryKey: ["TrackedItemsTable"],
     queryFn: async () => {
       if (!dotNetObj) {
@@ -60,7 +58,7 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
     }
   }, [query.data?.length]);
 
-  const columns = React.useMemo<ColumnDef<FreezeRow>[]>(
+  const columns = React.useMemo<ColumnDef<TrackedItem>[]>(
     () => [
       {
         accessorKey: "freeze",
@@ -107,47 +105,65 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
   const handleRowSelection = useTableRowSelection(trackedItemsTable);
 
   return (
-    <Table
-      onKeyUp={(e) => {
-        if (e.code === "Space") {
-          trackedItemsTable.toggleFreezeOnSelection();
-        }
-      }}
-      tabIndex={0}
-      className="focus-visible:outline-none"
-    >
-      <TableHeader className="stickyTableHeader bg-muted">
-        {trackedItemsTable.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead key={header.id}>
-                <div className="flex items-center">
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </div>
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {trackedItemsTable.getRowModel().rows.map((row) => (
-          <TableRow
-            key={row.id}
-            onClick={(e) => handleRowSelection(row.index, e)}
-            data-state={row.getIsSelected() && "selected"}
-          >
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <>
+      <Table
+        onKeyUp={(e) => {
+          if (e.code === "Space") {
+            trackedItemsTable.toggleFreezeOnSelection();
+          }
+        }}
+        tabIndex={0}
+        className="focus-visible:outline-none"
+      >
+        <TableHeader className="stickyTableHeader bg-muted">
+          {trackedItemsTable.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  <div className="flex items-center">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </div>
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {trackedItemsTable.getRowModel().rows.map((row) => (
+            <TableRow
+              key={row.id}
+              onClick={(e) => handleRowSelection(row.index, e)}
+              data-state={row.getIsSelected() && "selected"}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <TableCell
+                  key={cell.id}
+                  onDoubleClick={() => {
+                    setSelectedTrackedItemKey(
+                      cell.column.id as keyof TrackedItem
+                    );
+                    setIsDialogOpen(true);
+                  }}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <TrackedItemDialog
+        rows={trackedItemsTable.getSelectedRowModel().rows}
+        trackedItemKey={selectedTrackedItemKey}
+        dotNetObj={dotNetObj}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+      />
+    </>
   );
 }
 

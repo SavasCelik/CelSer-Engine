@@ -17,6 +17,17 @@ public class TrackedItemsController : ReactControllerBase
         _nativeApi = nativeApi;
     }
 
+    public void UpdateItems(int[] indices, string propertyKey, string newValue)
+    {
+        if (string.Equals(propertyKey, nameof(MemorySegment.Value), StringComparison.InvariantCultureIgnoreCase))
+        {
+            foreach (var index in indices)
+            {
+                _nativeApi.WriteMemory(_processSelectionTracker.SelectedProcessHandle, Items[index], newValue);
+            }
+        }
+    }
+
     public object[] GetTrackedItems()
     {
         _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, Items);
