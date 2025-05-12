@@ -8,7 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace CelSerEngine.WpfReact;
 
-public class ReactWebViewManager
+public class ReactWebViewManager : IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly WebView2 _webView;
@@ -37,13 +37,7 @@ public class ReactWebViewManager
         {
             // maybe clear on if e.NavigationKind == CoreWebView2NavigationKind.Reload?
 
-            // Dispose all tracked references before clearing them
-            foreach (var trackedRefDisposable in _trackedRefsById.Values.OfType<IDisposable>())
-            {
-                trackedRefDisposable.Dispose();
-            }
-
-            _trackedRefsById.Clear();
+            DisposeTrackedRefs();
         };
     }
 
@@ -249,6 +243,24 @@ public class ReactWebViewManager
         }
 
         return JsonSerializer.Deserialize(element, targetType, _jsonSerializerOptions);
+    }
+
+    /// <summary>
+    /// Disposes all tracked references.
+    /// </summary>
+    private void DisposeTrackedRefs()
+    {
+        foreach (var trackedRefDisposable in _trackedRefsById.Values.OfType<IDisposable>())
+        {
+            trackedRefDisposable.Dispose();
+        }
+
+        _trackedRefsById.Clear();
+    }
+
+    public void Dispose()
+    {
+        DisposeTrackedRefs();
     }
 }
 

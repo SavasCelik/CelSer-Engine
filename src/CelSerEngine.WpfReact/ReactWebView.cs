@@ -8,7 +8,7 @@ using WebView2Control = Microsoft.Web.WebView2.Wpf.WebView2;
 
 namespace CelSerEngine.WpfReact;
 
-public class ReactWebView : Control
+public class ReactWebView : Control, IDisposable
 {
     /// <summary>
     /// The backing store for the <see cref="Services"/> property.
@@ -113,5 +113,10 @@ public class ReactWebView : Control
 
         // Desktop applications almost never want to show a URL preview when hovering over a link
         _webview.CoreWebView2.Settings.IsStatusBarEnabled = false;
+    }
+
+    public void Dispose() {
+        _webViewManager?.Dispose();
+        _webview?.Dispose();
     }
 }
