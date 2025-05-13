@@ -11,6 +11,7 @@ namespace CelSerEngine.WpfReact;
 public partial class MainWindow : Window
 {
     public IServiceProvider Services { get; set; }
+    private SelectProcessWindow? _selectProcessWindow;
 
     public MainWindow()
     {
@@ -32,5 +33,20 @@ public partial class MainWindow : Window
     {
         reactWebView.WebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
         reactWebView.ConfigureWebView();
+    }
+
+    public void OpenProcessSelector()
+    {
+        _selectProcessWindow = new SelectProcessWindow(this);
+        _selectProcessWindow.ShowModal(this);
+    }
+
+    public void CloseProcessSelector()
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            _selectProcessWindow?.Close();
+            _selectProcessWindow = null;
+        });
     }
 }

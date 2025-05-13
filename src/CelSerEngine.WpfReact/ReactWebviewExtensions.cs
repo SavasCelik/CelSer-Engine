@@ -37,5 +37,8 @@ public static class ReactWebviewExtensions
             System.Windows.MessageBox.Show("The React client could not be found. Please ensure it has been built and published to the correct location.");
         }
 #endif
+
+        reactWebView.Focus();
+        reactWebView.WebView.Focus();
     }
 }

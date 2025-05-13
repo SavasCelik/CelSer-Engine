@@ -204,8 +204,7 @@ public class AppController : ReactControllerBase, IDisposable
 
     public void OpenProcessSelector()
     {
-        var processSelector = new SelectProcessWindow(_mainWindow);
-        processSelector.Show();
+        _mainWindow.OpenProcessSelector();
     }
 
     private async Task UpdateFrontEndProgressBarAsync()

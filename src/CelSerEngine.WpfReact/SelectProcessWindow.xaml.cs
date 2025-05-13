@@ -13,8 +13,11 @@ namespace CelSerEngine.WpfReact
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddWpfReactWebView();
+            serviceCollection.AddSingleton(mainWindow);
             var nativeApi = mainWindow.Services.GetRequiredService<INativeApi>();
             serviceCollection.AddSingleton(nativeApi);
+            var processSelectionTracker = mainWindow.Services.GetRequiredService<ProcessSelectionTracker>();
+            serviceCollection.AddSingleton(processSelectionTracker);
 
             var services = serviceCollection.BuildServiceProvider();
             Resources.Add("services", services);
