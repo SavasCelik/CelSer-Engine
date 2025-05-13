@@ -31,7 +31,6 @@ namespace CelSerEngine.WpfReact
 
         private void ReactWebView_ReactWebViewInitialized(object? sender, EventArgs e)
         {
-            reactWebView.WebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
             const string selectProcessRoute = "#select-process";
             reactWebView.ConfigureWebView(selectProcessRoute);
         }

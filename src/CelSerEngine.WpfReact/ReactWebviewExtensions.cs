@@ -9,6 +9,15 @@ public static class ReactWebviewExtensions
             throw new InvalidOperationException("WebView2 is not initialized.");
         }
 
+        reactWebView.WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+        reactWebView.WebView.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
+        reactWebView.WebView.CoreWebView2.Settings.IsPinchZoomEnabled = false;
+        reactWebView.WebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
+        reactWebView.WebView.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
+        reactWebView.WebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
+        reactWebView.WebView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = true;
+        reactWebView.WebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+
 #if DEBUG
         reactWebView.WebView.Source = new Uri("http://localhost:49356" + route);
 #else

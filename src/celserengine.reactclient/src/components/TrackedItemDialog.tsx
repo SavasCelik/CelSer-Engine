@@ -99,7 +99,7 @@ export default function TrackedItemDialog({
           <DialogDescription></DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form autoComplete="off">
+          <form>
             <FormField
               control={form.control}
               name="newValue"

@@ -31,7 +31,6 @@ public partial class MainWindow : Window
 
     private void ReactWebView_ReactWebViewInitialized(object? sender, EventArgs e)
     {
-        reactWebView.WebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
         reactWebView.ConfigureWebView();
     }
 

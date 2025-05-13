@@ -306,7 +306,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
 
   return (
     <Form {...form}>
-      <form autoComplete="off" className="mt-5 flex w-[330px] flex-col gap-2">
+      <form className="mt-5 flex w-[330px] flex-col gap-2">
         {selectedScanType === "valueBetween" ? (
           <>
             {SearchInputField(form, "fromValue", "From Value")}
