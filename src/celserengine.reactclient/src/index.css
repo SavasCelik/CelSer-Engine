@@ -139,9 +139,12 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground select-none;
     font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
     scrollbar-color: var(--muted-foreground) transparent;
+  }
+  img {
+    -webkit-user-drag: none;
   }
 }
 
