@@ -196,7 +196,7 @@ public class ReactWebViewManager : IDisposable
         {
             AsyncCallId = asyncCallId,
             IsSuccess = isSuccess,
-            ReposeJson = JsonSerializer.Serialize(result, _jsonSerializerOptions)
+            ResponseJson = JsonSerializer.Serialize(result, _jsonSerializerOptions)
         };
 
         EndInvokeDotNet(response);
@@ -276,5 +276,5 @@ internal class ResponseMessage
 {
     public int AsyncCallId { get; set; }
     public bool IsSuccess { get; set; } = true;
-    public string ReposeJson { get; set; } = string.Empty;
+    public string ResponseJson { get; set; } = string.Empty;
 }

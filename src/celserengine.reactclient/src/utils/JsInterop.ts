@@ -61,7 +61,7 @@ class JsInterop {
     ) {
       const asyncCall = this._pendingAsyncCalls[response.asyncCallId];
       delete this._pendingAsyncCalls[response.asyncCallId];
-      const responseParsed = JSON.parse(response.reposeJson);
+      const responseParsed = JSON.parse(response.responseJson);
 
       if (!response.isSuccess) {
         asyncCall.reject(new Error(responseParsed));
