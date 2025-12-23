@@ -1,5 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using System.Globalization;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.TrackedItems;
 
@@ -31,6 +32,19 @@ public class TrackedItemsController : ReactControllerBase
             foreach (var index in indices)
             {
                 Items[index].Description = newValue;
+            }
+        }
+        else if (string.Equals(propertyKey, nameof(TrackedItem.MemorySegment.Address), StringComparison.InvariantCultureIgnoreCase))
+        {
+            if (!IntPtr.TryParse(newValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var newAddress))
+            {
+                throw new ArgumentException($"Address must be a valid hexadecimal number. {newValue}");
+            }
+
+            foreach (var index in indices)
+            {
+                Items[index].MemorySegment.BaseAddress = newAddress;
+                Items[index].MemorySegment.BaseOffset = 0;
             }
         }
     }

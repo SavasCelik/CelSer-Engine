@@ -178,7 +178,15 @@ public class ReactWebViewManager : IDisposable
             convertedParams[i] = ConvertJsonElement(paramsSend[i], methodParams[i].ParameterType);
         }
 
-        var methodResponse = method.Invoke(instance, convertedParams);
+        object? methodResponse;
+        try
+        {
+            methodResponse = method.Invoke(instance, convertedParams);
+        } catch (Exception ex)
+        {
+            EndInvokeDotNet(receivedMessage.AsyncCallId, $"Error invoking method: {ex.GetBaseException().Message}", isSuccess: false);
+            return;
+        }
 
         if (methodResponse is Task taskResponse)
         {
@@ -272,6 +280,7 @@ internal class ReceivedMessage
     public string MethodArguments { get; set; } = string.Empty;
 }
 
+// Inspired from https://github.com/dotnet/aspnetcore/blob/main/src/JSInterop/Microsoft.JSInterop/src/Infrastructure/DotNetInvocationResult.cs
 internal class ResponseMessage
 {
     public int AsyncCallId { get; set; }
