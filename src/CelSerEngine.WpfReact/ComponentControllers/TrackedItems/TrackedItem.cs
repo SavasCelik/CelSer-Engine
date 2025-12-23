@@ -10,6 +10,6 @@ public class TrackedItem
     public TrackedItem(IMemorySegment item)
     {
         Description = "Description";
-        MemorySegment = item;
+        MemorySegment = new MemorySegment(item);
     }
 }
