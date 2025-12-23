@@ -74,7 +74,7 @@ export default function TrackedItemDialog({
     onError: (error) => {
       form.setError("newValue", { message: error.message });
       setTimeout(() => form.setFocus("newValue"), 100);
-    }
+    },
   });
 
   const form = useForm<FormDataType>({
@@ -113,7 +113,7 @@ export default function TrackedItemDialog({
                   <FormControl>
                     <Input {...field} className="col-span-4" />
                   </FormControl>
-                  <FormMessage className="col-start-2 col-span-5" />
+                  <FormMessage className="col-span-5 col-start-2" />
                 </FormItem>
               )}
             />
@@ -121,7 +121,9 @@ export default function TrackedItemDialog({
               <Button
                 type="submit"
                 onClick={form.handleSubmit(onSaveChanges)}
-                disabled={!form.formState.isValid || editTrackedItemsMutation.isPending}
+                disabled={
+                  !form.formState.isValid || editTrackedItemsMutation.isPending
+                }
               >
                 {editTrackedItemsMutation.isPending && (
                   <Loader2Icon className="animate-spin" />
