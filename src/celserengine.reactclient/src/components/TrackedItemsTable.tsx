@@ -23,6 +23,12 @@ import {
 } from "../tanstack-table-features/FrozenRows";
 import { useTableRowSelection } from "@/hooks/use-table-row-selection";
 import { TrackedItem } from "@/types/TrackedItem";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 const TrackedItemDialog = React.lazy(() => import("./TrackedItemDialog"));
 
 interface TrackedItemsTableProps {
@@ -132,8 +138,21 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
         </TableHeader>
         <TableBody>
           {trackedItemsTable.getRowModel().rows.map((row) => (
-            <TableRow
+            <ContextMenu
               key={row.id}
+              onOpenChange={(open) => {
+                if (open) {
+                  if (
+                    !trackedItemsTable.getIsSomeRowsSelected() ||
+                    !row.getIsSelected()
+                  ) {
+                    handleRowSelection(row.index);
+                  }
+                }
+              }}
+            >
+              <ContextMenuTrigger asChild>
+                <TableRow
               onClick={(e) => handleRowSelection(row.index, e)}
               data-state={row.getIsSelected() && "selected"}
             >
@@ -147,10 +166,39 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
                     setIsDialogOpen(true);
                   }}
                 >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                 </TableCell>
               ))}
             </TableRow>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem
+                  onClick={() => {
+                    setSelectedTrackedItemKey("value");
+                    // Delay opening the dialog to allow context menu to close properly
+                    setTimeout(() => {
+                      setIsDialogOpen(true);
+                    }, 100);
+                  }}
+                >
+                  Change Value
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    setSelectedTrackedItemKey("description");
+                    // Delay opening the dialog to allow context menu to close properly
+                    setTimeout(() => {
+                      setIsDialogOpen(true);
+                    }, 100);
+                  }}
+                >
+                  Change Description
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           ))}
         </TableBody>
       </Table>
