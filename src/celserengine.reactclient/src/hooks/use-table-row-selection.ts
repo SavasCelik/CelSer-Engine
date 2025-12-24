@@ -36,6 +36,12 @@ export function useTableRowSelection<TData>(table: Table<TData>) {
 
   const handleRowSelection = useCallback(
     (index: number, event?: React.MouseEvent): void => {
+      if (index === -1) {
+        table.resetRowSelection();
+        lastSelectedIndexRef.current = -1;
+        return;
+      }
+
       const isShiftKey = event?.shiftKey;
       const isCtrlKey = event?.ctrlKey || event?.metaKey; // Support both Ctrl and Command (Mac)
       const { rowSelection } = table.getState();
