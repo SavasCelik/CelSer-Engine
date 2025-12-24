@@ -142,10 +142,8 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
               key={row.id}
               onOpenChange={(open) => {
                 if (open) {
-                  if (
-                    !trackedItemsTable.getIsSomeRowsSelected() ||
-                    !row.getIsSelected()
-                  ) {
+                  // Ensure the row is selected when context menu is opened this also works when multiple rows are selected
+                  if (!row.getIsSelected()) {
                     handleRowSelection(row.index);
                   }
                 }
