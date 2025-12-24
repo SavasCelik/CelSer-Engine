@@ -193,10 +193,7 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
                 <ContextMenuItem
                   onClick={() => {
                     setSelectedTrackedItemKey("value");
-                    // Delay opening the dialog to allow context menu to close properly
-                    setTimeout(() => {
-                      setIsDialogOpen(true);
-                    }, 100);
+                    setIsDialogOpen(true);
                   }}
                 >
                   Change Value
