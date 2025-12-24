@@ -156,6 +156,7 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
           {trackedItemsTable.getRowModel().rows.map((row) => (
             <ContextMenu
               key={row.id}
+              modal={false}
               onOpenChange={(open) => {
                 if (open) {
                   // Ensure the row is selected when context menu is opened this also works when multiple rows are selected
@@ -203,10 +204,7 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
                 <ContextMenuItem
                   onClick={() => {
                     setSelectedTrackedItemKey("description");
-                    // Delay opening the dialog to allow context menu to close properly
-                    setTimeout(() => {
-                      setIsDialogOpen(true);
-                    }, 100);
+                    setIsDialogOpen(true);
                   }}
                 >
                   Change Description
