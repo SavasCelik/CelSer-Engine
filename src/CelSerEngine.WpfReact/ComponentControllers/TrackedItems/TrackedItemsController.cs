@@ -49,6 +49,15 @@ public class TrackedItemsController : ReactControllerBase
         }
     }
 
+    public void RemoveItems(int[] indices)
+    {
+        // Remove from highest index to lowest to avoid shifting issues
+        foreach (var index in indices.OrderByDescending(i => i))
+        {
+            Items.RemoveAt(index);
+        }
+    }
+
     public object[] GetTrackedItems()
     {
         _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, Items.Select(x => x.MemorySegment));

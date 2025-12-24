@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DotNetObject } from "@/utils/useDotNet";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   FrozenRowsFeature,
   FrozenRowsState,
@@ -42,6 +42,7 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
   const [selectedTrackedItemKey, setSelectedTrackedItemKey] =
     React.useState<keyof TrackedItem>("value");
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const queryClient = useQueryClient();
 
   const query = useQuery<TrackedItem[]>({
     queryKey: ["TrackedItemsTable"],
@@ -53,6 +54,21 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
       return await dotNetObj!.invokeMethod("GetTrackedItems");
     },
     refetchInterval: shouldRefetch ? 1000 : false,
+  });
+
+  const removeTrackedItemsMutation = useMutation({
+    mutationFn: (indices: number[]) => {
+      if (!dotNetObj) {
+        return Promise.reject();
+      }
+      return dotNetObj.invokeMethod("RemoveItems", indices);
+    },
+    onSuccess: () => {
+      handleRowSelection(-1); // Clear selection
+      queryClient.invalidateQueries({
+        queryKey: ["TrackedItemsTable"],
+      });
+    },
   });
 
   React.useEffect(() => {
@@ -151,26 +167,26 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
             >
               <ContextMenuTrigger asChild>
                 <TableRow
-              onClick={(e) => handleRowSelection(row.index, e)}
-              data-state={row.getIsSelected() && "selected"}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell
-                  key={cell.id}
-                  onDoubleClick={() => {
-                    setSelectedTrackedItemKey(
-                      cell.column.id as keyof TrackedItem
-                    );
-                    setIsDialogOpen(true);
-                  }}
+                  onClick={(e) => handleRowSelection(row.index, e)}
+                  data-state={row.getIsSelected() && "selected"}
                 >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      onDoubleClick={() => {
+                        setSelectedTrackedItemKey(
+                          cell.column.id as keyof TrackedItem
+                        );
+                        setIsDialogOpen(true);
+                      }}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
                       )}
-                </TableCell>
-              ))}
-            </TableRow>
+                    </TableCell>
+                  ))}
+                </TableRow>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 <ContextMenuItem
@@ -194,6 +210,23 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
                   }}
                 >
                   Change Description
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    const indices = trackedItemsTable
+                      .getSelectedRowModel()
+                      .rows.map((r) => r.index);
+                    removeTrackedItemsMutation.mutate(indices);
+                  }}
+                >
+                  Remove selected items
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    trackedItemsTable.toggleFreezeOnSelection();
+                  }}
+                >
+                  Toggle selected items
                 </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
