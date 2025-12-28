@@ -9,6 +9,7 @@ import React from "react";
 import NotFoundPage from "./pages/NotFoundPage.tsx";
 const App = React.lazy(() => import("./App.tsx"));
 const SelectProcess = React.lazy(() => import("./pages/SelectProcess.tsx"));
+const PointerScanner = React.lazy(() => import("./pages/PointerScanner.tsx"));
 
 // Create a client
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ createRoot(document.getElementById("root")!).render(
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/select-process" element={<SelectProcess />} />
+            <Route path="/pointer-scanner" element={<PointerScanner />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </HashRouter>

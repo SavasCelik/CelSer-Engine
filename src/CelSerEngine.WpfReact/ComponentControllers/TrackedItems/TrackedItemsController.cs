@@ -10,16 +10,23 @@ public class TrackedItemsController : ReactControllerBase
 
     private readonly ProcessSelectionTracker _processSelectionTracker;
     private readonly INativeApi _nativeApi;
+    private readonly MainWindow _mainWindow;
 
-    public TrackedItemsController(ProcessSelectionTracker processSelectionTracker, INativeApi nativeApi)
+    public TrackedItemsController(ProcessSelectionTracker processSelectionTracker, INativeApi nativeApi, MainWindow mainWindow)
     {
         Items = [];
         _processSelectionTracker = processSelectionTracker;
         _nativeApi = nativeApi;
+        _mainWindow = mainWindow;
     }
 
     public void UpdateItems(int[] indices, string propertyKey, string newValue)
     {
+        if (indices == null || indices.Length == 0)
+        {
+            return;
+        }
+
         if (string.Equals(propertyKey, nameof(MemorySegment.Value), StringComparison.InvariantCultureIgnoreCase))
         {
             foreach (var index in indices)
@@ -56,6 +63,12 @@ public class TrackedItemsController : ReactControllerBase
         {
             Items.RemoveAt(index);
         }
+    }
+
+    public void OpenPointerScanner(int selectedItemIndex)
+    {
+        var firstItem = Items[selectedItemIndex];
+        _mainWindow.OpenPointerScanner(firstItem.MemorySegment.Address);
     }
 
     public object[] GetTrackedItems()

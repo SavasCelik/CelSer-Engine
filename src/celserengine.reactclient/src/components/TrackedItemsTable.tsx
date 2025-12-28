@@ -223,6 +223,13 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
                 >
                   Toggle selected items
                 </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    dotNetObj?.invokeMethod("OpenPointerScanner", row.index);
+                  }}
+                >
+                  Pointer scan for this address
+                </ContextMenuItem>
               </ContextMenuContent>
             </ContextMenu>
           ))}

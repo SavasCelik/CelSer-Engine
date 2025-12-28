@@ -48,4 +48,10 @@ public partial class MainWindow : Window
             _selectProcessWindow = null;
         });
     }
+
+    public void OpenPointerScanner(IntPtr searchedAddress)
+    {
+        var pointerScannerWindow = new PointerScannerWindow(Services, searchedAddress);
+        pointerScannerWindow.Show();
+    }
 }
