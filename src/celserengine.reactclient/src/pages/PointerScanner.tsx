@@ -21,7 +21,12 @@ import { Loader2Icon } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "react-router";
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useDotNet } from "@/utils/useDotNet";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -45,9 +50,9 @@ import {
 import { cn } from "@/lib/utils";
 
 type PointerScanResult = {
-  address: string;
-  pointsTo: string;
-  offsets: number[];
+  moduleNameWithBaseOffset: string;
+  pointingToWithValue: string;
+  offsets: string[];
 };
 
 type PointerScanResultResponse = {
@@ -82,6 +87,7 @@ export default function PointerScanner() {
   const [searchParams] = useSearchParams();
   const dotNetObj = useDotNet("PointerScanner", "PointerScannerController");
   const [isDialogOpen, setIsDialogOpen] = React.useState(true);
+  const queryClient = useQueryClient();
 
   const startPointerScanMutation = useMutation({
     mutationFn: (data: FormDataType) => {
@@ -98,6 +104,9 @@ export default function PointerScanner() {
     },
     onSuccess: () => {
       setIsDialogOpen(false);
+      queryClient.invalidateQueries({
+        queryKey: ["PointerScanResultsTable"],
+      });
     },
   });
 
@@ -122,7 +131,7 @@ export default function PointerScanner() {
   });
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [maxOffsetCols, setMaxOffsetCols] = React.useState<number>(0);
-  const [totalCount] = React.useState(0);
+  const [totalCount, setTotalCount] = React.useState(0);
 
   const query = useQuery<PointerScanResultResponse>({
     queryKey: ["PointerScanResultsTable", { pagination }],
@@ -145,12 +154,8 @@ export default function PointerScanner() {
   const columns = React.useMemo<ColumnDef<PointerScanResult>[]>(
     () => [
       {
-        accessorKey: "address",
+        accessorKey: "moduleNameWithBaseOffset",
         header: "Address",
-        minSize: 1,
-        cell: ({ row }) => {
-          return row.original.address;
-        },
       },
       ...Array.from(
         {
@@ -160,40 +165,22 @@ export default function PointerScanner() {
           accessorKey: `offsets[${index}]`,
           header: `Offset ${index + 1}`,
           cell: ({ row }: { row: Row<PointerScanResult> }) =>
-            row.original.offsets[index] ?? "-",
+            row.original.offsets[index] ?? "",
         })
       ),
       {
-        accessorKey: "pointsTo",
+        accessorKey: "pointingToWithValue",
         header: "Points To",
       },
     ],
     [maxOffsetCols]
   );
 
-  const items: PointerScanResult[] = [
-    {
-      address: "0x00400000",
-      pointsTo: "0x00FFAA00",
-      offsets: [0x1000, 0x2000],
-    },
-    {
-      address: "0x00401000",
-      pointsTo: "0x00FFAB00",
-      offsets: [0x1500, 0x2500],
-    },
-    {
-      address: "0x00402000",
-      pointsTo: "0x00FFAC00",
-      offsets: [0x500, 0x3, 0x700],
-    },
-  ];
-
   const table = useReactTable({
-    data: items,
+    data: query.data?.items ?? [],
     columns,
     columnResizeMode: "onChange",
-    rowCount: items.length,
+    rowCount: query.data?.totalCount ?? 0,
     getCoreRowModel: getCoreRowModel(),
     onPaginationChange: setPagination,
     onRowSelectionChange: setRowSelection,
@@ -206,54 +193,65 @@ export default function PointerScanner() {
       pagination,
       rowSelection,
     },
-    getRowId: (row) => row.address,
+    getRowId: (row) => row.moduleNameWithBaseOffset + row.offsets.join(", "),
   });
+
+  React.useEffect(() => {
+    if (query.data && totalCount !== query.data.totalCount) {
+      setTotalCount(query.data.totalCount);
+    }
+  }, [query.data, totalCount]);
 
   return (
     <>
-      <Table className={cn({ "h-full": false })}>
-        <TableHeader className="stickyTableHeader bg-muted">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  <div className="flex items-center">
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </div>
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {query.isPending ? (
-            <TableRow className="hover:bg-transparent">
-              <TableCell>
-                <Loader2Icon className="m-auto animate-spin" />
-              </TableCell>
-            </TableRow>
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                onClick={() => {
-                  row.toggleSelected();
-                }}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+      <div className="bg-card h-screen">
+        <Table className={cn({ "h-full": false })}>
+          <TableHeader className="stickyTableHeader bg-muted">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    <div className="flex items-center">
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </div>
+                  </TableHead>
                 ))}
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {query.isPending ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell>
+                  <Loader2Icon className="m-auto animate-spin" />
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  onClick={() => {
+                    row.toggleSelected();
+                  }}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent
