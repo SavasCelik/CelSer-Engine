@@ -157,7 +157,7 @@ export default function PointerScanner() {
               )}
               OK
             </Button>
-            <DialogClose>
+            <DialogClose asChild>
               <Button variant="secondary">Cancel</Button>
             </DialogClose>
           </DialogFooter>
