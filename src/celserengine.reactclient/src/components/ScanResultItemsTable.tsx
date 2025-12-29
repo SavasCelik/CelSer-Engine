@@ -15,13 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import {
   keepPreviousData,
@@ -32,8 +25,8 @@ import {
 } from "@tanstack/react-query";
 import { DotNetObject } from "../utils/useDotNet";
 import { Skeleton } from "./ui/skeleton";
-import { Input } from "./ui/input";
 import { useTableRowSelection } from "@/hooks/use-table-row-selection";
+import TablePagination from "./TablePagination";
 
 type RusultItem = {
   address: string;
@@ -208,47 +201,7 @@ function ScanResultItemsTable({
           </Table>
         </div>
         <div className="mt-1">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={() => table.previousPage()}
-                  className={cn({
-                    "pointer-events-none cursor-not-allowed text-gray-500":
-                      !table.getCanPreviousPage(),
-                  })}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <Input
-                  className="size-8 p-0 text-center"
-                  value={table.getState().pagination.pageIndex}
-                  onChange={(val) => {
-                    let pageIndexDesired = Number(val.target.value) || 0;
-                    const pageCount = table.getPageCount();
-                    if (pageIndexDesired > pageCount - 1) {
-                      pageIndexDesired = pageCount - 1;
-                    } else if (pageIndexDesired < 0) {
-                      pageIndexDesired = 0;
-                    }
-
-                    table.setPageIndex(pageIndexDesired);
-                  }}
-                />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={() => table.nextPage()}
-                  className={cn({
-                    "pointer-events-none cursor-not-allowed text-gray-500":
-                      !table.getCanNextPage(),
-                  })}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <TablePagination table={table} />
         </div>
       </div>
     </>
