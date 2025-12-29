@@ -21,10 +21,39 @@ import { Loader2Icon } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "react-router";
-import { useMutation } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { useDotNet } from "@/utils/useDotNet";
 import React from "react";
 import { useForm } from "react-hook-form";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  PaginationState,
+  Row,
+  RowSelectionState,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+
+type PointerScanResult = {
+  address: string;
+  pointsTo: string;
+  offsets: number[];
+};
+
+type PointerScanResultResponse = {
+  items: PointerScanResult[];
+  totalCount: number;
+};
 
 const formSchema = z.object({
   scanAddress: z.string(),
@@ -70,10 +99,6 @@ export default function PointerScanner() {
     onSuccess: () => {
       setIsDialogOpen(false);
     },
-    onError: (error) => {
-      form.setError("scanAddress", { message: error.message });
-      setTimeout(() => form.setFocus("scanAddress"), 100);
-    },
   });
 
   const form = useForm<FormDataType>({
@@ -88,11 +113,147 @@ export default function PointerScanner() {
 
   function onSubmit(data: FormDataType) {
     startPointerScanMutation.mutate(data);
+    setMaxOffsetCols(Number(data.maxLevel));
   }
+
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 13,
+  });
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const [maxOffsetCols, setMaxOffsetCols] = React.useState<number>(0);
+  const [totalCount] = React.useState(0);
+
+  const query = useQuery<PointerScanResultResponse>({
+    queryKey: ["PointerScanResultsTable", { pagination }],
+    queryFn: async () => {
+      if (!dotNetObj) {
+        return { items: [], totalCount: 0 };
+      }
+
+      return await dotNetObj!.invokeMethod(
+        "GetPointerScanResults",
+        pagination.pageIndex,
+        pagination.pageSize
+      );
+    },
+    refetchInterval:
+      totalCount > 0 && !startPointerScanMutation.isPending ? 1000 : false,
+    placeholderData: keepPreviousData,
+  });
+
+  const columns = React.useMemo<ColumnDef<PointerScanResult>[]>(
+    () => [
+      {
+        accessorKey: "address",
+        header: "Address",
+        minSize: 1,
+        cell: ({ row }) => {
+          return row.original.address;
+        },
+      },
+      ...Array.from(
+        {
+          length: maxOffsetCols,
+        },
+        (_, index) => ({
+          accessorKey: `offsets[${index}]`,
+          header: `Offset ${index + 1}`,
+          cell: ({ row }: { row: Row<PointerScanResult> }) =>
+            row.original.offsets[index] ?? "-",
+        })
+      ),
+      {
+        accessorKey: "pointsTo",
+        header: "Points To",
+      },
+    ],
+    [maxOffsetCols]
+  );
+
+  const items: PointerScanResult[] = [
+    {
+      address: "0x00400000",
+      pointsTo: "0x00FFAA00",
+      offsets: [0x1000, 0x2000],
+    },
+    {
+      address: "0x00401000",
+      pointsTo: "0x00FFAB00",
+      offsets: [0x1500, 0x2500],
+    },
+    {
+      address: "0x00402000",
+      pointsTo: "0x00FFAC00",
+      offsets: [0x500, 0x3, 0x700],
+    },
+  ];
+
+  const table = useReactTable({
+    data: items,
+    columns,
+    columnResizeMode: "onChange",
+    rowCount: items.length,
+    getCoreRowModel: getCoreRowModel(),
+    onPaginationChange: setPagination,
+    onRowSelectionChange: setRowSelection,
+    autoResetPageIndex: false,
+    manualPagination: true,
+    // initialState: {
+    //   pagination
+    // },
+    state: {
+      pagination,
+      rowSelection,
+    },
+    getRowId: (row) => row.address,
+  });
 
   return (
     <>
-      <div>PointerScanner Page {searchParams.get("searchedAddress")}</div>
+      <Table className={cn({ "h-full": false })}>
+        <TableHeader className="stickyTableHeader bg-muted">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  <div className="flex items-center">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </div>
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {query.isPending ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell>
+                <Loader2Icon className="m-auto animate-spin" />
+              </TableCell>
+            </TableRow>
+          ) : (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                onClick={() => {
+                  row.toggleSelected();
+                }}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent
