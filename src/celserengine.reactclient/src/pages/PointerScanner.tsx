@@ -95,6 +95,7 @@ export default function PointerScanner() {
       if (!dotNetObj) {
         return Promise.reject();
       }
+      setIsDialogOpen(false);
 
       return dotNetObj.invokeMethod(
         "StartPointerScan",
@@ -104,10 +105,13 @@ export default function PointerScanner() {
       );
     },
     onSuccess: () => {
-      setIsDialogOpen(false);
       queryClient.invalidateQueries({
         queryKey: ["PointerScanResultsTable"],
       });
+    },
+    onError: () => {
+      setIsDialogOpen(true);
+      form.setError("scanAddress", { message: "Failed to start pointer scan" });
     },
   });
 
@@ -206,8 +210,13 @@ export default function PointerScanner() {
   return (
     <>
       <div className="bg-card flex h-screen flex-col gap-2 p-2">
+        <div className="text-center text-sm">Found: {totalCount}</div>
         <div className="flex-1 overflow-auto rounded-lg border-1">
-          <Table>
+          <Table
+            className={cn({
+              "h-full": query.isPending || startPointerScanMutation.isPending,
+            })}
+          >
             <TableHeader className="stickyTableHeader bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -225,9 +234,9 @@ export default function PointerScanner() {
               ))}
             </TableHeader>
             <TableBody>
-              {query.isPending ? (
+              {query.isPending || startPointerScanMutation.isPending ? (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell>
+                  <TableCell colSpan={columns.length}>
                     <Loader2Icon className="m-auto animate-spin" />
                   </TableCell>
                 </TableRow>

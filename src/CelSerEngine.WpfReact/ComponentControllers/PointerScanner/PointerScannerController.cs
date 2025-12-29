@@ -33,9 +33,9 @@ public class PointerScannerController : ReactControllerBase
         var pointerScanner = new DefaultPointerScanner(_nativeApi, pointerScanOptions);
         //Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
         //    pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
-        var stopwatch = Stopwatch.StartNew();
+        //var stopwatch = Stopwatch.StartNew();
         _pointerScanResults.AddRange(await pointerScanner.StartPointerScanAsync(_processSelectionTracker.SelectedProcessHandle));
-        stopwatch.Stop();
+        //stopwatch.Stop();
         //Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
     }
 
