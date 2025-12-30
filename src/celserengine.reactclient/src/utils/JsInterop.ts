@@ -44,7 +44,18 @@ class JsInterop {
       methodName,
       methodArguments,
     });
-    (window as any).chrome.webview.postMessage(message);
+
+    if ((window as any).chrome?.webview) {
+      (window as any).chrome.webview.postMessage(message);
+    }
+    else {
+      console.info("invokeDotNetMethodAsync", message);
+      this.handleResponse(new MessageEvent("message", { data: {
+        asyncCallId,
+        isSuccess: true,
+        responseJson: JSON.stringify("chrome.webview is not available.")
+      }}));
+    }
 
     return resultPromise;
   }
@@ -112,8 +123,14 @@ class JsInterop {
 // Expose the JsInterop instance globally
 
 export const jsInteropObj = new JsInterop();
-(window as any).chrome.webview.addEventListener("message", (event: any) =>
-  jsInteropObj.handleResponse(event)
-);
+
+if ((window as any).chrome?.webview) {
+  (window as any).chrome.webview.addEventListener("message", (event: any) =>
+    jsInteropObj.handleResponse(event)
+  );
+}
+else {
+  console.info("chrome.webview is not available.");
+}
 
 (window as any)["jsInterop"] = jsInteropObj;
