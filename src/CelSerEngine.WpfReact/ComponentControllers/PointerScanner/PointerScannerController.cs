@@ -41,8 +41,8 @@ public class PointerScannerController : ReactControllerBase
 
     public object GetPointerScanResults(int page, int pageSize)
     {
-        var pointerScanResultsPage = GetPointerScanResultItemsByPage(page, pageSize);
-        _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, _pointerScanResults);
+        var pointerScanResultsPage = GetPointerScanResultItemsByPage(page, pageSize).ToList();
+        _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, pointerScanResultsPage);
 
         return new
         {
