@@ -175,10 +175,14 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
                     <TableCell
                       key={cell.id}
                       onDoubleClick={() => {
-                        setSelectedTrackedItemKey(
-                          cell.column.id as keyof TrackedItem
-                        );
-                        setIsDialogOpen(true);
+                        const trackedItem: TrackedItem = row.original;
+
+                        if (cell.column.id in trackedItem) {
+                          setSelectedTrackedItemKey(
+                            cell.column.id as keyof TrackedItem
+                          );
+                          setIsDialogOpen(true);
+                        }
                       }}
                     >
                       {flexRender(
