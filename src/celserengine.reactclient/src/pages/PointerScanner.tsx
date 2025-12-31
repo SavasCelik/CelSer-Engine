@@ -135,7 +135,7 @@ export default function PointerScanner() {
 
   const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 13,
+    pageSize: 20,
   });
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
@@ -218,6 +218,32 @@ export default function PointerScanner() {
     }
   }, [query.data, totalCount]);
 
+  // adjust pageSize based on container height
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    const rowHeight = 28; // row height in px
+    const headerHeight = 36; // header height in px
+
+    const resizeObserver = new ResizeObserver(() => {
+      const containerHeight = container.clientHeight;
+      const visibleRows = Math.floor(
+        (containerHeight - headerHeight) / rowHeight
+      );
+
+      setPagination((prev) => ({
+        ...prev,
+        pageSize: visibleRows > 20 ? visibleRows : 20,
+      }));
+    });
+
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
   React.useEffect(() => {
     if (dotNetObj && totalCount > 0 && !startPointerScanMutation.isPending) {
       dotNetObj.invokeMethod("ApplyMultipleSorting", sorting);
@@ -228,7 +254,10 @@ export default function PointerScanner() {
     <>
       <div className="bg-card flex h-screen flex-col gap-2 p-2">
         <div className="text-center text-sm">Found: {totalCount}</div>
-        <div className="flex-1 overflow-auto rounded-lg border-1">
+        <div
+          ref={tableContainerRef}
+          className="flex-1 overflow-auto rounded-lg border-1"
+        >
           <Table
             className={cn({
               "h-full": query.isPending || startPointerScanMutation.isPending,
