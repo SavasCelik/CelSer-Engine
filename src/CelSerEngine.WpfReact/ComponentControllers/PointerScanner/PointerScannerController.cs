@@ -57,6 +57,86 @@ public class PointerScannerController : ReactControllerBase
         };
     }
 
+    public void ApplySingleSorting(TableSorting[] tableSortings)
+    {
+        // [{id:"offsets[0]", desc:false},{id:"offsets[1]", desc:false},{id:"moduleNameWithBaseOffset", desc:true}]
+        // using List.Sort
+        if (tableSortings.Length == 0)
+        {
+            return;
+        }
+
+        var tableSorting = tableSortings[0];
+        if (tableSorting.Id == "moduleNameWithBaseOffset")
+        {
+            _pointerScanResults.Sort((a, b) =>
+            {
+                int comparison = string.Compare(a.ModuleNameWithBaseOffset, b.ModuleNameWithBaseOffset, StringComparison.OrdinalIgnoreCase);
+                return tableSorting.Desc ? -comparison : comparison;
+            });
+        }
+        else if (tableSorting.Id.StartsWith("offsets["))
+        {
+            _pointerScanResults.Sort((a, b) =>
+            {
+                int comparison = ComparePointersByOffset(a, b, tableSorting); ;
+                return tableSorting.Desc ? -comparison : comparison;
+            });
+        }
+    }
+
+    public void ApplyMultipleSorting(TableSorting[] tableSortings)
+    {
+        // [{id:"offsets[0]", desc:false},{id:"offsets[1]", desc:false},{id:"moduleNameWithBaseOffset", desc:true}]
+        // using List.Sort
+
+        if (tableSortings.Length == 0)
+        {
+            return;
+        }
+
+        _pointerScanResults.Sort((a, b) =>
+        {
+            foreach (var sorting in tableSortings)
+            {
+                int comparison = 0;
+                switch (sorting.Id)
+                {
+                    case "moduleNameWithBaseOffset":
+                        comparison = string.Compare(a.ModuleNameWithBaseOffset, b.ModuleNameWithBaseOffset, StringComparison.OrdinalIgnoreCase);
+                        break;
+                    default:
+                        if (sorting.Id.StartsWith("offsets["))
+                        {
+                            comparison = ComparePointersByOffset(a, b, sorting);
+                        }
+                        break;
+                }
+
+                if (comparison != 0)
+                {
+                    return sorting.Desc ? -comparison : comparison;
+                }
+            }
+
+            return 0;
+        });
+    }
+
+    private int ComparePointersByOffset(Pointer a, Pointer b, TableSorting tableSorting)
+    {
+        var indexStr = tableSorting.Id[8..^1];
+        if (int.TryParse(indexStr, out int index))
+        {
+            var aOffset = index < a.Offsets.Count ? a.Offsets[a.Offsets.Count - 1 - index] : -1;
+            var bOffset = index < b.Offsets.Count ? b.Offsets[b.Offsets.Count - 1 - index] : -1;
+            int comparison = aOffset.CompareTo(bOffset);
+            return comparison;
+        }
+
+        return 0;
+    }
+
     private IEnumerable<Pointer> GetPointerScanResultItemsByPage(int page, int pageSize)
     {
         return _pointerScanResults

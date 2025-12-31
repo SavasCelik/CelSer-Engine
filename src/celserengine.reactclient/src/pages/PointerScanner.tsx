@@ -31,12 +31,14 @@ import { useDotNet } from "@/utils/useDotNet";
 import React from "react";
 import { useForm } from "react-hook-form";
 import {
+  Column,
   ColumnDef,
   flexRender,
   getCoreRowModel,
   PaginationState,
   Row,
   RowSelectionState,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import {
@@ -49,6 +51,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import TablePagination from "@/components/TablePagination";
+import { TableColumnHeader } from "@/components/TableColumnHeader";
 
 type PointerScanResult = {
   moduleNameWithBaseOffset: string;
@@ -134,6 +137,7 @@ export default function PointerScanner() {
     pageIndex: 0,
     pageSize: 13,
   });
+  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [maxOffsetCols, setMaxOffsetCols] = React.useState<number>(0);
   const [totalCount, setTotalCount] = React.useState(0);
@@ -160,7 +164,9 @@ export default function PointerScanner() {
     () => [
       {
         accessorKey: "moduleNameWithBaseOffset",
-        header: "Address",
+        header: ({ column }) => (
+          <TableColumnHeader column={column} title="Address" />
+        ),
       },
       ...Array.from(
         {
@@ -168,7 +174,10 @@ export default function PointerScanner() {
         },
         (_, index) => ({
           accessorKey: `offsets[${index}]`,
-          header: `Offset ${index + 1}`,
+          // header: `Offset ${index + 1}`,
+          header: ({ column }: { column: Column<PointerScanResult> }) => (
+            <TableColumnHeader column={column} title={`Offset ${index + 1}`} />
+          ),
           cell: ({ row }: { row: Row<PointerScanResult> }) =>
             row.original.offsets[index] ?? "",
         })
@@ -184,20 +193,22 @@ export default function PointerScanner() {
   const table = useReactTable({
     data: query.data?.items ?? [],
     columns,
-    columnResizeMode: "onChange",
     rowCount: query.data?.totalCount ?? 0,
     getCoreRowModel: getCoreRowModel(),
     onPaginationChange: setPagination,
     onRowSelectionChange: setRowSelection,
     autoResetPageIndex: false,
     manualPagination: true,
+    manualSorting: true,
     // initialState: {
     //   pagination
     // },
     state: {
       pagination,
       rowSelection,
+      sorting,
     },
+    onSortingChange: setSorting,
     getRowId: (row) => row.moduleNameWithBaseOffset + row.offsets.join(", "),
   });
 
@@ -206,6 +217,12 @@ export default function PointerScanner() {
       setTotalCount(query.data.totalCount);
     }
   }, [query.data, totalCount]);
+
+  React.useEffect(() => {
+    if (dotNetObj && totalCount > 0 && !startPointerScanMutation.isPending) {
+      dotNetObj.invokeMethod("ApplyMultipleSorting", sorting);
+    }
+  }, [sorting, dotNetObj, totalCount, startPointerScanMutation.isPending]);
 
   return (
     <>
