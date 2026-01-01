@@ -200,6 +200,7 @@ export default function PointerScanner() {
     autoResetPageIndex: false,
     manualPagination: true,
     manualSorting: true,
+    enableMultiRowSelection: false,
     // initialState: {
     //   pagination
     // },
@@ -291,7 +292,7 @@ export default function PointerScanner() {
                   <TableRow
                     key={row.id}
                     onClick={() => {
-                      row.toggleSelected();
+                      row.toggleSelected(true);
                     }}
                     data-state={row.getIsSelected() && "selected"}
                   >
