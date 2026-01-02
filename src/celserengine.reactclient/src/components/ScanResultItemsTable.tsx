@@ -19,9 +19,7 @@ import { cn } from "@/lib/utils";
 import {
   keepPreviousData,
   useIsMutating,
-  useMutation,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
 import { DotNetObject } from "../utils/useDotNet";
 import { Skeleton } from "./ui/skeleton";
@@ -41,17 +39,9 @@ type ScanResultResponse = {
 
 interface ScanResultItemsTableProps {
   dotNetObj: DotNetObject | null;
-  addTrackedItem: (
-    address: string,
-    pageIndex: number,
-    pageSize: number
-  ) => Promise<void>;
 }
 
-function ScanResultItemsTable({
-  dotNetObj,
-  addTrackedItem,
-}: ScanResultItemsTableProps) {
+function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
   const columns = React.useMemo(
     () => [
       {
@@ -187,15 +177,9 @@ function ScanResultItemsTable({
                   </TableCell>
                 </TableRow>
               ) : table.getState().columnSizingInfo.isResizingColumn ? (
-                <MemoizedTableBody
-                  table={table}
-                  addTrackedItem={addTrackedItem}
-                />
+                <MemoizedTableBody table={table} dotNetObj={dotNetObj} />
               ) : (
-                <TableBodyNormal
-                  table={table}
-                  addTrackedItem={addTrackedItem}
-                />
+                <TableBodyNormal table={table} dotNetObj={dotNetObj} />
               )}
             </TableBody>
           </Table>
@@ -210,34 +194,29 @@ function ScanResultItemsTable({
 
 function TableBodyNormal({
   table,
-  addTrackedItem,
+  dotNetObj,
 }: {
   table: TTable<RusultItem>;
-  addTrackedItem: (
-    address: string,
-    pageIndex: number,
-    pageSize: number
-  ) => Promise<void>;
+  dotNetObj: DotNetObject | null;
 }) {
   const handleRowSelection = useTableRowSelection(table);
-  const queryClient = useQueryClient();
-  const addTrackedItemMutation = useMutation({
-    mutationFn: (address: string) => {
-      const { pagination } = table.getState();
-
-      return addTrackedItem(address, pagination.pageIndex, pagination.pageSize);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["TrackedItemsTable"] });
-    },
-  });
 
   return (
     <>
       {table.getRowModel().rows.map((row) => (
         <TableRow
           key={row.id}
-          onDoubleClick={() => addTrackedItemMutation.mutate(row.id)}
+          onDoubleClick={() => {
+            if (dotNetObj) {
+              const { pagination } = table.getState();
+              dotNetObj.invokeMethod(
+                "AddToTrackedItems",
+                row.id,
+                pagination.pageIndex,
+                pagination.pageSize
+              );
+            }
+          }}
           onClick={(e) => handleRowSelection(row.index, e)}
           // onClick={(e) => row.toggleSelected()}
           data-state={row.getIsSelected() && "selected"}

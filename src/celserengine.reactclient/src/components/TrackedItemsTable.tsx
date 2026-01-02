@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DotNetObject } from "@/utils/useDotNet";
+import { useDotNet } from "@/utils/useDotNet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   FrozenRowsFeature,
@@ -31,11 +31,8 @@ import {
 } from "@/components/ui/context-menu";
 const TrackedItemDialog = React.lazy(() => import("./TrackedItemDialog"));
 
-interface TrackedItemsTableProps {
-  dotNetObj: DotNetObject | null;
-}
-
-function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
+function TrackedItemsTable() {
+  const dotNetObj = useDotNet("TrackedItems", "TrackedItemsController");
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [frozenRows, setFrozenRows] = React.useState<FrozenRowsState>({});
   const [shouldRefetch, setShouldRefetch] = React.useState(false);

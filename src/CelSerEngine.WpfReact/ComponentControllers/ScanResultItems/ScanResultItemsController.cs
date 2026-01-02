@@ -8,12 +8,14 @@ public class ScanResultItemsController : ReactControllerBase
     public List<MemorySegment> ScanResultItems { get; set; }
 
     private readonly ProcessSelectionTracker _processSelectionTracker;
+    private readonly TrackedItemNotifier _trackedItemNotifier;
     private readonly INativeApi _nativeApi;
 
-    public ScanResultItemsController(ProcessSelectionTracker processSelectionTracker, INativeApi nativeApi)
+    public ScanResultItemsController(ProcessSelectionTracker processSelectionTracker, TrackedItemNotifier trackedItemNotifier, INativeApi nativeApi)
     {
         ScanResultItems = [];
         _processSelectionTracker = processSelectionTracker;
+        _trackedItemNotifier = trackedItemNotifier;
         _nativeApi = nativeApi;
     }
 
@@ -40,5 +42,18 @@ public class ScanResultItemsController : ReactControllerBase
         return ScanResultItems
             .Skip(page * pageSize)
             .Take(pageSize);
+    }
+
+    public void AddToTrackedItems(string memoryAddressHexString, int pageIndex, int pageSize)
+    {
+        var visibleScanResultItems = GetScanResultItemsByPage(pageIndex, pageSize);
+        var selectedItem = visibleScanResultItems
+            .Where(x => x.Address.ToString("X8") == memoryAddressHexString)
+            .FirstOrDefault();
+
+        if (selectedItem != null)
+        {
+            _trackedItemNotifier.RaiseItemAdded(selectedItem);
+        }
     }
 }

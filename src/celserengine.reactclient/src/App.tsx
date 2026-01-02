@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import ScanResultItemsTable from "./components/ScanResultItemsTable";
 import TrackedItemsTable from "./components/TrackedItemsTable";
@@ -16,10 +16,6 @@ function App() {
   const dotNetObjScanResultItems = useDotNet(
     "Scan",
     "ScanResultItemsController"
-  );
-  const dotNetObjTrackedItems = useDotNet(
-    "TrackedItems",
-    "TrackedItemsController"
   );
   const [progressBarValue, setProgressBarValue] = useState(0);
   const [selectedProcessText, setSelectedProcessText] = useState<string>(
@@ -50,31 +46,12 @@ function App() {
   }, [dotNetObj]);
 
   useEffect(() => {
-    if (!dotNetObj || !dotNetObjScanResultItems || !dotNetObjTrackedItems) {
+    if (!dotNetObj || !dotNetObjScanResultItems) {
       return;
     }
 
-    dotNetObj.bindComponentReferences([
-      dotNetObjScanResultItems,
-      dotNetObjTrackedItems,
-    ]);
-  }, [dotNetObj, dotNetObjScanResultItems, dotNetObjTrackedItems]);
-
-  const addTrackedItem = useCallback(
-    (address: string, pageIndex: number, pageSize: number) => {
-      if (!dotNetObj) {
-        return Promise.reject("DotNet object is not initialized.");
-      }
-
-      return dotNetObj.invokeMethod<void>(
-        "AddTrackedItem",
-        address,
-        pageIndex,
-        pageSize
-      );
-    },
-    [dotNetObj]
-  );
+    dotNetObj.bindComponentReferences([dotNetObjScanResultItems]);
+  }, [dotNetObj, dotNetObjScanResultItems]);
 
   return (
     <>
@@ -102,10 +79,7 @@ function App() {
         </div>
 
         <div className="flex flex-row gap-2">
-          <ScanResultItemsTable
-            dotNetObj={dotNetObjScanResultItems}
-            addTrackedItem={addTrackedItem}
-          />
+          <ScanResultItemsTable dotNetObj={dotNetObjScanResultItems} />
 
           {/* Right panel - Search options */}
           <ScanConstraintsForm dotNetObj={dotNetObj} />
@@ -113,7 +87,7 @@ function App() {
 
         {/* Bottom table */}
         <div className="mt-2 flex-1 overflow-auto rounded-lg border-1">
-          <TrackedItemsTable dotNetObj={dotNetObjTrackedItems} />
+          <TrackedItemsTable />
         </div>
       </div>
     </>

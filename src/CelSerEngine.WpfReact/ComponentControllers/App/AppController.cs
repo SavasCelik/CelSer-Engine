@@ -2,7 +2,6 @@
 using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfReact.ComponentControllers.ScanResultItems;
-using CelSerEngine.WpfReact.ComponentControllers.TrackedItems;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.IO;
@@ -39,9 +38,6 @@ public class AppController : ReactControllerBase, IDisposable
 
     [InjectComponent]
     public ScanResultItemsController ScanResultItemsController { get; set; } = default!;
-
-    [InjectComponent]
-    public TrackedItemsController TrackedItemsController { get; set; } = default!;
 
     public AppController(
         ReactJsRuntime reactJsRuntime,
@@ -186,19 +182,6 @@ public class AppController : ReactControllerBase, IDisposable
         if (_scanCancellationTokenSource != null)
         {
             await _scanCancellationTokenSource.CancelAsync();
-        }
-    }
-
-    public void AddTrackedItem(string memoryAddressHexString, int pageIndex, int pageSize)
-    {
-        var visibleScanResultItems = ScanResultItemsController.GetScanResultItemsByPage(pageIndex, pageSize);
-        var selectedItem = visibleScanResultItems
-            .Where(x => x.Address.ToString("X8") == memoryAddressHexString)
-            .FirstOrDefault();
-
-        if (selectedItem != null)
-        {
-            TrackedItemsController.Items.Add(new TrackedItem(selectedItem));
         }
     }
 
