@@ -296,7 +296,12 @@ export default function PointerScanner() {
                     }}
                     onDoubleClick={() => {
                       if (dotNetObj) {
-                        dotNetObj.invokeMethod("AddToTrackedItems", row.index);
+                        dotNetObj.invokeMethod(
+                          "AddToTrackedItems",
+                          row.id,
+                          pagination.pageIndex,
+                          pagination.pageSize
+                        );
                       }
                     }}
                     data-state={row.getIsSelected() && "selected"}
