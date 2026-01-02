@@ -85,7 +85,9 @@ public class TrackedItemsController : ReactControllerBase, IDisposable
         {
             Description = x.Description,
             Address = x.MemorySegment.Address.ToString("X8"),
-            Value = x.MemorySegment.Value
+            Value = x.MemorySegment.Value,
+            IsPointer = x.MemorySegment is Pointer,
+            PointingTo = x.MemorySegment is Pointer pointer ? pointer.PointingTo.ToString("X8") : null,
         }).ToArray();
     }
 

@@ -10,6 +10,14 @@ public class TrackedItem
     public TrackedItem(IMemorySegment item)
     {
         Description = "Description";
-        MemorySegment = new MemorySegment(item);
+
+        if (item is Pointer pointerItem)
+        {
+            MemorySegment = pointerItem.Clone();
+        }
+        else
+        {
+            MemorySegment = new MemorySegment(item);
+        }
     }
 }

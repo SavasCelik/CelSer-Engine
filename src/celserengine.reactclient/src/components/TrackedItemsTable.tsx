@@ -112,6 +112,10 @@ function TrackedItemsTable() {
       {
         accessorKey: "address",
         header: "Address",
+        cell: ({ row }) =>
+          row.original.isPointer
+            ? `P->${row.original.pointingTo}`
+            : row.original.address,
       },
       {
         accessorKey: "value",
