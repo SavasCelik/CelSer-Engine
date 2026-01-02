@@ -19,6 +19,7 @@ public partial class MainWindow : Window
         serviceCollection.AddWpfReactWebView();
         serviceCollection.AddLogging();
         serviceCollection.AddSingleton<ProcessSelectionTracker>();
+        serviceCollection.AddSingleton<TrackedItemNotifier>();
         serviceCollection.AddSingleton<IMemoryScanService, MemoryScanService>();
         serviceCollection.AddSingleton<INativeApi, NativeApi>();
         serviceCollection.AddSingleton(this);

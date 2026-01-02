@@ -79,6 +79,22 @@ function TrackedItemsTable({ dotNetObj }: TrackedItemsTableProps) {
     }
   }, [query.data?.length]);
 
+  React.useEffect(() => {
+    if (!dotNetObj) {
+      return;
+    }
+
+    const onItemsChanged = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["TrackedItemsTable"],
+      });
+    };
+
+    dotNetObj.registerComponent({
+      onItemsChanged,
+    });
+  }, [dotNetObj, queryClient]);
+
   const columns = React.useMemo<ColumnDef<TrackedItem>[]>(
     () => [
       {

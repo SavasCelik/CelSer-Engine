@@ -4,20 +4,26 @@ using System.Globalization;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.TrackedItems;
 
-public class TrackedItemsController : ReactControllerBase
+public class TrackedItemsController : ReactControllerBase, IDisposable
 {
     public List<TrackedItem> Items { get; set; }
 
     private readonly ProcessSelectionTracker _processSelectionTracker;
+    private readonly TrackedItemNotifier _trackedItemNotifier;
+    private readonly ReactJsRuntime _reactJsRuntime;
     private readonly INativeApi _nativeApi;
     private readonly MainWindow _mainWindow;
 
-    public TrackedItemsController(ProcessSelectionTracker processSelectionTracker, INativeApi nativeApi, MainWindow mainWindow)
+    public TrackedItemsController(ProcessSelectionTracker processSelectionTracker, TrackedItemNotifier trackedItemNotifier, ReactJsRuntime reactJsRuntime, INativeApi nativeApi, MainWindow mainWindow)
     {
         Items = [];
         _processSelectionTracker = processSelectionTracker;
+        _trackedItemNotifier = trackedItemNotifier;
+        _reactJsRuntime = reactJsRuntime;
         _nativeApi = nativeApi;
         _mainWindow = mainWindow;
+
+        _trackedItemNotifier.ItemAdded += AddItem;
     }
 
     public void UpdateItems(int[] indices, string propertyKey, string newValue)
@@ -81,5 +87,22 @@ public class TrackedItemsController : ReactControllerBase
             Address = x.MemorySegment.Address.ToString("X8"),
             Value = x.MemorySegment.Value
         }).ToArray();
+    }
+
+    private async void AddItem(MemorySegment memorySegment)
+    {
+        Items.Add(new TrackedItem(memorySegment));
+        await ItemsStateChanged();
+    }
+
+    private async Task ItemsStateChanged()
+    {
+        // Notify front-end about state change
+        await _reactJsRuntime.InvokeVoidAsync(ComponentId, "onItemsChanged");
+    }
+
+    public void Dispose()
+    {
+        _trackedItemNotifier.ItemAdded -= AddItem;
     }
 }

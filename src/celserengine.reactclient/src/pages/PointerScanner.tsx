@@ -294,6 +294,11 @@ export default function PointerScanner() {
                     onClick={() => {
                       row.toggleSelected(true);
                     }}
+                    onDoubleClick={() => {
+                      if (dotNetObj) {
+                        dotNetObj.invokeMethod("AddToTrackedItems", row.index);
+                      }
+                    }}
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (

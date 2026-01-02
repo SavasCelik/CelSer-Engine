@@ -1,7 +1,6 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
-using System.Diagnostics;
 using System.Globalization;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.PointerScanner;
@@ -9,14 +8,16 @@ namespace CelSerEngine.WpfReact.ComponentControllers.PointerScanner;
 public class PointerScannerController : ReactControllerBase
 {
     private readonly ProcessSelectionTracker _processSelectionTracker;
+    private readonly TrackedItemNotifier _trackedItemNotifier;
     private readonly INativeApi _nativeApi;
     private readonly List<Pointer> _pointerScanResults;
 
-    public PointerScannerController(INativeApi nativeApi, ProcessSelectionTracker processSelectionTracker)
+    public PointerScannerController(INativeApi nativeApi, ProcessSelectionTracker processSelectionTracker, TrackedItemNotifier trackedItemNotifier)
     {
         _nativeApi = nativeApi;
         _pointerScanResults = [];
         _processSelectionTracker = processSelectionTracker;
+        _trackedItemNotifier = trackedItemNotifier;
     }
     public async Task StartPointerScan(string scanAddress, int maxOffset, int maxLevel)
     {
@@ -142,5 +143,11 @@ public class PointerScannerController : ReactControllerBase
         return _pointerScanResults
             .Skip(page * pageSize)
             .Take(pageSize);
+    }
+
+    public void AddToTrackedItems(int index)
+    {
+        var pointer = _pointerScanResults[index];
+        _trackedItemNotifier.RaiseItemAdded(pointer);
     }
 }
