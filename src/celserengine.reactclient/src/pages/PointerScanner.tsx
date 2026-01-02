@@ -176,7 +176,7 @@ export default function PointerScanner() {
           accessorKey: `offsets[${index}]`,
           // header: `Offset ${index + 1}`,
           header: ({ column }: { column: Column<PointerScanResult> }) => (
-            <TableColumnHeader column={column} title={`Offset ${index + 1}`} />
+            <TableColumnHeader column={column} title={`Offset ${index}`} />
           ),
           cell: ({ row }: { row: Row<PointerScanResult> }) =>
             row.original.offsets[index] ?? "",
