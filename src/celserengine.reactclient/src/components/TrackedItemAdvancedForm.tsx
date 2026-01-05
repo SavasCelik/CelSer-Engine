@@ -16,7 +16,13 @@ import {
   FormLabel,
   FormMessage,
 } from "./ui/form";
-import { ArrowLeftIcon, ArrowRightIcon, Loader2Icon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  Loader2Icon,
+  Minus,
+  Plus,
+} from "lucide-react";
 import { ButtonGroup } from "./ui/button-group";
 import { cn } from "@/lib/utils";
 
@@ -243,6 +249,7 @@ export default function TrackedItemAdvancedForm({
                 variant={"secondary"}
                 onClick={() => append({ value: "0" })}
               >
+                <Plus />
                 Add Offset
               </Button>
               <Button
@@ -250,6 +257,7 @@ export default function TrackedItemAdvancedForm({
                 variant={"secondary"}
                 onClick={() => remove(fields.length - 1)}
               >
+                <Minus />
                 Remove Offset
               </Button>
             </div>
