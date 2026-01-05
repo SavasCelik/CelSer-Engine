@@ -3,5 +3,7 @@ export type TrackedItem = {
   address: string;
   value: string;
   isPointer: boolean;
+  moduleNameWithBaseOffset: string;
+  offsets: string[];
   pointingTo: string;
 };
