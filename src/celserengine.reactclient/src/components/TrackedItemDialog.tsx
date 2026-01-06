@@ -31,7 +31,7 @@ export default function TrackedItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="focus-visible:outline-none sm:max-w-[425px]">
+      <DialogContent className="w-[55%] min-w-[400px] focus-visible:outline-none sm:max-w-full">
         <DialogHeader>
           <DialogTitle>Change {trackedItemKeyDisplayText}</DialogTitle>
           <DialogDescription></DialogDescription>

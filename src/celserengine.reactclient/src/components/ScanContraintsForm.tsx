@@ -24,6 +24,7 @@ import { Toggle } from "./ui/toggle";
 import { DotNetObject } from "../utils/useDotNet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { scanValueTypes } from "@/constants/ScanValueTypes";
 
 const maxIntPtrString = "7FFFFFFFFFFFFFFF";
 const maxIntPtr = BigInt(`0x${maxIntPtrString}`);
@@ -83,29 +84,6 @@ const scanCompareTypes = [
     id: "unchangedValue",
     label: "Unchanged value",
     hasSearchValue: false,
-  },
-] as const;
-
-const scanValueTypes = [
-  {
-    id: "short",
-    label: "Short (2 Bytes)",
-  },
-  {
-    id: "integer",
-    label: "Integer (4 Bytes)",
-  },
-  {
-    id: "float",
-    label: "Float (4 Bytes)",
-  },
-  {
-    id: "long",
-    label: "Long (8 Bytes)",
-  },
-  {
-    id: "double",
-    label: "Double (8 Bytes)",
   },
 ] as const;
 

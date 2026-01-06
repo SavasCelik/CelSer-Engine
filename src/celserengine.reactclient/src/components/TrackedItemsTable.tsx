@@ -29,6 +29,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { scanValueTypeById } from "@/constants/ScanValueTypes";
 const TrackedItemDialog = React.lazy(() => import("./TrackedItemDialog"));
 
 function TrackedItemsTable() {
@@ -116,6 +117,13 @@ function TrackedItemsTable() {
           row.original.isPointer
             ? `P->${row.original.pointingTo}`
             : row.original.address,
+      },
+      {
+        accessorKey: "dataType",
+        header: "Type",
+        cell: ({ row }) => {
+          return scanValueTypeById[row.original.dataType].label;
+        },
       },
       {
         accessorKey: "value",

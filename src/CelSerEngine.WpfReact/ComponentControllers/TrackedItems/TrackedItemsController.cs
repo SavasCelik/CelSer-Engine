@@ -37,21 +37,31 @@ public class TrackedItemsController : ReactControllerBase, IDisposable
             return;
         }
 
-        if (string.Equals(propertyKey, nameof(MemorySegment.Value), StringComparison.InvariantCultureIgnoreCase))
+        if (string.Equals(propertyKey, nameof(MemorySegment.Value), StringComparison.OrdinalIgnoreCase))
         {
             foreach (var index in indices)
             {
                 _nativeApi.WriteMemory(_processSelectionTracker.SelectedProcessHandle, Items[index].MemorySegment, newValue);
             }
         }
-        else if (string.Equals(propertyKey, nameof(TrackedItem.Description), StringComparison.InvariantCultureIgnoreCase))
+        else if (string.Equals(propertyKey, nameof(TrackedItem.Description), StringComparison.OrdinalIgnoreCase))
         {
             foreach (var index in indices)
             {
                 Items[index].Description = newValue;
             }
         }
-        else if (string.Equals(propertyKey, nameof(TrackedItem.MemorySegment.Address), StringComparison.InvariantCultureIgnoreCase))
+        else if (string.Equals(propertyKey, "DataType", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!Enum.TryParse<ScanDataType>(newValue, ignoreCase: true, out var dataType))
+                return;
+
+            foreach (var index in indices)
+            {
+                Items[index].MemorySegment.ScanDataType = dataType;
+            }
+        }
+        else if (string.Equals(propertyKey, nameof(TrackedItem.MemorySegment.Address), StringComparison.OrdinalIgnoreCase))
         {
             if (!IntPtr.TryParse(newValue, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var newAddress))
             {

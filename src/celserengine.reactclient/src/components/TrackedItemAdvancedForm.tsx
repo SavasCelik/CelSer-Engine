@@ -32,10 +32,19 @@ import {
   InputGroupText,
 } from "./ui/input-group";
 import { useEffect } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { scanValueTypes } from "@/constants/ScanValueTypes";
 
 const formSchema = z.object({
   address: z.string(),
   description: z.string().max(50),
+  dataType: z.string(),
   isPointer: z.boolean().optional(),
   offsets: z
     .array(
@@ -92,6 +101,7 @@ export default function TrackedItemAdvancedForm({
     defaultValues: {
       address: row.original.pointingTo ?? row.original.address,
       description: row.original.description,
+      dataType: row.original.dataType,
       isPointer: row.original.isPointer,
       offsets: row.original.offsets.map((offset) => ({ value: offset })),
       moduleNameWithBaseOffset: row.original.moduleNameWithBaseOffset ?? "",
@@ -126,14 +136,15 @@ export default function TrackedItemAdvancedForm({
   });
 
   const currentAddress = form.watch("address");
+  const currentDataType = form.watch("dataType");
   const getAddressValue = useQuery<string>({
-    queryKey: ["GetAddressValue", currentAddress],
+    queryKey: ["GetAddressValue", currentAddress, currentDataType],
     enabled: dotNetObj != null,
     queryFn: () =>
       dotNetObj!.invokeMethod(
         "GetAddressValue",
         currentAddress,
-        row.original.dataType
+        currentDataType
       ),
   });
 
@@ -197,6 +208,30 @@ export default function TrackedItemAdvancedForm({
               <FormControl>
                 <Input {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="dataType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger {...field} className="col-span-4 w-full">
+                    <SelectValue placeholder="Value Type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {scanValueTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
