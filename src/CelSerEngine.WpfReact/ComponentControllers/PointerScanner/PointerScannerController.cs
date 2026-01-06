@@ -145,12 +145,14 @@ public class PointerScannerController : ReactControllerBase
             .Take(pageSize);
     }
 
-    public void AddToTrackedItems(string itemId, int pageIndex, int pageSize)
+    public void AddToTrackedItems(int pageIndex, int pageSize, int rowIndex)
     {
-        var visibleItems = GetPointerScanResultItemsByPage(pageIndex, pageSize);
-        var selectedItem = _pointerScanResults
-            .Where(x => itemId == $"{x.ModuleNameWithBaseOffset}{x.OffsetsDisplayString}")
-            .FirstOrDefault();
+        var itemIndex = pageIndex * pageSize + rowIndex;
+
+        if (itemIndex < 0 || itemIndex >= _pointerScanResults.Count)
+            return;
+
+        var selectedItem = _pointerScanResults[itemIndex];
 
         if (selectedItem != null)
         {

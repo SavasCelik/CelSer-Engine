@@ -211,9 +211,9 @@ function TableBodyNormal({
               const { pagination } = table.getState();
               dotNetObj.invokeMethod(
                 "AddToTrackedItems",
-                row.id,
                 pagination.pageIndex,
-                pagination.pageSize
+                pagination.pageSize,
+                row.index
               );
             }
           }}

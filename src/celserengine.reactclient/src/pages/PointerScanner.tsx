@@ -298,9 +298,9 @@ export default function PointerScanner() {
                       if (dotNetObj) {
                         dotNetObj.invokeMethod(
                           "AddToTrackedItems",
-                          row.id,
                           pagination.pageIndex,
-                          pagination.pageSize
+                          pagination.pageSize,
+                          row.index
                         );
                       }
                     }}

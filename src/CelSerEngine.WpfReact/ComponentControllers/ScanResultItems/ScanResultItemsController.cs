@@ -44,12 +44,14 @@ public class ScanResultItemsController : ReactControllerBase
             .Take(pageSize);
     }
 
-    public void AddToTrackedItems(string memoryAddressHexString, int pageIndex, int pageSize)
+    public void AddToTrackedItems(int pageIndex, int pageSize, int rowIndex)
     {
-        var visibleScanResultItems = GetScanResultItemsByPage(pageIndex, pageSize);
-        var selectedItem = visibleScanResultItems
-            .Where(x => x.Address.ToString("X8") == memoryAddressHexString)
-            .FirstOrDefault();
+        var itemIndex = pageIndex * pageSize + rowIndex;
+
+        if (itemIndex < 0 || itemIndex >= ScanResultItems.Count)
+            return;
+
+        var selectedItem = ScanResultItems[itemIndex];
 
         if (selectedItem != null)
         {

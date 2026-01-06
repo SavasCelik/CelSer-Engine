@@ -102,6 +102,26 @@ const memoryTypesArr = [
   },
 ] as const;
 
+const memoryFilterOptions = [
+  {
+    id: "yes",
+    label: "Yes",
+  },
+  {
+    id: "no",
+    label: "No",
+  },
+  {
+    id: "dontcare",
+    label: "Don't Care",
+  },
+] as const;
+
+const memoryFilterOptionIds = memoryFilterOptions.map((t) => t.id) as [
+  string,
+  ...string[],
+];
+
 const formSchema = z
   .object({
     scanValue: z.string().optional(),
@@ -113,25 +133,30 @@ const formSchema = z
         errorMap: () => ({ message: "Please select a scan type." }),
       }
     ),
-    scanValueType: z.enum(["integer", "float"], {
-      errorMap: () => ({ message: "Please select a value type." }),
-    }),
+    scanValueType: z.enum(
+      scanValueTypes.map((t) => t.id) as [string, ...string[]],
+      {
+        errorMap: () => ({ message: "Please select a value type." }),
+      }
+    ),
     startAddress: z.string().refine((val) => validateHexAddress(val), {
       message: "Start address must be a valid hex value.",
     }),
     stopAddress: z.string().refine((val) => validateHexAddress(val), {
       message: "Stop address must be a valid hex value.",
     }),
-    writable: z.enum(["yes", "no", "dontcare"], {
+    writable: z.enum(memoryFilterOptionIds, {
       errorMap: () => ({ message: "Please select a writeable option." }),
     }),
-    executable: z.enum(["yes", "no", "dontcare"], {
+    executable: z.enum(memoryFilterOptionIds, {
       errorMap: () => ({ message: "Please select an executable option." }),
     }),
-    copyOnWrite: z.enum(["yes", "no", "dontcare"], {
+    copyOnWrite: z.enum(memoryFilterOptionIds, {
       errorMap: () => ({ message: "Please select a copy-on-write option." }),
     }),
-    memoryTypes: z.array(z.enum(["image", "private", "mapped"])).optional(),
+    memoryTypes: z
+      .array(z.enum(memoryTypesArr.map((t) => t.id) as [string, ...string[]]))
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if (
@@ -456,9 +481,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
-                    <SelectItem value="dontcare">Don't Care</SelectItem>
+                    {memoryFilterOptions.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -483,9 +510,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
-                    <SelectItem value="dontcare">Don't Care</SelectItem>
+                    {memoryFilterOptions.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -510,9 +539,11 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
-                    <SelectItem value="dontcare">Don't Care</SelectItem>
+                    {memoryFilterOptions.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
