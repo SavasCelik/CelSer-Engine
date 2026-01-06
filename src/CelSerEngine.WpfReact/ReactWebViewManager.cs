@@ -28,7 +28,7 @@ public class ReactWebViewManager : IDisposable
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             Converters =
             {
-                new JsonStringEnumConverter()
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
             }
         };
         _trackedRefsById = new ConcurrentDictionary<long, object>();
