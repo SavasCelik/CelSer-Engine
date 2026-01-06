@@ -157,11 +157,13 @@ export default function TrackedItemAdvancedForm({
   };
 
   useEffect(() => {
+    if (!row.original.isPointer) return;
+
     const queryData = getPointerOffsetPathsQuery.data;
     if (queryData) {
       form.setValue("address", queryData.offsets[queryData.offsets.length - 1]);
     }
-  }, [getPointerOffsetPathsQuery.data, form]);
+  }, [row.original.isPointer, getPointerOffsetPathsQuery.data, form]);
 
   function onSaveChanges(data: FormDataType) {
     editTrackedItemsMutation.mutate(data);
