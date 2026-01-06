@@ -25,6 +25,13 @@ import {
 } from "lucide-react";
 import { ButtonGroup } from "./ui/button-group";
 import { cn } from "@/lib/utils";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "./ui/input-group";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   address: z.string(),
@@ -118,6 +125,18 @@ export default function TrackedItemAdvancedForm({
       ),
   });
 
+  const currentAddress = form.watch("address");
+  const getAddressValue = useQuery<string>({
+    queryKey: ["GetAddressValue", currentAddress],
+    enabled: dotNetObj != null,
+    queryFn: () =>
+      dotNetObj!.invokeMethod(
+        "GetAddressValue",
+        currentAddress,
+        row.original.dataType
+      ),
+  });
+
   const changeOffset = (index: number, delta: number) => {
     const field = `offsets.${index}.value` as const;
     const currentValue = form.getValues(field);
@@ -125,6 +144,13 @@ export default function TrackedItemAdvancedForm({
     const newValue = parseInt(currentValue, 16) + delta;
     form.setValue(field, newValue.toString(16).toUpperCase());
   };
+
+  useEffect(() => {
+    const queryData = getPointerOffsetPathsQuery.data;
+    if (queryData) {
+      form.setValue("address", queryData.offsets[queryData.offsets.length - 1]);
+    }
+  }, [getPointerOffsetPathsQuery.data, form]);
 
   function onSaveChanges(data: FormDataType) {
     editTrackedItemsMutation.mutate(data);
@@ -140,11 +166,23 @@ export default function TrackedItemAdvancedForm({
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  readOnly={row.original.isPointer}
-                  className={cn({ "opacity-50": row.original.isPointer })}
-                />
+                <InputGroup>
+                  <InputGroupInput
+                    {...field}
+                    readOnly={row.original.isPointer}
+                    className={cn("flex-[1_0_55%]", {
+                      "opacity-50": row.original.isPointer,
+                    })}
+                  />
+                  <InputGroupAddon align="inline-end" className="min-w-0">
+                    <InputGroupText
+                      className="block truncate"
+                      title={getAddressValue.data}
+                    >
+                      ={getAddressValue.data}
+                    </InputGroupText>
+                  </InputGroupAddon>
+                </InputGroup>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -165,7 +203,7 @@ export default function TrackedItemAdvancedForm({
         />
         {row.original.isPointer && (
           <>
-            <div className="grid gap-y-1">
+            <div className="grid min-w-0 gap-y-1">
               {[...fields].reverse().map((field, reversedIndex) => {
                 const lastIndex = fields.length - 1;
                 const originalIndex = lastIndex - reversedIndex;
@@ -179,13 +217,14 @@ export default function TrackedItemAdvancedForm({
 
                 const currentOffsetPointingTo =
                   queryData?.offsets[originalIndex];
+
                 return (
                   <FormField
                     key={field.id}
                     control={form.control}
                     name={`offsets.${originalIndex}.value`}
                     render={({ field }) => (
-                      <FormItem className="flex">
+                      <FormItem className="flex min-w-0">
                         <ButtonGroup>
                           <Button
                             type="button"
@@ -210,17 +249,23 @@ export default function TrackedItemAdvancedForm({
                             <ArrowRightIcon />
                           </Button>
                         </ButtonGroup>
-                        <div className="flex items-center text-sm">
+                        <div className="flex min-w-0 items-center gap-0.5 text-sm">
                           {isLastField ? (
-                            <>
+                            <span className="truncate">
                               {previousOffsetPointingTo}+{field.value} ={" "}
                               {currentOffsetPointingTo}
-                            </>
+                            </span>
                           ) : (
                             <>
-                              [{previousOffsetPointingTo}+{field.value}]
-                              <ArrowRightIcon size={14} className="mx-0.5" />
-                              {currentOffsetPointingTo}
+                              <span className="shrink-0">
+                                [{previousOffsetPointingTo}+{field.value}]
+                              </span>
+
+                              <ArrowRightIcon size={14} className="shrink-0" />
+
+                              <span className="truncate">
+                                {currentOffsetPointingTo}
+                              </span>
                             </>
                           )}
                         </div>
@@ -235,10 +280,19 @@ export default function TrackedItemAdvancedForm({
               control={form.control}
               name="moduleNameWithBaseOffset"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="grid-cols-2 gap-1">
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <div className="flex items-center gap-0.5 text-sm">
+                    <ArrowRightIcon size={14} className="shrink-0" />
+                    <span className="truncate">
+                      {
+                        getPointerOffsetPathsQuery.data
+                          ?.moduleNameWithBaseOffset
+                      }
+                    </span>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

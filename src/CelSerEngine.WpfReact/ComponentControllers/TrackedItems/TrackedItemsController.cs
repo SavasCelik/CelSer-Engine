@@ -1,4 +1,5 @@
-﻿using CelSerEngine.Core.Models;
+﻿using CelSerEngine.Core.Extensions;
+using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using Microsoft.Win32.SafeHandles;
 using System.Data;
@@ -111,6 +112,7 @@ public class TrackedItemsController : ReactControllerBase, IDisposable
                 Description = x.Description,
                 Address = x.MemorySegment.Address.ToString("X8"),
                 Value = x.MemorySegment.Value,
+                DataType = x.MemorySegment.ScanDataType, 
                 IsPointer = pointer != null,
                 ModuleNameWithBaseOffset = pointer?.ModuleNameWithBaseOffset,
                 Offsets = pointer?.Offsets.Select(x => x.ToString("X")).Reverse().ToArray() ?? [],
@@ -252,6 +254,22 @@ public class TrackedItemsController : ReactControllerBase, IDisposable
         value = (IntPtr)BitConverter.ToInt64(buffer);
 
         return true;
+    }
+
+    public string GetAddressValue(string addressString, ScanDataType dataType)
+    {
+        var result = "???";
+
+        if (!IntPtr.TryParse(addressString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var address))
+            return result;
+
+
+        if (!_nativeApi.TryReadVirtualMemory(_processSelectionTracker.SelectedProcessHandle, address, (uint)dataType.GetPrimitiveSize(), out var buffer))
+            return result;
+
+        result = buffer.ConvertToString(dataType);
+
+        return result;
     }
 
     public void Dispose()
