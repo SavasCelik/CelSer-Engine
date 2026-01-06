@@ -150,7 +150,7 @@ export default function TrackedItemAdvancedForm({
 
   const changeOffset = (index: number, delta: number) => {
     const field = `offsets.${index}.value` as const;
-    const currentValue = form.getValues(field);
+    const currentValue = form.getValues(field) as string;
 
     const newValue = parseInt(currentValue, 16) + delta;
     form.setValue(field, newValue.toString(16).toUpperCase());
