@@ -105,10 +105,12 @@ function TrackedItemsTable() {
             onClick={() => row.toggleFrozen()}
           />
         ),
+        size: 70,
       },
       {
         accessorKey: "description",
         header: "Description",
+        size: 190,
       },
       {
         accessorKey: "address",
@@ -117,6 +119,7 @@ function TrackedItemsTable() {
           row.original.isPointer
             ? `P->${row.original.pointingTo}`
             : row.original.address,
+        size: 190,
       },
       {
         accessorKey: "dataType",
@@ -128,6 +131,7 @@ function TrackedItemsTable() {
       {
         accessorKey: "value",
         header: "Value",
+        enableResizing: false,
       },
     ],
     []
@@ -136,9 +140,14 @@ function TrackedItemsTable() {
   const trackedItemsTable = useReactTable({
     data: query.data || [],
     columns: columns,
+    columnResizeMode: "onChange",
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     enableRowFreezing: false,
+    defaultColumn: {
+      enableResizing: true,
+      minSize: 60,
+    },
     state: {
       frozenRows,
       rowSelection,
@@ -159,21 +168,44 @@ function TrackedItemsTable() {
           }
         }}
         tabIndex={0}
-        className="focus-visible:outline-none"
+        className="w-fit table-fixed focus-visible:outline-none"
       >
         <TableHeader className="stickyTableHeader bg-muted">
           {trackedItemsTable.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  <div className="flex items-center">
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </div>
-                </TableHead>
-              ))}
+              {headerGroup.headers.map((header, index) => {
+                const colSize = header.getSize();
+                const isLast = index === headerGroup.headers.length - 1;
+
+                return (
+                  <TableHead
+                    key={header.id}
+                    style={{
+                      width: isLast ? "100%" : colSize,
+                    }}
+                    className="relative"
+                  >
+                    <div className="flex h-full items-center justify-between">
+                      <div className="truncate">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </div>
+                      {header.column.columnDef.enableResizing && (
+                        <div
+                          className="flex h-full w-2 shrink-0 cursor-ew-resize items-center justify-center"
+                          onDoubleClick={() => header.column.resetSize()}
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                        >
+                          <div className="h-2/6 w-0.5 rounded-full bg-neutral-700"></div>
+                        </div>
+                      )}
+                    </div>
+                  </TableHead>
+                );
+              })}
             </TableRow>
           ))}
         </TableHeader>
@@ -209,6 +241,7 @@ function TrackedItemsTable() {
                           setIsDialogOpen(true);
                         }
                       }}
+                      className="truncate"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
