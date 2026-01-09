@@ -66,6 +66,18 @@ public partial class MainWindow : Window
     public void OpenPointerScanner(IntPtr searchedAddress)
     {
         var pointerScannerWindow = new PointerScannerWindow(Services, searchedAddress);
+
+        // Ensure the pointer scanner window closes when the main window closes.
+        // By not setting Owner, we avoid forcing the window to stay above the main window,
+        // which preserves normal focus and Z-order behavior.
+        void MainWindowClosed(object? sender, EventArgs e)
+        {
+            pointerScannerWindow.Close();
+            Closed -= MainWindowClosed;
+        }
+
+        Closed += MainWindowClosed;
+
         pointerScannerWindow.Show();
     }
 }
