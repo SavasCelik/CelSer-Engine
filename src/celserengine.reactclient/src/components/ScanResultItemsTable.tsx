@@ -71,12 +71,9 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
 
   const query = useQuery<ScanResultResponse>({
     queryKey: ["ScanResultItemsTable", { pagination }],
-    queryFn: async () => {
-      if (!dotNetObj) {
-        return { items: [], totalCount: 0 };
-      }
-
-      return await dotNetObj!.invokeMethod(
+    enabled: dotNetObj != null,
+    queryFn: () => {
+      return dotNetObj!.invokeMethod(
         "GetScanResultItems",
         pagination.pageIndex,
         pagination.pageSize

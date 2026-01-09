@@ -144,12 +144,9 @@ export default function PointerScanner() {
 
   const query = useQuery<PointerScanResultResponse>({
     queryKey: ["PointerScanResultsTable", { pagination }],
-    queryFn: async () => {
-      if (!dotNetObj) {
-        return { items: [], totalCount: 0 };
-      }
-
-      return await dotNetObj!.invokeMethod(
+    enabled: dotNetObj != null,
+    queryFn: () => {
+      return dotNetObj!.invokeMethod(
         "GetPointerScanResults",
         pagination.pageIndex,
         pagination.pageSize

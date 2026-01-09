@@ -33,13 +33,10 @@ export default function SelectProcess() {
   const [rowSelection, setRowSelection] = useState({});
 
   const query = useQuery<Process[]>({
-    queryKey: ["GetProcesses", dotNetObj],
-    queryFn: async () => {
-      if (!dotNetObj) {
-        return [];
-      }
-
-      return await dotNetObj.invokeMethod("GetProcesses");
+    queryKey: ["GetProcesses"],
+    enabled: dotNetObj != null,
+    queryFn: () => {
+      return dotNetObj!.invokeMethod("GetProcesses");
     },
   });
 

@@ -44,12 +44,9 @@ function TrackedItemsTable() {
 
   const query = useQuery<TrackedItem[]>({
     queryKey: ["TrackedItemsTable"],
-    queryFn: async () => {
-      if (!dotNetObj) {
-        return [];
-      }
-
-      return await dotNetObj!.invokeMethod("GetTrackedItems");
+    enabled: dotNetObj != null,
+    queryFn: () => {
+      return dotNetObj!.invokeMethod("GetTrackedItems");
     },
     refetchInterval: shouldRefetch ? 1000 : false,
   });
