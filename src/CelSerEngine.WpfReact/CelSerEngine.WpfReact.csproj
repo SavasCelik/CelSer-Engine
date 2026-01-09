@@ -25,7 +25,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="BrowserExtensions\ReactDeveloperTools\" />
     <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="BrowserExtensions\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 	

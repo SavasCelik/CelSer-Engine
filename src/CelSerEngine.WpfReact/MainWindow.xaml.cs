@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 using System.Windows;
 
 namespace CelSerEngine.WpfReact;
@@ -30,8 +31,20 @@ public partial class MainWindow : Window
         reactWebView.ReactWebViewInitialized += ReactWebView_ReactWebViewInitialized;
     }
 
-    private void ReactWebView_ReactWebViewInitialized(object? sender, EventArgs e)
+    private async void ReactWebView_ReactWebViewInitialized(object? sender, EventArgs e)
     {
+#if DEBUG
+        // Add React Developer Tools extension
+        var installedExtensions = await reactWebView.WebView.CoreWebView2.Profile.GetBrowserExtensionsAsync();
+
+        if (!installedExtensions.Any(ext => ext.Name == "React Developer Tools"))
+        {
+            // could also download the extension from the store. like so: https://github.com/MicrosoftEdge/WebView2Feedback/issues/3694#issuecomment-1993649183
+            var extensionPath = Path.Combine(AppContext.BaseDirectory, "BrowserExtensions", "ReactDeveloperTools", "7.0.1_0");
+            await reactWebView.WebView.CoreWebView2.Profile.AddBrowserExtensionAsync(extensionPath);
+        }
+#endif
+
         reactWebView.ConfigureWebView();
     }
 
