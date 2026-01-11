@@ -267,6 +267,14 @@ function TrackedItemsTable() {
                 </ContextMenuItem>
                 <ContextMenuItem
                   onClick={() => {
+                    setSelectedTrackedItemKey("dataType");
+                    setIsDialogOpen(true);
+                  }}
+                >
+                  Change Type
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
                     const indices = trackedItemsTable
                       .getSelectedRowModel()
                       .rows.map((r) => r.index);
