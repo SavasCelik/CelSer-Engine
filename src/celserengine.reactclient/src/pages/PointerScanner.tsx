@@ -118,6 +118,21 @@ export default function PointerScanner() {
     },
   });
 
+  const rescanMutation = useMutation({
+    mutationFn: (address?: string) => {
+      if (!dotNetObj) {
+        return Promise.reject();
+      }
+
+      return dotNetObj.invokeMethod("Rescan", address);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["PointerScanResultsTable"],
+      });
+    },
+  });
+
   const form = useForm<FormDataType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -153,7 +168,11 @@ export default function PointerScanner() {
       );
     },
     refetchInterval:
-      totalCount > 0 && !startPointerScanMutation.isPending ? 1000 : false,
+      totalCount > 0 &&
+      !startPointerScanMutation.isPending &&
+      !rescanMutation.isPending
+        ? 1000
+        : false,
     placeholderData: keepPreviousData,
   });
 
@@ -243,22 +262,47 @@ export default function PointerScanner() {
   }, []);
 
   React.useEffect(() => {
-    if (dotNetObj && totalCount > 0 && !startPointerScanMutation.isPending) {
+    if (
+      dotNetObj &&
+      totalCount > 0 &&
+      !startPointerScanMutation.isPending &&
+      !rescanMutation.isPending
+    ) {
       dotNetObj.invokeMethod("ApplyMultipleSorting", sorting);
     }
-  }, [sorting, dotNetObj, totalCount, startPointerScanMutation.isPending]);
+  }, [
+    sorting,
+    dotNetObj,
+    totalCount,
+    startPointerScanMutation.isPending,
+    rescanMutation.isPending,
+  ]);
+
+  const rescanInputRef = React.useRef<HTMLInputElement>(null);
 
   return (
     <>
       <div className="bg-card flex h-screen flex-col gap-2 p-2">
+        <div className="flex justify-end gap-1">
+          <Input className="h-7.5 w-fit text-sm" ref={rescanInputRef} />
+          <Button
+            disabled={totalCount <= 0}
+            onClick={() => rescanMutation.mutate(rescanInputRef.current?.value)}
+          >
+            Rescan
+          </Button>
+        </div>
         <div className="text-center text-sm">Found: {totalCount}</div>
         <div
           ref={tableContainerRef}
-          className="flex-1 overflow-auto rounded-lg border-1"
+          className="flex-1 overflow-auto rounded-lg border"
         >
           <Table
             className={cn({
-              "h-full": query.isPending || startPointerScanMutation.isPending,
+              "h-full":
+                query.isPending ||
+                startPointerScanMutation.isPending ||
+                rescanMutation.isPending,
             })}
           >
             <TableHeader className="stickyTableHeader bg-muted">
@@ -278,7 +322,9 @@ export default function PointerScanner() {
               ))}
             </TableHeader>
             <TableBody>
-              {query.isPending || startPointerScanMutation.isPending ? (
+              {query.isPending ||
+              startPointerScanMutation.isPending ||
+              rescanMutation.isPending ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={columns.length}>
                     <Loader2Icon className="m-auto animate-spin" />
@@ -322,7 +368,7 @@ export default function PointerScanner() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent
-          className="focus-visible:outline-none sm:max-w-[625px]"
+          className="focus-visible:outline-none sm:max-w-156.25"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>

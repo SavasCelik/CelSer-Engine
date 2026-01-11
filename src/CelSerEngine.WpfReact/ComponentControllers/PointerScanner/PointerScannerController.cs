@@ -58,6 +58,22 @@ public class PointerScannerController : ReactControllerBase
         };
     }
 
+    public async Task Rescan(string? address)
+    {
+        if (string.IsNullOrWhiteSpace(address))
+            return;
+
+        if (!IntPtr.TryParse(address, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var searchedAddress))
+        {
+            throw new ArgumentException("Invalid scan address format. Please provide a valid hexadecimal address.");
+        }
+
+        var pointerScanner = new DefaultPointerScanner(_nativeApi, new PointerScanOptions());
+        var foundPointers = await pointerScanner.RescanPointersAsync(_pointerScanResults, searchedAddress, _processSelectionTracker.SelectedProcessHandle);
+        _pointerScanResults.Clear();
+        _pointerScanResults.AddRange(foundPointers);
+    }
+
     public void ApplySingleSorting(TableSorting[] tableSortings)
     {
         // [{id:"offsets[0]", desc:false},{id:"offsets[1]", desc:false},{id:"moduleNameWithBaseOffset", desc:true}]
