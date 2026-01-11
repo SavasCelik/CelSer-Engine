@@ -19,14 +19,21 @@ public class PointerScannerController : ReactControllerBase
         _processSelectionTracker = processSelectionTracker;
         _trackedItemNotifier = trackedItemNotifier;
     }
-    public async Task StartPointerScan(string scanAddress, int maxOffset, int maxLevel)
+
+    public async Task StartPointerScan(PointerScanOptionsDto pointerScanOptionsDto)
     {
-        if (!IntPtr.TryParse(scanAddress, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var searchedAddress))
+        if (!IntPtr.TryParse(pointerScanOptionsDto.ScanAddress, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var searchedAddress))
         {
             throw new ArgumentException("Invalid scan address format. Please provide a valid hexadecimal address.");
         }
 
-        await InMemoryPointerScan(new PointerScanOptions { SearchedAddress = searchedAddress, MaxOffset = maxOffset, MaxLevel = maxLevel});
+        await InMemoryPointerScan(new PointerScanOptions
+        {
+            SearchedAddress = searchedAddress,
+            MaxOffset = pointerScanOptionsDto.MaxOffset,
+            MaxLevel = pointerScanOptionsDto.MaxLevel,
+            RequireAlignedPointers = pointerScanOptionsDto.RequireAlignedPointers
+        });
     }
 
     private async Task InMemoryPointerScan(PointerScanOptions pointerScanOptions)

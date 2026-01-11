@@ -52,6 +52,7 @@ import {
 import { cn } from "@/lib/utils";
 import TablePagination from "@/components/TablePagination";
 import { TableColumnHeader } from "@/components/TableColumnHeader";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type PointerScanResult = {
   moduleNameWithBaseOffset: string;
@@ -66,6 +67,7 @@ type PointerScanResultResponse = {
 
 const formSchema = z.object({
   scanAddress: z.string(),
+  requireAlignedPointers: z.boolean(),
   maxOffset: z.string().refine(
     (val) => {
       const num = Number(val);
@@ -100,12 +102,12 @@ export default function PointerScanner() {
       }
       setIsDialogOpen(false);
 
-      return dotNetObj.invokeMethod(
-        "StartPointerScan",
-        data.scanAddress,
-        Number(data.maxOffset),
-        Number(data.maxLevel)
-      );
+      return dotNetObj.invokeMethod("StartPointerScan", {
+        scanAddress: data.scanAddress,
+        maxOffset: Number(data.maxOffset),
+        maxLevel: Number(data.maxLevel),
+        requireAlignedPointers: data.requireAlignedPointers,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -139,6 +141,7 @@ export default function PointerScanner() {
       scanAddress: searchParams.get("searchedAddress") ?? "",
       maxOffset: (0x1000).toString(),
       maxLevel: "4",
+      requireAlignedPointers: true,
     },
     disabled: startPointerScanMutation.isPending,
   });
@@ -416,6 +419,24 @@ export default function PointerScanner() {
                   </FormItem>
                 )}
               />
+              <div className="col-span-3">
+                <FormField
+                  control={form.control}
+                  name="requireAlignedPointers"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel>Addresses must be 32-bit aligned</FormLabel>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </form>
           </Form>
           <DialogFooter>
