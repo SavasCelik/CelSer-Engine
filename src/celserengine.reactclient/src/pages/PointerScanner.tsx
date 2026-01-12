@@ -102,12 +102,13 @@ export default function PointerScanner() {
       }
       setIsDialogOpen(false);
 
-      return dotNetObj.invokeMethod("StartPointerScan", {
-        scanAddress: data.scanAddress,
+      const pointerScanOptions = {
+        ...data,
         maxOffset: Number(data.maxOffset),
         maxLevel: Number(data.maxLevel),
-        requireAlignedPointers: data.requireAlignedPointers,
-      });
+      };
+
+      return dotNetObj.invokeMethod("StartPointerScan", pointerScanOptions);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
