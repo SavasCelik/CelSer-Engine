@@ -18,6 +18,8 @@ public class CheatEnginePointerScanner : PointerScanner2
     protected override void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, SafeProcessHandle processHandle)
     {
         var buffer = new byte[memoryRegions.Max(x => x.MemorySize)];
+        var requireAlignedPointers = PointerScanOptions.RequireAlignedPointers;
+        var increaseValue = requireAlignedPointers ? 4 : 1;
 
         //initial scan to fetch the counts of memory
         foreach (var memoryRegion in memoryRegions.Where(x => x.ValidPointerRange))
@@ -26,11 +28,12 @@ public class CheatEnginePointerScanner : PointerScanner2
                 continue;
 
             var lastAddress = (int)memoryRegion.MemorySize - IntPtr.Size;
-            for (var i = 0; i <= lastAddress; i += 4)
+
+            for (var i = 0; i <= lastAddress; i += increaseValue)
             {
                 var currentPointer = (IntPtr)BitConverter.ToUInt64(buffer, i);
 
-                if (currentPointer % 4 == 0 && IsPointer(currentPointer, memoryRegions))
+                if ((!requireAlignedPointers || currentPointer % 4 == 0) && IsPointer(currentPointer, memoryRegions))
                 {
                     AddPointer(currentPointer, memoryRegion.BaseAddress + i, false);
                 }
@@ -44,11 +47,11 @@ public class CheatEnginePointerScanner : PointerScanner2
                 continue;
 
             var lastAddress = (int)memoryRegion.MemorySize - IntPtr.Size;
-            for (var i = 0; i <= lastAddress; i += 4)
+            for (var i = 0; i <= lastAddress; i += increaseValue)
             {
                 var currentPointer = (IntPtr)BitConverter.ToUInt64(buffer, i);
 
-                if (currentPointer % 4 == 0 && IsPointer(currentPointer, memoryRegions))
+                if ((!requireAlignedPointers || currentPointer % 4 == 0) && IsPointer(currentPointer, memoryRegions))
                 {
                     AddPointer(currentPointer, memoryRegion.BaseAddress + i, true);
                 }
