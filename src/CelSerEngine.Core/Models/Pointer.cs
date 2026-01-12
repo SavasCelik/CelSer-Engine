@@ -3,7 +3,7 @@
 public class Pointer : MemorySegment, IPointer
 {
     public string ModuleName { get; set; }
-    public string ModuleNameWithBaseOffset => $"{ModuleName} {(BaseOffset >= 0 ? $"+ {BaseOffset:X}" : $"- {(~BaseOffset + 1):X}")}";
+    public string ModuleNameWithBaseOffset => $"\"{ModuleName}\" {(BaseOffset >= 0 ? $"+ {BaseOffset:X}" : $"- {(~BaseOffset + 1):X}")}";
     public IList<IntPtr> Offsets { get; set; } = new List<IntPtr>();
     public IntPtr PointingTo { get; set; }
     public string OffsetsDisplayString => string.Join(", ", Offsets.Select(x => x.ToString("X")).Reverse());
