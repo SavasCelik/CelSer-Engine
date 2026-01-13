@@ -1,6 +1,6 @@
 ﻿namespace CelSerEngine.Core.Scanners;
 
-internal class PathQueueElement
+public class PathQueueElement
 {
     public IntPtr[] TempResults { get; set; }
     public UIntPtr[] ValueList { get; set; }

@@ -4,10 +4,13 @@ using CelSerEngine.Core.Native;
 using Microsoft.Win32.SafeHandles;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Channels;
 using static CelSerEngine.Core.Native.Enums;
 using static CelSerEngine.Core.Native.Structs;
 
 namespace CelSerEngine.Core.Scanners;
+
+public sealed class PendingCounter { public int Value; }
 
 public abstract class PointerScanner2
 {
@@ -56,38 +59,70 @@ public abstract class PointerScanner2
 
         var pointersFoundTotal = 0;
         var foundPointers = new List<Pointer>();
-        await Task.Factory.StartNew(async () =>
+
+        var channel = Channel.CreateUnbounded<PathQueueElement>(new UnboundedChannelOptions
         {
-            const int workerId = 1; // currently only single worker is supported
-            await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerId, fileName);
-            var scanWorker = new PointerScanWorker(this, workerStorage, cancellationToken);
-            var scanResult = scanWorker.Start();
-            var workersResultPointers = workerStorage.GetResults()
-                .Select(x => new Pointer
+            SingleReader = false,
+            SingleWriter = false
+        });
+
+        await channel.Writer.WriteAsync(new PathQueueElement(PointerScanOptions.MaxLevel) { StartLevel = 0, ValueToFind = PointerScanOptions.SearchedAddress }, cancellationToken);
+        var pendingCounter = new PendingCounter
+        {
+            Value = 1
+        };
+        int workerCount = Environment.ProcessorCount - 1;
+
+        var workers = Enumerable.Range(0, workerCount)
+            .Select(_ => {
+                var worker = new PointerScanWorker(this, new InMemoryStorage(), channel, pendingCounter, cancellationToken);
+                return Task.Run(worker.StartAsync, cancellationToken);
+            })
+            .ToArray();
+
+        var results = await Task.WhenAll(workers);
+        foundPointers.AddRange(
+            results.SelectMany(x => x.GetResults().Select(r => new Pointer
                 {
-                    ModuleName = _modules[x.ModuleIndex].ShortName,
-                    BaseAddress = _modules[x.ModuleIndex].BaseAddress,
-                    BaseOffset = (int)x.Offset,
-                    Offsets = x.TempResults
-                }).ToList();
-            pointersFoundTotal += scanWorker.PointersFound;
-            foundPointers.AddRange(workersResultPointers);
-        }, cancellationToken);
+                    ModuleName = _modules[r.ModuleIndex].ShortName,
+                    BaseAddress = _modules[r.ModuleIndex].BaseAddress,
+                    BaseOffset = (int)r.Offset,
+                    Offsets = r.TempResults
+                }
+            )));
 
-        if (storageType == StorageType.File)
-        {
-            await using var writer = new BinaryWriter(File.Open(fileName!, FileMode.Create));
-            writer.Write(_modules.Count);
+        //await Task.Factory.StartNew(async () =>
+        //{
+        //    const int workerId = 1; // currently only single worker is supported
+        //    await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerId, fileName);
+        //    var scanWorker = new PointerScanWorker(this, workerStorage, cancellationToken);
+        //    var scanResult = scanWorker.Start();
+        //    var workersResultPointers = workerStorage.GetResults()
+        //        .Select(x => new Pointer
+        //        {
+        //            ModuleName = _modules[x.ModuleIndex].ShortName,
+        //            BaseAddress = _modules[x.ModuleIndex].BaseAddress,
+        //            BaseOffset = (int)x.Offset,
+        //            Offsets = x.TempResults
+        //        }).ToList();
+        //    pointersFoundTotal += scanWorker.PointersFound;
+        //    foundPointers.AddRange(workersResultPointers);
+        //}, cancellationToken);
 
-            foreach (ModuleInfo moduleInfo in _modules)
-            {
-                writer.Write(moduleInfo.ShortName);
-                writer.Write(moduleInfo.BaseAddress);
-            }
+        //if (storageType == StorageType.File)
+        //{
+        //    await using var writer = new BinaryWriter(File.Open(fileName!, FileMode.Create));
+        //    writer.Write(_modules.Count);
 
-            writer.Write(PointerScanOptions.MaxLevel);
-            writer.Write(pointersFoundTotal);
-        }
+        //    foreach (ModuleInfo moduleInfo in _modules)
+        //    {
+        //        writer.Write(moduleInfo.ShortName);
+        //        writer.Write(moduleInfo.BaseAddress);
+        //    }
+
+        //    writer.Write(PointerScanOptions.MaxLevel);
+        //    writer.Write(pointersFoundTotal);
+        //}
 
         return foundPointers;
     }

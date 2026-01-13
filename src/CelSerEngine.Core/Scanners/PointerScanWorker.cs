@@ -1,4 +1,8 @@
-﻿namespace CelSerEngine.Core.Scanners;
+﻿using System.Threading;
+using System.Threading.Channels;
+using System.Xml.Linq;
+
+namespace CelSerEngine.Core.Scanners;
 
 public class PointerScanWorker
 {
@@ -7,6 +11,8 @@ public class PointerScanWorker
     private readonly PointerScanner2 _pointerScanner;
     private readonly IResultStorage _resultStorage;
     private readonly CancellationToken _cancellationToken;
+    private readonly Channel<PathQueueElement> _channel;
+    private readonly PendingCounter _pendingCounter;
     private IntPtr[] _tempResults;
     private UIntPtr[] _valueList;
     private int _pathsEvaluated = 0;
@@ -14,59 +20,94 @@ public class PointerScanWorker
     private int _maxLevel;
     private int _structSize;
 
-    public PointerScanWorker(PointerScanner2 pointerScanner, IResultStorage resultStorage, CancellationToken cancellationToken)
+    public PointerScanWorker(PointerScanner2 pointerScanner, IResultStorage resultStorage, Channel<PathQueueElement> channel, PendingCounter pendingCounter, CancellationToken cancellationToken)
     {
         _pointerScanner = pointerScanner;
         _resultStorage = resultStorage;
         _cancellationToken = cancellationToken;
+        _channel = channel;
+        _pendingCounter = pendingCounter;
         _structSize = pointerScanner.PointerScanOptions.MaxOffset;
         _maxLevel = pointerScanner.PointerScanOptions.MaxLevel;
         _tempResults = new IntPtr[_maxLevel];
         _valueList = new UIntPtr[_maxLevel];
     }
 
-    public IList<ResultPointer> Start()
+    public async Task<IResultStorage> StartAsync()
     {
-        while (true)
+        try
         {
-            var valueToFind = IntPtr.Zero;
-            var startLevel = 0;
-
-            if (_pointerScanner.PathQueueLength > 0)
+            while (await _channel.Reader.WaitToReadAsync(_cancellationToken))
             {
-                _pointerScanner.PathQueueLength--;
-                var i = _pointerScanner.PathQueueLength;
-                valueToFind = _pointerScanner.PathQueue[i].ValueToFind;
-                startLevel = _pointerScanner.PathQueue[i].StartLevel;
-                Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, _maxLevel);
-
-                if (PointerScanner2.NoLoop)
+                while (_channel.Reader.TryRead(out var node))
                 {
-                    Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, _maxLevel);
+                    try
+                    {
+                        Array.Copy(node.TempResults, _tempResults, _maxLevel);
+
+                        if (PointerScanner2.NoLoop)
+                        {
+                            Array.Copy(node.ValueList, _valueList, _maxLevel);
+                        }
+
+                        await ReverseScan(node.ValueToFind, node.StartLevel);
+                    }
+                    finally
+                    {
+                        if (Interlocked.Decrement(ref _pendingCounter.Value) == 0)
+                        {
+                            _channel.Writer.TryComplete();
+                        }
+                    }
                 }
             }
-
-            try
-            {
-                ReverseScan(valueToFind, startLevel);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-
-            if (_pointerScanner.PathQueueLength == 0)
-            {
-                break;
-            }
         }
+        catch (OperationCanceledException)
+        {
+            // Normal shutdown
+        }
+
+
+        //while (true)
+        //{
+        //    var valueToFind = IntPtr.Zero;
+        //    var startLevel = 0;
+
+        //    if (_pointerScanner.PathQueueLength > 0)
+        //    {
+        //        _pointerScanner.PathQueueLength--;
+        //        var i = _pointerScanner.PathQueueLength;
+        //        valueToFind = _pointerScanner.PathQueue[i].ValueToFind;
+        //        startLevel = _pointerScanner.PathQueue[i].StartLevel;
+        //        Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, _maxLevel);
+
+        //        if (PointerScanner2.NoLoop)
+        //        {
+        //            Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, _maxLevel);
+        //        }
+        //    }
+
+        //    try
+        //    {
+        //        ReverseScan(valueToFind, startLevel);
+        //    }
+        //    catch (OperationCanceledException)
+        //    {
+        //        break;
+        //    }
+
+        //    if (_pointerScanner.PathQueueLength == 0)
+        //    {
+        //        break;
+        //    }
+        //}
 
         //var sorted = _results.OrderBy(x => x.TempResults[0]).ThenBy(x => x.TempResults[1]).ToArray();
 
-        return _results;
+        return _resultStorage;
     }
 
-    private void ReverseScan(IntPtr valueToFind, int level)
+    private async Task ReverseScan(IntPtr valueToFind, int level)
     {
         if (level >= _maxLevel)
             return;
@@ -155,16 +196,30 @@ public class PointerScanWorker
                                 {
                                     //still room
 
-                                    Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, _maxLevel);
+                                    //Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, _maxLevel);
+
+                                    //if (PointerScanner2.NoLoop)
+                                    //{
+                                    //    Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, _maxLevel);
+                                    //}
+
+                                    //_pointerScanner.PathQueue[_pointerScanner.PathQueueLength].StartLevel = level + 1;
+                                    //_pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueToFind = plist.List[j].Address;
+                                    //_pointerScanner.PathQueueLength++;
+                                    //addedToQueue = true;
+
+                                    var newNode = new PathQueueElement(_pointerScanner.PointerScanOptions.MaxLevel);
+                                    Array.Copy(_tempResults, newNode.TempResults, _maxLevel);
 
                                     if (PointerScanner2.NoLoop)
                                     {
-                                        Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, _maxLevel);
+                                        Array.Copy(_valueList, newNode.ValueList, _maxLevel);
                                     }
 
-                                    _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].StartLevel = level + 1;
-                                    _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueToFind = plist.List[j].Address;
-                                    _pointerScanner.PathQueueLength++;
+                                    newNode.StartLevel = level + 1;
+                                    newNode.ValueToFind = plist.List[j].Address;
+                                    Interlocked.Increment(ref _pendingCounter.Value);
+                                    await _channel.Writer.WriteAsync(newNode, _cancellationToken);
                                     addedToQueue = true;
                                 }
                             }
@@ -172,7 +227,7 @@ public class PointerScanWorker
                             if (!addedToQueue)
                             {
                                 //I'll have to do it myself
-                                ReverseScan(plist.List[j].Address, level + 1);
+                                await ReverseScan(plist.List[j].Address, level + 1);
                                 ///done with this branch 
                             }
                         }
