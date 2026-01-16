@@ -59,28 +59,30 @@ public abstract class PointerScanner2
 
         var pointersFoundTotal = 0;
         var foundPointers = new List<Pointer>();
-
-        var channel = Channel.CreateUnbounded<PathQueueElement>(new UnboundedChannelOptions
-        {
-            SingleReader = false,
-            SingleWriter = false
-        });
+        var channel = Channel.CreateBounded<PathQueueElement>(MaxQueueSize);
 
         await channel.Writer.WriteAsync(new PathQueueElement(PointerScanOptions.MaxLevel) { StartLevel = 0, ValueToFind = PointerScanOptions.SearchedAddress }, cancellationToken);
         var pendingCounter = new PendingCounter
         {
             Value = 1
         };
-        int workerCount = Environment.ProcessorCount - 1;
+        int workerCount = Environment.ProcessorCount;
+        var results = new IResultStorage[workerCount];
 
-        var workers = Enumerable.Range(0, workerCount)
-            .Select(_ => {
-                var worker = new PointerScanWorker(this, new InMemoryStorage(), channel, pendingCounter, cancellationToken);
-                return Task.Run(worker.StartAsync, cancellationToken);
-            })
-            .ToArray();
+        await Parallel.ForEachAsync(Enumerable.Range(0, workerCount),
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = workerCount,
+                CancellationToken = cancellationToken
+            },
+            async (workerIndex, _) =>
+            {
+                await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerIndex, fileName);
+                var scanWorker = new PointerScanWorker(this, workerStorage, channel, pendingCounter, cancellationToken);
+                results[workerIndex] = await scanWorker.StartAsync();
+            }
+        );
 
-        var results = await Task.WhenAll(workers);
         foundPointers.AddRange(
             results.SelectMany(x => x.GetResults().Select(r => new Pointer
                 {
@@ -109,20 +111,20 @@ public abstract class PointerScanner2
         //    foundPointers.AddRange(workersResultPointers);
         //}, cancellationToken);
 
-        //if (storageType == StorageType.File)
-        //{
-        //    await using var writer = new BinaryWriter(File.Open(fileName!, FileMode.Create));
-        //    writer.Write(_modules.Count);
+        if (storageType == StorageType.File)
+        {
+            await using var writer = new BinaryWriter(File.Open(fileName!, FileMode.Create));
+            writer.Write(_modules.Count);
 
-        //    foreach (ModuleInfo moduleInfo in _modules)
-        //    {
-        //        writer.Write(moduleInfo.ShortName);
-        //        writer.Write(moduleInfo.BaseAddress);
-        //    }
+            foreach (ModuleInfo moduleInfo in _modules)
+            {
+                writer.Write(moduleInfo.ShortName);
+                writer.Write(moduleInfo.BaseAddress);
+            }
 
-        //    writer.Write(PointerScanOptions.MaxLevel);
-        //    writer.Write(pointersFoundTotal);
-        //}
+            writer.Write(PointerScanOptions.MaxLevel);
+            writer.Write(pointersFoundTotal);
+        }
 
         return foundPointers;
     }

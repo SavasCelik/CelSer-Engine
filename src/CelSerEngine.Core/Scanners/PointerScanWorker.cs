@@ -50,7 +50,7 @@ public class PointerScanWorker
                             Array.Copy(node.ValueList, _valueList, _maxLevel);
                         }
 
-                        await ReverseScan(node.ValueToFind, node.StartLevel);
+                        ReverseScan(node.ValueToFind, node.StartLevel);
                     }
                     finally
                     {
@@ -64,50 +64,13 @@ public class PointerScanWorker
         }
         catch (OperationCanceledException)
         {
-            // Normal shutdown
+            // Scan was cancelled, just exit gracefully
         }
-
-
-        //while (true)
-        //{
-        //    var valueToFind = IntPtr.Zero;
-        //    var startLevel = 0;
-
-        //    if (_pointerScanner.PathQueueLength > 0)
-        //    {
-        //        _pointerScanner.PathQueueLength--;
-        //        var i = _pointerScanner.PathQueueLength;
-        //        valueToFind = _pointerScanner.PathQueue[i].ValueToFind;
-        //        startLevel = _pointerScanner.PathQueue[i].StartLevel;
-        //        Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, _maxLevel);
-
-        //        if (PointerScanner2.NoLoop)
-        //        {
-        //            Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, _maxLevel);
-        //        }
-        //    }
-
-        //    try
-        //    {
-        //        ReverseScan(valueToFind, startLevel);
-        //    }
-        //    catch (OperationCanceledException)
-        //    {
-        //        break;
-        //    }
-
-        //    if (_pointerScanner.PathQueueLength == 0)
-        //    {
-        //        break;
-        //    }
-        //}
-
-        //var sorted = _results.OrderBy(x => x.TempResults[0]).ThenBy(x => x.TempResults[1]).ToArray();
 
         return _resultStorage;
     }
 
-    private async Task ReverseScan(IntPtr valueToFind, int level)
+    private void ReverseScan(IntPtr valueToFind, int level)
     {
         if (level >= _maxLevel)
             return;
@@ -181,53 +144,44 @@ public class PointerScanWorker
                             if (
                                 ((level + 3 < _maxLevel) &&
                                     (
-                                        ((_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 3))) ||
-                                        ((level <= 2) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 8))) ||
-                                        ((level <= 1) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 16))) ||
-                                        ((level == 0) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - 1))
+                                        ((_pendingCounter.Value < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 3))) ||
+                                        ((level <= 2) && (_pendingCounter.Value < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 8))) ||
+                                        ((level <= 1) && (_pendingCounter.Value < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 16))) ||
+                                        ((level == 0) && (_pendingCounter.Value < PointerScanner2.MaxQueueSize - 1))
                                     )
                                 )
-                                || (_pointerScanner.PathQueueLength == 0)) // completely empty
+                                || (_pendingCounter.Value == 0)) // completely empty
                             {
                                 //there's room and not a crappy work item. Add it
                                 //if locked then
 
-                                if (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - 1)
+                                if (_pendingCounter.Value < PointerScanner2.MaxQueueSize - 1)
                                 {
                                     //still room
 
-                                    //Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, _maxLevel);
-
-                                    //if (PointerScanner2.NoLoop)
-                                    //{
-                                    //    Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, _maxLevel);
-                                    //}
-
-                                    //_pointerScanner.PathQueue[_pointerScanner.PathQueueLength].StartLevel = level + 1;
-                                    //_pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueToFind = plist.List[j].Address;
-                                    //_pointerScanner.PathQueueLength++;
-                                    //addedToQueue = true;
-
-                                    var newNode = new PathQueueElement(_pointerScanner.PointerScanOptions.MaxLevel);
-                                    Array.Copy(_tempResults, newNode.TempResults, _maxLevel);
+                                    var newElement = new PathQueueElement(_pointerScanner.PointerScanOptions.MaxLevel);
+                                    Array.Copy(_tempResults, newElement.TempResults, _maxLevel);
 
                                     if (PointerScanner2.NoLoop)
                                     {
-                                        Array.Copy(_valueList, newNode.ValueList, _maxLevel);
+                                        Array.Copy(_valueList, newElement.ValueList, _maxLevel);
                                     }
 
-                                    newNode.StartLevel = level + 1;
-                                    newNode.ValueToFind = plist.List[j].Address;
-                                    Interlocked.Increment(ref _pendingCounter.Value);
-                                    await _channel.Writer.WriteAsync(newNode, _cancellationToken);
-                                    addedToQueue = true;
+                                    newElement.StartLevel = level + 1;
+                                    newElement.ValueToFind = plist.List[j].Address;
+
+                                    if (_channel.Writer.TryWrite(newElement))
+                                    {
+                                        Interlocked.Increment(ref _pendingCounter.Value);
+                                        addedToQueue = true;
+                                    }
                                 }
                             }
 
                             if (!addedToQueue)
                             {
                                 //I'll have to do it myself
-                                await ReverseScan(plist.List[j].Address, level + 1);
+                                ReverseScan(plist.List[j].Address, level + 1);
                                 ///done with this branch 
                             }
                         }
