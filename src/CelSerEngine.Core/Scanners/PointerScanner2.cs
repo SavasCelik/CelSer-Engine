@@ -4,10 +4,13 @@ using CelSerEngine.Core.Native;
 using Microsoft.Win32.SafeHandles;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Channels;
 using static CelSerEngine.Core.Native.Enums;
 using static CelSerEngine.Core.Native.Structs;
 
 namespace CelSerEngine.Core.Scanners;
+
+public sealed class PendingCounter(int startValue) { public int Value = startValue; }
 
 public abstract class PointerScanner2
 {
@@ -55,24 +58,40 @@ public abstract class PointerScanner2
         InitializeEmptyPathQueue();
 
         var pointersFoundTotal = 0;
-        var foundPointers = new List<Pointer>();
-        await Task.Factory.StartNew(async () =>
+        var channel = Channel.CreateBounded<PathQueueElement>(MaxQueueSize);
+        var rootElement = new PathQueueElement(PointerScanOptions.MaxLevel)
         {
-            const int workerId = 1; // currently only single worker is supported
-            await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerId, fileName);
-            var scanWorker = new PointerScanWorker(this, workerStorage, cancellationToken);
-            var scanResult = scanWorker.Start();
-            var workersResultPointers = workerStorage.GetResults()
-                .Select(x => new Pointer
+            StartLevel = 0,
+            ValueToFind = PointerScanOptions.SearchedAddress
+        };
+        await channel.Writer.WriteAsync(rootElement, cancellationToken);
+        var pendingCounter = new PendingCounter(startValue: 1);
+        int workerCount = Math.Max(PointerScanOptions.MaxParallelWorker, Environment.ProcessorCount);
+        var results = new IResultStorage[workerCount];
+
+        await Parallel.ForEachAsync(Enumerable.Range(0, workerCount),
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = workerCount,
+                CancellationToken = cancellationToken
+            },
+            async (workerIndex, _) =>
+            {
+                await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerIndex, fileName);
+                var scanWorker = new PointerScanWorker(this, workerStorage, channel, pendingCounter, cancellationToken);
+                results[workerIndex] = await scanWorker.StartAsync();
+            }
+        );
+
+        var foundPointers = 
+            results.SelectMany(x => x.GetResults().Select(r => new Pointer
                 {
-                    ModuleName = _modules[x.ModuleIndex].ShortName,
-                    BaseAddress = _modules[x.ModuleIndex].BaseAddress,
-                    BaseOffset = (int)x.Offset,
-                    Offsets = x.TempResults
-                }).ToList();
-            pointersFoundTotal += scanWorker.PointersFound;
-            foundPointers.AddRange(workersResultPointers);
-        }, cancellationToken);
+                    ModuleName = _modules[r.ModuleIndex].ShortName,
+                    BaseAddress = _modules[r.ModuleIndex].BaseAddress,
+                    BaseOffset = (int)r.Offset,
+                    Offsets = r.TempResults
+                }
+            )).ToList();
 
         if (storageType == StorageType.File)
         {

@@ -6,12 +6,12 @@ namespace CelSerEngine.Core.Scanners;
 
 public class DefaultPointerScanner : PointerScanner2
 {
-    private SortedDictionary<IntPtr, PointerList> _pointerDict;
+    private Dictionary<IntPtr, PointerList> _pointerDict;
     private IntPtr[] _keyArray;
 
     public DefaultPointerScanner(INativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
     {
-        _pointerDict = new SortedDictionary<IntPtr, PointerList>();
+        _pointerDict = new Dictionary<IntPtr, PointerList>();
         _keyArray = Array.Empty<IntPtr>();
     }
 
@@ -117,9 +117,11 @@ public class DefaultPointerScanner : PointerScanner2
     protected override void FillLinkedList()
     {
         PointerList? current = null;
+        var keysSorted = _pointerDict.Keys.Order().ToArray();
 
-        foreach (var (key, value) in _pointerDict)
+        foreach (var key in keysSorted)
         {
+            var value = _pointerDict[key];
             if (current == null)
             {
                 current = value;
@@ -131,8 +133,9 @@ public class DefaultPointerScanner : PointerScanner2
             current = value;
         }
 
-        _keyArray = new IntPtr[_pointerDict.Keys.Count];
-        _pointerDict.Keys.CopyTo(_keyArray, 0);
+        _keyArray = keysSorted;
+        //_keyArray = new IntPtr[_pointerDict.Keys.Count];
+        //_pointerDict.Keys.CopyTo(_keyArray, 0);
     }
 
     internal override PointerList? FindPointerValue(nint startValue, ref nint stopValue)
