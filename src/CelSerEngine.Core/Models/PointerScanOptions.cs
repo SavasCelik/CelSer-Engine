@@ -10,5 +10,5 @@ public class PointerScanOptions
     public bool RequireAlignedPointers { get; set; } = true;
     public int MaxLevel { get; set; }
     public int MaxOffset { get; set; }
-
+    public int MaxParallelWorker { get; set; }
 }

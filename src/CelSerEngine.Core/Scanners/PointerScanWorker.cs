@@ -39,18 +39,18 @@ public class PointerScanWorker
         {
             while (await _channel.Reader.WaitToReadAsync(_cancellationToken))
             {
-                while (_channel.Reader.TryRead(out var node))
+                while (_channel.Reader.TryRead(out var element))
                 {
                     try
                     {
-                        Array.Copy(node.TempResults, _tempResults, _maxLevel);
+                        Array.Copy(element.TempResults, _tempResults, _maxLevel);
 
                         if (PointerScanner2.NoLoop)
                         {
-                            Array.Copy(node.ValueList, _valueList, _maxLevel);
+                            Array.Copy(element.ValueList, _valueList, _maxLevel);
                         }
 
-                        ReverseScan(node.ValueToFind, node.StartLevel);
+                        ReverseScan(element.ValueToFind, element.StartLevel);
                     }
                     finally
                     {

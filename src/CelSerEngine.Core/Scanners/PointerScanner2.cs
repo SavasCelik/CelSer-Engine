@@ -10,7 +10,7 @@ using static CelSerEngine.Core.Native.Structs;
 
 namespace CelSerEngine.Core.Scanners;
 
-public sealed class PendingCounter { public int Value; }
+public sealed class PendingCounter(int startValue) { public int Value = startValue; }
 
 public abstract class PointerScanner2
 {
@@ -58,15 +58,15 @@ public abstract class PointerScanner2
         InitializeEmptyPathQueue();
 
         var pointersFoundTotal = 0;
-        var foundPointers = new List<Pointer>();
         var channel = Channel.CreateBounded<PathQueueElement>(MaxQueueSize);
-
-        await channel.Writer.WriteAsync(new PathQueueElement(PointerScanOptions.MaxLevel) { StartLevel = 0, ValueToFind = PointerScanOptions.SearchedAddress }, cancellationToken);
-        var pendingCounter = new PendingCounter
+        var rootElement = new PathQueueElement(PointerScanOptions.MaxLevel)
         {
-            Value = 1
+            StartLevel = 0,
+            ValueToFind = PointerScanOptions.SearchedAddress
         };
-        int workerCount = Environment.ProcessorCount;
+        await channel.Writer.WriteAsync(rootElement, cancellationToken);
+        var pendingCounter = new PendingCounter(startValue: 1);
+        int workerCount = Math.Max(PointerScanOptions.MaxParallelWorker, Environment.ProcessorCount);
         var results = new IResultStorage[workerCount];
 
         await Parallel.ForEachAsync(Enumerable.Range(0, workerCount),
@@ -83,7 +83,7 @@ public abstract class PointerScanner2
             }
         );
 
-        foundPointers.AddRange(
+        var foundPointers = 
             results.SelectMany(x => x.GetResults().Select(r => new Pointer
                 {
                     ModuleName = _modules[r.ModuleIndex].ShortName,
@@ -91,25 +91,7 @@ public abstract class PointerScanner2
                     BaseOffset = (int)r.Offset,
                     Offsets = r.TempResults
                 }
-            )));
-
-        //await Task.Factory.StartNew(async () =>
-        //{
-        //    const int workerId = 1; // currently only single worker is supported
-        //    await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerId, fileName);
-        //    var scanWorker = new PointerScanWorker(this, workerStorage, cancellationToken);
-        //    var scanResult = scanWorker.Start();
-        //    var workersResultPointers = workerStorage.GetResults()
-        //        .Select(x => new Pointer
-        //        {
-        //            ModuleName = _modules[x.ModuleIndex].ShortName,
-        //            BaseAddress = _modules[x.ModuleIndex].BaseAddress,
-        //            BaseOffset = (int)x.Offset,
-        //            Offsets = x.TempResults
-        //        }).ToList();
-        //    pointersFoundTotal += scanWorker.PointersFound;
-        //    foundPointers.AddRange(workersResultPointers);
-        //}, cancellationToken);
+            )).ToList();
 
         if (storageType == StorageType.File)
         {
