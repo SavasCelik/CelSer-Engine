@@ -66,7 +66,7 @@ public abstract class PointerScanner2
         };
         await channel.Writer.WriteAsync(rootElement, cancellationToken);
         var pendingCounter = new PendingCounter(startValue: 1);
-        int workerCount = Math.Max(PointerScanOptions.MaxParallelWorker, Environment.ProcessorCount);
+        int workerCount = Math.Max(PointerScanOptions.MaxParallelWorkers, Environment.ProcessorCount);
         var results = new IResultStorage[workerCount];
 
         await Parallel.ForEachAsync(Enumerable.Range(0, workerCount),
