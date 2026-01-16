@@ -6,4 +6,5 @@ public class PointerScanOptionsDto
     public bool RequireAlignedPointers { get; set; }
     public int MaxLevel { get; set; }
     public int MaxOffset { get; set; }
+    public int MaxParallelWorkers { get; set; }
 }

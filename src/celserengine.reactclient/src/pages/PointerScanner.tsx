@@ -86,6 +86,22 @@ const formSchema = z.object({
       message: "Max level must be a positive integer",
     }
   ),
+  maxParallelWorkers: z.string().refine(
+    (val) => {
+      const num = Number(val);
+      return (
+        !isNaN(num) &&
+        Number.isInteger(num) &&
+        num > 0 &&
+        num <= navigator.hardwareConcurrency
+      );
+    },
+    {
+      message:
+        "Max parallel workers can be from 1 to " +
+        navigator.hardwareConcurrency,
+    }
+  ),
 });
 type FormDataType = z.infer<typeof formSchema>;
 
@@ -106,6 +122,7 @@ export default function PointerScanner() {
         ...data,
         maxOffset: Number(data.maxOffset),
         maxLevel: Number(data.maxLevel),
+        maxParallelWorkers: Number(data.maxParallelWorkers),
       };
 
       return dotNetObj.invokeMethod("StartPointerScan", pointerScanOptions);
@@ -143,6 +160,7 @@ export default function PointerScanner() {
       maxOffset: (0x1000).toString(),
       maxLevel: "4",
       requireAlignedPointers: true,
+      maxParallelWorkers: navigator.hardwareConcurrency.toString(),
     },
     disabled: startPointerScanMutation.isPending,
   });
@@ -413,6 +431,19 @@ export default function PointerScanner() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Max Level:</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="maxParallelWorkers"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Parallel Workers:</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

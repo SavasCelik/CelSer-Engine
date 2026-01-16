@@ -32,7 +32,8 @@ public class PointerScannerController : ReactControllerBase
             SearchedAddress = searchedAddress,
             MaxOffset = pointerScanOptionsDto.MaxOffset,
             MaxLevel = pointerScanOptionsDto.MaxLevel,
-            RequireAlignedPointers = pointerScanOptionsDto.RequireAlignedPointers
+            RequireAlignedPointers = pointerScanOptionsDto.RequireAlignedPointers,
+            MaxParallelWorkers = pointerScanOptionsDto.MaxParallelWorkers
         });
     }
 
