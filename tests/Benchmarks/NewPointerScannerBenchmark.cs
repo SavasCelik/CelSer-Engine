@@ -68,7 +68,8 @@ public class NewPointerScannerBenchmark
             ProcessHandle = new SafeProcessHandle(),
             MaxLevel = 4,
             MaxOffset = 0x1000,
-            SearchedAddress = new IntPtr(0x014FA308)
+            SearchedAddress = new IntPtr(0x014FA308),
+            MaxParallelWorkers = Environment.ProcessorCount
         };
         var scanner = new CheatEnginePointerScanner(_stubNativeApi.Object, scanOpts);
         var foundPointers = await scanner.StartPointerScanAsync(scanOpts.ProcessHandle);
@@ -84,7 +85,8 @@ public class NewPointerScannerBenchmark
             ProcessHandle = new SafeProcessHandle(),
             MaxLevel = 5,
             MaxOffset = 0x3000,
-            SearchedAddress = new IntPtr(0x014FA308)
+            SearchedAddress = new IntPtr(0x014FA308),
+            MaxParallelWorkers = Environment.ProcessorCount
         };
         var scanner = new DefaultPointerScanner(_stubNativeApi.Object, scanOpts);
         var foundPointers = await scanner.StartPointerScanAsync(scanOpts.ProcessHandle);
@@ -100,7 +102,8 @@ public class NewPointerScannerBenchmark
             ProcessHandle = new SafeProcessHandle(),
             MaxLevel = 6,
             MaxOffset = 0x1000,
-            SearchedAddress = new IntPtr(0x014FA308)
+            SearchedAddress = new IntPtr(0x014FA308),
+            MaxParallelWorkers = Environment.ProcessorCount
         };
         var scanner = new CheatEnginePointerScanner(_stubNativeApi.Object, scanOpts);
         var foundPointers = await scanner.StartPointerScanAsync(scanOpts.ProcessHandle);
@@ -116,7 +119,8 @@ public class NewPointerScannerBenchmark
             ProcessHandle = new SafeProcessHandle(),
             MaxLevel = 6,
             MaxOffset = 0x1500,
-            SearchedAddress = new IntPtr(0x014FA308)
+            SearchedAddress = new IntPtr(0x014FA308),
+            MaxParallelWorkers = Environment.ProcessorCount
         };
         var scanner = new DefaultPointerScanner(_stubNativeApi.Object, scanOpts);
         var foundPointers = await scanner.StartPointerScanAsync(scanOpts.ProcessHandle);
