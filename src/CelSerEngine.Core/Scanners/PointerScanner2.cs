@@ -151,15 +151,20 @@ public abstract class PointerScanner2
                 && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_GUARD)
                 && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_NOACCESS)
             )
-            .Select(m => new VirtualMemoryRegion2
+            .Select(m =>
             {
-                BaseAddress = (IntPtr)m.BaseAddress,
-                MemorySize = m.RegionSize,
-                InModule = TryGetModule((IntPtr)m.BaseAddress, out _),
-                ValidPointerRange = !m.AllocationProtect.HasFlag(MEMORY_PROTECTION.PAGE_WRITECOMBINE)
-                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_READONLY)
-                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE)
-                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE_READ)
+                var isReadOnly = m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_READONLY)
+                                 || m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE)
+                                 || m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE_READ);
+
+                return new VirtualMemoryRegion2
+                {
+                    BaseAddress = (IntPtr)m.BaseAddress,
+                    MemorySize = m.RegionSize,
+                    InModule = TryGetModule((IntPtr)m.BaseAddress, out _),
+                    ValidPointerRange = !m.AllocationProtect.HasFlag(MEMORY_PROTECTION.PAGE_WRITECOMBINE)
+                                        && (PointerScanOptions.AllowReadOnlyPointers || !isReadOnly)
+                };
             })
             .ToList();
 

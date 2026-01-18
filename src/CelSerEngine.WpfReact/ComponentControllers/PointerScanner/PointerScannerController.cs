@@ -40,6 +40,7 @@ public class PointerScannerController : ReactControllerBase
             AllowThreadStacksAsStatic = pointerScanOptionsDto.AllowThreadStacksAsStatic,
             ThreadStacks = pointerScanOptionsDto.ThreadStacks,
             StackSize = pointerScanOptionsDto.StackSize,
+            AllowReadOnlyPointers = pointerScanOptionsDto.AllowReadOnlyPointers,
         });
     }
 
