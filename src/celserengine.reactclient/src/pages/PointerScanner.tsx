@@ -65,44 +65,60 @@ type PointerScanResultResponse = {
   totalCount: number;
 };
 
-const formSchema = z.object({
-  scanAddress: z.string(),
-  requireAlignedPointers: z.boolean(),
-  maxOffset: z.string().refine(
-    (val) => {
-      const num = Number(val);
-      return !isNaN(num) && Number.isInteger(num) && num !== 0;
-    },
-    {
-      message: "Max offset value must be a non-zero integer",
+const formSchema = z
+  .object({
+    scanAddress: z.string(),
+    requireAlignedPointers: z.boolean(),
+    maxOffset: z.string().refine(
+      (val) => {
+        const num = Number(val);
+        return !isNaN(num) && Number.isInteger(num) && num !== 0;
+      },
+      {
+        message: "Max offset value must be a non-zero integer",
+      }
+    ),
+    maxLevel: z.string().refine(
+      (val) => {
+        const num = Number(val);
+        return !isNaN(num) && Number.isInteger(num) && num > 0;
+      },
+      {
+        message: "Max level must be a positive integer",
+      }
+    ),
+    maxParallelWorkers: z.string().refine(
+      (val) => {
+        const num = Number(val);
+        return (
+          !isNaN(num) &&
+          Number.isInteger(num) &&
+          num > 0 &&
+          num <= navigator.hardwareConcurrency
+        );
+      },
+      {
+        message:
+          "Max parallel workers can be from 1 to " +
+          navigator.hardwareConcurrency,
+      }
+    ),
+    limitToMaxOffsetsPerNode: z.boolean(),
+    maxOffsetsPerNode: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.limitToMaxOffsetsPerNode) {
+      const num = Number(data.maxOffsetsPerNode);
+      if (isNaN(num) || !Number.isInteger(num) || num <= 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["maxOffsetsPerNode"],
+          message: "Max offsets per node must be a positive integer",
+        });
+      }
     }
-  ),
-  maxLevel: z.string().refine(
-    (val) => {
-      const num = Number(val);
-      return !isNaN(num) && Number.isInteger(num) && num > 0;
-    },
-    {
-      message: "Max level must be a positive integer",
-    }
-  ),
-  maxParallelWorkers: z.string().refine(
-    (val) => {
-      const num = Number(val);
-      return (
-        !isNaN(num) &&
-        Number.isInteger(num) &&
-        num > 0 &&
-        num <= navigator.hardwareConcurrency
-      );
-    },
-    {
-      message:
-        "Max parallel workers can be from 1 to " +
-        navigator.hardwareConcurrency,
-    }
-  ),
-});
+  });
+
 type FormDataType = z.infer<typeof formSchema>;
 
 export default function PointerScanner() {
@@ -123,6 +139,9 @@ export default function PointerScanner() {
         maxOffset: Number(data.maxOffset),
         maxLevel: Number(data.maxLevel),
         maxParallelWorkers: Number(data.maxParallelWorkers),
+        maxOffsetsPerNode: data.limitToMaxOffsetsPerNode
+          ? Number(data.maxOffsetsPerNode)
+          : 0,
       };
 
       return dotNetObj.invokeMethod("StartPointerScan", pointerScanOptions);
@@ -161,6 +180,8 @@ export default function PointerScanner() {
       maxLevel: "4",
       requireAlignedPointers: true,
       maxParallelWorkers: navigator.hardwareConcurrency.toString(),
+      limitToMaxOffsetsPerNode: true,
+      maxOffsetsPerNode: "3",
     },
     disabled: startPointerScanMutation.isPending,
   });
@@ -467,6 +488,46 @@ export default function PointerScanner() {
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+              </div>
+              <div className="col-span-3 flex items-center gap-2">
+                <FormField
+                  control={form.control}
+                  name="limitToMaxOffsetsPerNode"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel>Limit to max offsets per node:</FormLabel>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="maxOffsetsPerNode"
+                  render={({ field }) => {
+                    const limitToMaxOffsetsPerNodeValue = form.watch(
+                      "limitToMaxOffsetsPerNode"
+                    );
+
+                    return (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            disabled={!limitToMaxOffsetsPerNodeValue}
+                            {...field}
+                            className="w-16"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
             </form>

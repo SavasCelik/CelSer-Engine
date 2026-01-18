@@ -22,8 +22,6 @@ public abstract class PointerScanner2
     private List<IntPtr> _stackList = new(2);
     public const int MaxQueueSize = 64;
     public const bool NoLoop = true;
-    public const bool LimitToMaxOffsetsPerNode = true;
-    public const int MaxOffsetsPerNode = 3;
     private bool _findValueInsteadOfAddress = false;
     private Dictionary<IntPtr, IntPtr> _pointerByMemoryAddress = new();
 

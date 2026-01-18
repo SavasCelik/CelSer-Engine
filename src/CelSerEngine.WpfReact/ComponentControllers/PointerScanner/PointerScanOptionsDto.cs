@@ -7,4 +7,6 @@ public class PointerScanOptionsDto
     public int MaxLevel { get; set; }
     public int MaxOffset { get; set; }
     public int MaxParallelWorkers { get; set; }
+    public bool LimitToMaxOffsetsPerNode { get; set; }
+    public int MaxOffsetsPerNode { get; set; }
 }

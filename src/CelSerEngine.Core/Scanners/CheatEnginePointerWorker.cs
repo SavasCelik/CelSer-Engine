@@ -196,14 +196,14 @@ public class CheatEnginePointerWorker
                 }
             }
 
-            if (PointerScanner2.LimitToMaxOffsetsPerNode) //check if the current iteration is less than maxOffsetsPerNode 
+            if (_pointerScanner.PointerScanOptions.LimitToMaxOffsetsPerNode) //check if the current iteration is less than maxOffsetsPerNode 
             {
                 if (level > 0)
                 {
                     differentOffsetsInThisNode++;
                 }
 
-                if (differentOffsetsInThisNode >= PointerScanner2.MaxOffsetsPerNode)
+                if (differentOffsetsInThisNode >= _pointerScanner.PointerScanOptions.MaxOffsetsPerNode)
                 {
                     return; //the max node has been reached 
                 }
