@@ -21,7 +21,6 @@ public abstract class PointerScanner2
     private int _threadStacks = 2;
     private List<IntPtr> _stackList = new(2);
     public const int MaxQueueSize = 64;
-    public const bool NoLoop = true;
     private bool _findValueInsteadOfAddress = false;
     private Dictionary<IntPtr, IntPtr> _pointerByMemoryAddress = new();
 
@@ -395,7 +394,7 @@ public abstract class PointerScanner2
                 PathQueue[i].TempResults[j] = new IntPtr(0xcececece);
             }
 
-            if (NoLoop)
+            if (PointerScanOptions.PreventLoops)
             {
                 for (var j = 0; j < PointerScanOptions.MaxLevel + 1; j++)
                 {

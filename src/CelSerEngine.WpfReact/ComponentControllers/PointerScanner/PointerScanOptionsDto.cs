@@ -9,4 +9,5 @@ public class PointerScanOptionsDto
     public int MaxParallelWorkers { get; set; }
     public bool LimitToMaxOffsetsPerNode { get; set; }
     public int MaxOffsetsPerNode { get; set; }
+    public bool PreventLoops { get; set; }
 }

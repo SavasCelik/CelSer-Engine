@@ -13,4 +13,5 @@ public class PointerScanOptions
     public int MaxParallelWorkers { get; set; } = Environment.ProcessorCount;
     public bool LimitToMaxOffsetsPerNode { get; set; } = true;
     public int MaxOffsetsPerNode { get; set; } = 3;
+    public bool PreventLoops { get; set; } = true;
 }

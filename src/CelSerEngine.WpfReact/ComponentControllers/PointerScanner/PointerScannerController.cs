@@ -35,7 +35,8 @@ public class PointerScannerController : ReactControllerBase
             RequireAlignedPointers = pointerScanOptionsDto.RequireAlignedPointers,
             MaxParallelWorkers = pointerScanOptionsDto.MaxParallelWorkers,
             LimitToMaxOffsetsPerNode = pointerScanOptionsDto.LimitToMaxOffsetsPerNode,
-            MaxOffsetsPerNode = pointerScanOptionsDto.MaxOffsetsPerNode
+            MaxOffsetsPerNode = pointerScanOptionsDto.MaxOffsetsPerNode,
+            PreventLoops = pointerScanOptionsDto.PreventLoops
         });
     }
 

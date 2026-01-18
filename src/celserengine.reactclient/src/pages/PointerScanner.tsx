@@ -105,6 +105,7 @@ const formSchema = z
     ),
     limitToMaxOffsetsPerNode: z.boolean(),
     maxOffsetsPerNode: z.string().optional(),
+    preventLoops: z.boolean(),
   })
   .superRefine((data, ctx) => {
     if (data.limitToMaxOffsetsPerNode) {
@@ -182,6 +183,7 @@ export default function PointerScanner() {
       maxParallelWorkers: navigator.hardwareConcurrency.toString(),
       limitToMaxOffsetsPerNode: true,
       maxOffsetsPerNode: "3",
+      preventLoops: true,
     },
     disabled: startPointerScanMutation.isPending,
   });
@@ -528,6 +530,24 @@ export default function PointerScanner() {
                       </FormItem>
                     );
                   }}
+                />
+              </div>
+              <div className="col-span-3">
+                <FormField
+                  control={form.control}
+                  name="preventLoops"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel>No looping pointers</FormLabel>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
             </form>

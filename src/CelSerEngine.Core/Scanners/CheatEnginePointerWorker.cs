@@ -40,7 +40,7 @@ public class CheatEnginePointerWorker
                 startLevel = _pointerScanner.PathQueue[i].StartLevel;
                 Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, _maxLevel);
 
-                if (PointerScanner2.NoLoop)
+                if (_pointerScanner.PointerScanOptions.PreventLoops)
                 {
                     Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, _maxLevel);
                 }
@@ -87,7 +87,7 @@ public class CheatEnginePointerWorker
             }
         }
 
-        if (PointerScanner2.NoLoop)
+        if (_pointerScanner.PointerScanOptions.PreventLoops)
         {
             //check if this valuetofind is already in the list
             for (var i = 0; i <= level - 1; i++)
@@ -157,7 +157,7 @@ public class CheatEnginePointerWorker
 
                                     Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, _maxLevel);
 
-                                    if (PointerScanner2.NoLoop)
+                                    if (_pointerScanner.PointerScanOptions.PreventLoops)
                                     {
                                         Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, _maxLevel);
                                     }

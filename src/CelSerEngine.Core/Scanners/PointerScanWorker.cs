@@ -45,7 +45,7 @@ public class PointerScanWorker
                     {
                         Array.Copy(element.TempResults, _tempResults, _maxLevel);
 
-                        if (PointerScanner2.NoLoop)
+                        if (_pointerScanner.PointerScanOptions.PreventLoops)
                         {
                             Array.Copy(element.ValueList, _valueList, _maxLevel);
                         }
@@ -91,7 +91,7 @@ public class PointerScanWorker
             }
         }
 
-        if (PointerScanner2.NoLoop)
+        if (_pointerScanner.PointerScanOptions.PreventLoops)
         {
             //check if this valuetofind is already in the list
             for (var i = 0; i <= level - 1; i++)
@@ -162,7 +162,7 @@ public class PointerScanWorker
                                     var newElement = new PathQueueElement(_pointerScanner.PointerScanOptions.MaxLevel);
                                     Array.Copy(_tempResults, newElement.TempResults, _maxLevel);
 
-                                    if (PointerScanner2.NoLoop)
+                                    if (_pointerScanner.PointerScanOptions.PreventLoops)
                                     {
                                         Array.Copy(_valueList, newElement.ValueList, _maxLevel);
                                     }
