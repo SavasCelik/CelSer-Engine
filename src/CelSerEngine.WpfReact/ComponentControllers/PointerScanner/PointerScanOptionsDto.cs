@@ -10,4 +10,7 @@ public class PointerScanOptionsDto
     public bool LimitToMaxOffsetsPerNode { get; set; }
     public int MaxOffsetsPerNode { get; set; }
     public bool PreventLoops { get; set; }
+    public bool AllowThreadStacksAsStatic { get; set; }
+    public int ThreadStacks { get; set; }
+    public int StackSize { get; set; }
 }

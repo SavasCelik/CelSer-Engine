@@ -106,6 +106,9 @@ const formSchema = z
     limitToMaxOffsetsPerNode: z.boolean(),
     maxOffsetsPerNode: z.string().optional(),
     preventLoops: z.boolean(),
+    allowThreadStacksAsStatic: z.boolean(),
+    threadStacks: z.string().optional(),
+    stackSize: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.limitToMaxOffsetsPerNode) {
@@ -115,6 +118,35 @@ const formSchema = z
           code: "custom",
           path: ["maxOffsetsPerNode"],
           message: "Max offsets per node must be a positive integer",
+        });
+      }
+    }
+
+    if (data.allowThreadStacksAsStatic) {
+      const threadStacksNum = Number(data.threadStacks);
+      const stackSizeNum = Number(data.stackSize);
+
+      if (
+        isNaN(threadStacksNum) ||
+        !Number.isInteger(threadStacksNum) ||
+        threadStacksNum <= 0
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["threadStacks"],
+          message: "Thread stacks must be a positive integer",
+        });
+      }
+
+      if (
+        isNaN(stackSizeNum) ||
+        !Number.isInteger(stackSizeNum) ||
+        stackSizeNum <= 0
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["stackSize"],
+          message: "Stack size must be a positive integer",
         });
       }
     }
@@ -143,6 +175,10 @@ export default function PointerScanner() {
         maxOffsetsPerNode: data.limitToMaxOffsetsPerNode
           ? Number(data.maxOffsetsPerNode)
           : 0,
+        threadStacks: data.allowThreadStacksAsStatic
+          ? Number(data.threadStacks)
+          : 0,
+        stackSize: data.allowThreadStacksAsStatic ? Number(data.stackSize) : 0,
       };
 
       return dotNetObj.invokeMethod("StartPointerScan", pointerScanOptions);
@@ -184,6 +220,9 @@ export default function PointerScanner() {
       limitToMaxOffsetsPerNode: true,
       maxOffsetsPerNode: "3",
       preventLoops: true,
+      allowThreadStacksAsStatic: true,
+      threadStacks: "2",
+      stackSize: (0x1000).toString(),
     },
     disabled: startPointerScanMutation.isPending,
   });
@@ -550,6 +589,68 @@ export default function PointerScanner() {
                   )}
                 />
               </div>
+              <FormField
+                control={form.control}
+                name="allowThreadStacksAsStatic"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Allow thread stacks as static</FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="maxOffsetsPerNode"
+                render={({ field }) => {
+                  const allowThreadStacksAsStaticValue = form.watch(
+                    "allowThreadStacksAsStatic"
+                  );
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Number of threads</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={!allowThreadStacksAsStaticValue}
+                          {...field}
+                          className="w-16"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+              <FormField
+                control={form.control}
+                name="stackSize"
+                render={({ field }) => {
+                  const allowThreadStacksAsStaticValue = form.watch(
+                    "allowThreadStacksAsStatic"
+                  );
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Thread's stack size</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={!allowThreadStacksAsStaticValue}
+                          {...field}
+                          className="w-16"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
             </form>
           </Form>
           <DialogFooter>

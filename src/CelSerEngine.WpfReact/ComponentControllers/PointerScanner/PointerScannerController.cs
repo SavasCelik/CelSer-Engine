@@ -36,7 +36,10 @@ public class PointerScannerController : ReactControllerBase
             MaxParallelWorkers = pointerScanOptionsDto.MaxParallelWorkers,
             LimitToMaxOffsetsPerNode = pointerScanOptionsDto.LimitToMaxOffsetsPerNode,
             MaxOffsetsPerNode = pointerScanOptionsDto.MaxOffsetsPerNode,
-            PreventLoops = pointerScanOptionsDto.PreventLoops
+            PreventLoops = pointerScanOptionsDto.PreventLoops,
+            AllowThreadStacksAsStatic = pointerScanOptionsDto.AllowThreadStacksAsStatic,
+            ThreadStacks = pointerScanOptionsDto.ThreadStacks,
+            StackSize = pointerScanOptionsDto.StackSize,
         });
     }
 

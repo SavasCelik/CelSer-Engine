@@ -14,13 +14,11 @@ public sealed class PendingCounter(int startValue) { public int Value = startVal
 
 public abstract class PointerScanner2
 {
-    public const string PointerListExtName = ".ptrlist"; 
-
-    private readonly bool _useStacks;
-    private IList<ModuleInfo> _modules;
-    private int _threadStacks = 2;
-    private List<IntPtr> _stackList = new(2);
+    public const string PointerListExtName = ".ptrlist";
     public const int MaxQueueSize = 64;
+
+    private IList<ModuleInfo> _modules;
+    private readonly List<IntPtr> _threadStackList;
     private bool _findValueInsteadOfAddress = false;
     private Dictionary<IntPtr, IntPtr> _pointerByMemoryAddress = new();
 
@@ -33,8 +31,8 @@ public abstract class PointerScanner2
     {
         NativeApi = nativeApi;
         PointerScanOptions = pointerScanOptions;
-        _useStacks = true;
         _modules = [];
+        _threadStackList = new List<IntPtr>(pointerScanOptions.ThreadStacks);
     }
 
     public async Task<IList<Pointer>> StartPointerScanAsync(SafeProcessHandle processHandle, StorageType storageType = StorageType.InMemory, string? fileName = null, CancellationToken cancellationToken = default)
@@ -80,14 +78,14 @@ public abstract class PointerScanner2
             }
         );
 
-        var foundPointers = 
+        var foundPointers =
             results.SelectMany(x => x.GetResults().Select(r => new Pointer
-                {
-                    ModuleName = _modules[r.ModuleIndex].ShortName,
-                    BaseAddress = _modules[r.ModuleIndex].BaseAddress,
-                    BaseOffset = (int)r.Offset,
-                    Offsets = r.TempResults
-                }
+            {
+                ModuleName = _modules[r.ModuleIndex].ShortName,
+                BaseAddress = _modules[r.ModuleIndex].BaseAddress,
+                BaseOffset = (int)r.Offset,
+                Offsets = r.TempResults
+            }
             )).ToList();
 
         if (storageType == StorageType.File)
@@ -210,17 +208,16 @@ public abstract class PointerScanner2
     {
         var kernel32 = _modules.FirstOrDefault(x => x.Name.Contains("kernel32.dll", StringComparison.InvariantCultureIgnoreCase));
 
-        for (int i = 0; i < _threadStacks; i++)
+        for (int i = 0; i < _threadStackList.Capacity; i++)
         {
             var threadStackStart = NativeApi.GetStackStart(processHandle, i, kernel32);
 
             if (threadStackStart == IntPtr.Zero)
             {
-                _threadStacks = i;
                 break;
             }
 
-            _stackList.Add(threadStackStart);
+            _threadStackList.Add(threadStackStart);
             _modules.Add(new ModuleInfo { ModuleIndex = _modules.Count, Name = $"THREADSTACK{i}", BaseAddress = threadStackStart });
         }
     }
@@ -346,17 +343,18 @@ public abstract class PointerScanner2
     protected bool isStatic(IntPtr address, [NotNullWhen(true)] out ModuleInfo? moduleInfo)
     {
         moduleInfo = null;
-        const int stackSize = 4096;
         var isStack = false;
         var moduleBaseAddress = IntPtr.Zero;
 
-        if (_useStacks)
+        if (PointerScanOptions.AllowThreadStacksAsStatic)
         {
-            for (var i = 0; i <= _threadStacks - 1; i++)
+            var stackSize = PointerScanOptions.StackSize;
+
+            foreach (var threadStack in _threadStackList)
             {
-                if (address.InRange(_stackList[i] - stackSize, _stackList[i]))
+                if (address.InRange(threadStack - stackSize, threadStack))
                 {
-                    moduleBaseAddress = _stackList[i];
+                    moduleBaseAddress = threadStack;
                     isStack = true;
                 }
             }
