@@ -128,15 +128,15 @@ const formSchema = z
     fromValue: z.string().optional(),
     toValue: z.string().optional(),
     scanCompareType: z.enum(
-      scanCompareTypes.map((type) => type.id) as [string, ...string[]],
+      scanCompareTypes.map((type) => type.id),
       {
-        errorMap: () => ({ message: "Please select a scan type." }),
+        error: () => ({ message: "Please select a scan type." }),
       }
     ),
     scanValueType: z.enum(
-      scanValueTypes.map((t) => t.id) as [string, ...string[]],
+      scanValueTypes.map((t) => t.id),
       {
-        errorMap: () => ({ message: "Please select a value type." }),
+        error: () => ({ message: "Please select a value type." }),
       }
     ),
     startAddress: z.string().refine((val) => validateHexAddress(val), {
@@ -146,17 +146,15 @@ const formSchema = z
       message: "Stop address must be a valid hex value.",
     }),
     writable: z.enum(memoryFilterOptionIds, {
-      errorMap: () => ({ message: "Please select a writeable option." }),
+      error: () => ({ message: "Please select a writeable option." }),
     }),
     executable: z.enum(memoryFilterOptionIds, {
-      errorMap: () => ({ message: "Please select an executable option." }),
+      error: () => ({ message: "Please select an executable option." }),
     }),
     copyOnWrite: z.enum(memoryFilterOptionIds, {
-      errorMap: () => ({ message: "Please select a copy-on-write option." }),
+      error: () => ({ message: "Please select a copy-on-write option." }),
     }),
-    memoryTypes: z
-      .array(z.enum(memoryTypesArr.map((t) => t.id) as [string, ...string[]]))
-      .optional(),
+    memoryTypes: z.array(z.enum(memoryTypesArr.map((t) => t.id))).optional(),
   })
   .superRefine((data, ctx) => {
     if (
@@ -309,7 +307,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
 
   return (
     <Form {...form}>
-      <form className="mt-5 flex w-[330px] flex-col gap-2">
+      <form className="mt-5 flex w-82.5 flex-col gap-2">
         {selectedScanType === "valueBetween" ? (
           <>
             {SearchInputField(form, "fromValue", "From Value")}
@@ -365,7 +363,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           name="scanCompareType"
           render={({ field }) => (
             <FormItem className="flex items-center gap-0">
-              <FormLabel className="w-[90px]">Scan Type</FormLabel>
+              <FormLabel className="w-22.5">Scan Type</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger {...field} className="w-full" size="xs">
@@ -389,7 +387,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
           name="scanValueType"
           render={({ field }) => (
             <FormItem className="flex items-center gap-0">
-              <FormLabel className="w-[90px]">Value Type</FormLabel>
+              <FormLabel className="w-22.5">Value Type</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger
@@ -557,7 +555,7 @@ function ScanConstraintsForm({ dotNetObj }: ScanConstraintsFormProps) {
             name="memoryTypes"
             render={() => (
               <FormItem className="flex gap-0">
-                <FormLabel className="w-[100px]">Memory Types</FormLabel>
+                <FormLabel className="w-25">Memory Types</FormLabel>
                 <div className="grid grid-cols-3 gap-1">
                   {memoryTypesArr.map((item) => (
                     <FormField

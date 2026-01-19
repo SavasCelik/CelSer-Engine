@@ -66,7 +66,7 @@ function App() {
               dotNetObj?.invokeMethod("OpenProcessSelector");
             }}
           >
-            <img className="h-[25px]" src={SelectProcessIcon}></img>
+            <img className="h-6.25" src={SelectProcessIcon}></img>
           </Button>
 
           <div className="flex-1">
@@ -86,7 +86,7 @@ function App() {
         </div>
 
         {/* Bottom table */}
-        <div className="mt-2 flex-1 overflow-auto rounded-lg border-1">
+        <div className="mt-2 flex-1 overflow-auto rounded-lg border">
           <TrackedItemsTable />
         </div>
       </div>
