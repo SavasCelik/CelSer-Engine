@@ -330,61 +330,54 @@ public sealed class NativeApi : INativeApi
     /// </summary>
     public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateResidentMemoryRegions(SafeProcessHandle hProcess, IntPtr? startAddress = null, IntPtr? stopAddress = null)
     {
-        var currentAddress = (ulong)(startAddress?.ToInt64() ?? IntPtr.Zero.ToInt64());
-        var lastAddress = (ulong)(stopAddress?.ToInt64() ?? IntPtr.MaxValue.ToInt64());
-        var memInfoClass = (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation;
-        const int memoryWorkingSetEx = 4;
-        var mbi = new MEMORY_BASIC_INFORMATION64();
+        // https://github.com/microsoft/TestApi/blob/92e28fa0b87803cdc1c668235e473f1baffb2c60/Development/Sources/TestApiCore/Code/LeakDetection/MemoryInterop.cs#L32
+        // the doc there uses 4 + i * 4 for flags, but it should be 8 + i * 8
+
         GetSystemInfo(out var systemInfo);
         var pageSize = systemInfo.pageSize; // always 0x1000?
+        var process = Process.GetProcessById(GetProcessId(hProcess));
+        var wsInfoLength = (int)(Marshal.SizeOf<PSAPI_WORKING_SET_INFORMATION>() +
+                                     Marshal.SizeOf<PSAPI_WORKING_SET_ENTRY>() * (process.WorkingSet64 / pageSize));
+        var workingSetPtr = Marshal.AllocHGlobal(wsInfoLength);
 
-        while (NtQueryVirtualMemory(hProcess, (IntPtr)currentAddress, memInfoClass, ref mbi, Marshal.SizeOf(mbi), out _) == NTSTATUS.Success
-            && currentAddress < lastAddress && (currentAddress + mbi.RegionSize) > currentAddress)
+        if (!QueryWorkingSet(hProcess, workingSetPtr, wsInfoLength))
         {
-            var workingSetSuccess = false;
+            throw new Exception("QueryWorkingSet failed to retrieve working set info");
+        }
 
-            if (mbi.State == MEMORY_STATE.MEM_COMMIT &&
-                !mbi.Protect.HasFlag(MEMORY_PROTECTION.PAGE_NOACCESS) &&
-                !mbi.Protect.HasFlag(MEMORY_PROTECTION.PAGE_GUARD))
+        var numberOfEntries = Marshal.ReadInt32(workingSetPtr);
+        var workingSet = new PSAPI_WORKING_SET_INFORMATION
+        {
+            NumberOfEntries = (UIntPtr)numberOfEntries,
+            WorkingSetInfo = new PSAPI_WORKING_SET_ENTRY[numberOfEntries]
+        };
+        var sizeOfNumberOfEntriesField = Marshal.SizeOf(workingSet.NumberOfEntries);
+        var sizeOfEntryField = Marshal.SizeOf<PSAPI_WORKING_SET_ENTRY>();
+
+        for (var i = 0; i < numberOfEntries; i++)
+        {
+            workingSet.WorkingSetInfo[i].Flags = (ulong)Marshal.ReadInt64(workingSetPtr, sizeOfNumberOfEntriesField + i * sizeOfEntryField);
+        }
+
+        Marshal.FreeHGlobal(workingSetPtr);
+        var memInfoClass = (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation;
+        var mbi = new MEMORY_BASIC_INFORMATION64();
+        var startAddressValue = startAddress ?? IntPtr.Zero;
+        var stopAddressValue = stopAddress ?? IntPtr.MaxValue;
+
+        foreach (var item in workingSet.WorkingSetInfo)
+        {
+            var address = (IntPtr)item.VirtualPage;
+
+            if (!address.InRange(startAddressValue, stopAddressValue))
+                continue;
+
+            if (NtQueryVirtualMemory(hProcess, address, memInfoClass, ref mbi, Marshal.SizeOf(mbi), out _) == NTSTATUS.Success)
             {
-                var pageCount = mbi.RegionSize / pageSize;
-                var pages = new MEMORY_WORKING_SET_EX_INFORMATION[pageCount];
+                mbi.RegionSize = pageSize;
 
-                for (ulong i = 0; i < pageCount; i++)
-                {
-                    var pageAddr = mbi.BaseAddress + i * pageSize;
-                    var ws = new MEMORY_WORKING_SET_EX_INFORMATION
-                    {
-                        VirtualAddress = (IntPtr)pageAddr
-                    };
-                    pages[i] = ws;
-                }
-
-                var pageArrayHandle = GCHandle.Alloc(pages, GCHandleType.Pinned);
-
-                try
-                {
-                    var pageArrayPtr = pageArrayHandle.AddrOfPinnedObject();
-                    if (NtQueryVirtualMemory(hProcess, IntPtr.Zero, memoryWorkingSetEx, pageArrayPtr, Marshal.SizeOf<MEMORY_WORKING_SET_EX_INFORMATION>() * (int)pageCount, out _) == NTSTATUS.Success)
-                    {
-                        if (pages.Any(x => x.IsValid))
-                        {
-                            workingSetSuccess = true;
-                        }
-                    }
-                }
-                finally
-                {
-                    pageArrayHandle.Free();
-                }
-            }
-
-            if (workingSetSuccess)
-            {
                 yield return mbi;
             }
-
-            currentAddress = mbi.BaseAddress + mbi.RegionSize;
         }
     }
 

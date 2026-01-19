@@ -51,6 +51,13 @@ internal static class Functions
         out uint ReturnLength
     );
 
+    [DllImport("psapi.dll", SetLastError = true)]
+    public static extern bool QueryWorkingSet(
+        SafeProcessHandle ProcessHandle,
+        IntPtr pv,
+        int cb
+    );
+
     [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "K32EnumProcessModules")]
     public static extern bool EnumProcessModules(SafeProcessHandle hProcess, [Out] IntPtr[]? lphModule, uint cb, [MarshalAs(UnmanagedType.U4)] out uint lpcbNeeded);
 

@@ -123,4 +123,27 @@ public static class Structs
         public int Priority;
         public int BasePriority;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct PSAPI_WORKING_SET_INFORMATION
+    {
+        public UIntPtr NumberOfEntries;
+
+        [MarshalAsAttribute(UnmanagedType.ByValArray, SizeConst = 1, ArraySubType = UnmanagedType.Struct)]
+        public PSAPI_WORKING_SET_ENTRY[] WorkingSetInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct PSAPI_WORKING_SET_ENTRY
+    {
+        public ulong Flags;
+
+        public ulong Protection => (Flags >> 0) & 0x1F;     // 5 bits
+        public ulong ShareCount => (Flags >> 5) & 0x7;      // 3 bits
+        public bool Shared => ((Flags >> 8) & 1) != 0;      // 1 bit
+        public ulong Reserved => (Flags >> 9) & 0x7;        // 3 bits
+
+        // after first 12 bits is the address
+        public ulong VirtualPage => Flags & 0xfffffffffffff000;
+    }
 }

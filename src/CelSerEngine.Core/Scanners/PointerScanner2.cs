@@ -171,6 +171,11 @@ public abstract class PointerScanner2
             })
             .ToList();
 
+        if (PointerScanOptions.OnlyResidentMemory)
+        {
+            memoryRegions = memoryRegions.Where(x => x.ValidPointerRange).ToList();
+        }
+
         if (memoryRegions.Count == 0)
             throw new Exception("No memory found in the specified region");
 
