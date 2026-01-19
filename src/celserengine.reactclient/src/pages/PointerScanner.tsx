@@ -111,6 +111,7 @@ const formSchema = z
     stackSize: z.string().optional(),
     allowReadOnlyPointers: z.boolean(),
     onlyOneStaticInPath: z.boolean(),
+    onlyResidentMemory: z.boolean(),
   })
   .superRefine((data, ctx) => {
     if (data.limitToMaxOffsetsPerNode) {
@@ -227,6 +228,7 @@ export default function PointerScanner() {
       stackSize: (0x1000).toString(),
       allowReadOnlyPointers: false,
       onlyOneStaticInPath: false,
+      onlyResidentMemory: false,
     },
     disabled: startPointerScanMutation.isPending,
   });
@@ -685,6 +687,22 @@ export default function PointerScanner() {
                     <FormLabel>
                       Stop traversing a path when a static has been found
                     </FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="onlyResidentMemory"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel>Only scan resident memory</FormLabel>
                     <FormMessage />
                   </FormItem>
                 )}

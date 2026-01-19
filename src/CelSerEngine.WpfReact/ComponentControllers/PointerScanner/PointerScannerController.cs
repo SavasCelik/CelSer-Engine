@@ -42,6 +42,7 @@ public class PointerScannerController : ReactControllerBase
             StackSize = pointerScanOptionsDto.StackSize,
             AllowReadOnlyPointers = pointerScanOptionsDto.AllowReadOnlyPointers,
             OnlyOneStaticInPath = pointerScanOptionsDto.OnlyOneStaticInPath,
+            OnlyResidentMemory = pointerScanOptionsDto.OnlyResidentMemory,
         });
     }
 
