@@ -18,4 +18,5 @@ public class PointerScanOptions
     public int ThreadStacks { get; set; } = 2;
     public int StackSize { get; set; } = 0x1000;
     public bool AllowReadOnlyPointers { get; set; } = false;
+    public bool OnlyOneStaticInPath { get; set; } = false;
 }

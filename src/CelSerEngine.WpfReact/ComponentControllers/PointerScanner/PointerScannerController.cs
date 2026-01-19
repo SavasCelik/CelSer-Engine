@@ -41,6 +41,7 @@ public class PointerScannerController : ReactControllerBase
             ThreadStacks = pointerScanOptionsDto.ThreadStacks,
             StackSize = pointerScanOptionsDto.StackSize,
             AllowReadOnlyPointers = pointerScanOptionsDto.AllowReadOnlyPointers,
+            OnlyOneStaticInPath = pointerScanOptionsDto.OnlyOneStaticInPath,
         });
     }
 

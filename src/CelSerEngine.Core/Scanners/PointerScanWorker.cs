@@ -201,7 +201,11 @@ public class PointerScanWorker
                 {
                     //found a static one 
                     StorePath(level, plist.List[j].StaticData.ModuleIndex, plist.List[j].StaticData.Offset);
-                    //if onlyOneStaticInPath then DontGoDeeper:= true;
+
+                    if (_pointerScanner.PointerScanOptions.OnlyOneStaticInPath)
+                    {
+                        dontGoDeeper = true;
+                    }
                 }
             }
 
