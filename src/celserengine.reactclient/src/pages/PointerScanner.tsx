@@ -613,7 +613,7 @@ export default function PointerScanner() {
               />
               <FormField
                 control={form.control}
-                name="maxOffsetsPerNode"
+                name="threadStacks"
                 render={({ field }) => {
                   const allowThreadStacksAsStaticValue = form.watch(
                     "allowThreadStacksAsStatic"
