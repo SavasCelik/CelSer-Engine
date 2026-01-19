@@ -142,8 +142,11 @@ public abstract class PointerScanner2
 
     private IReadOnlyList<VirtualMemoryRegion2> GetMemoryRegions(SafeProcessHandle processHandle)
     {
-        var memoryRegions = NativeApi
-            .EnumerateMemoryRegions(processHandle)
+        var memoryRegionsEnumerable = PointerScanOptions.OnlyResidentMemory
+            ? NativeApi.EnumerateResidentMemoryRegions(processHandle)
+            : NativeApi.EnumerateMemoryRegions(processHandle);
+
+        var memoryRegions = memoryRegionsEnumerable
             .Where(m =>
                 !IsSystemModule(m)
                 && m.State == MEMORY_STATE.MEM_COMMIT

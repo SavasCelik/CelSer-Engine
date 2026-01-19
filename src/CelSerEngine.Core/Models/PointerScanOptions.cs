@@ -19,4 +19,5 @@ public class PointerScanOptions
     public int StackSize { get; set; } = 0x1000;
     public bool AllowReadOnlyPointers { get; set; } = false;
     public bool OnlyOneStaticInPath { get; set; } = false;
+    public bool OnlyResidentMemory { get; set; } = false;
 }

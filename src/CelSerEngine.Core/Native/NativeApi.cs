@@ -1,12 +1,12 @@
-﻿using System.Diagnostics;
-using static CelSerEngine.Core.Native.Enums;
-using static CelSerEngine.Core.Native.Structs;
-using static CelSerEngine.Core.Native.Functions;
+﻿using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
-using System.Runtime.InteropServices;
-using CelSerEngine.Core.Extensions;
-using System.Buffers;
 using Microsoft.Win32.SafeHandles;
+using System.Buffers;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using static CelSerEngine.Core.Native.Enums;
+using static CelSerEngine.Core.Native.Functions;
+using static CelSerEngine.Core.Native.Structs;
 
 namespace CelSerEngine.Core.Native;
 
@@ -321,6 +321,69 @@ public sealed class NativeApi : INativeApi
             && currentAddress < lastAddress && (currentAddress + mbi.RegionSize) > currentAddress)
         {
             yield return mbi;
+            currentAddress = mbi.BaseAddress + mbi.RegionSize;
+        }
+    }
+
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateResidentMemoryRegions(SafeProcessHandle hProcess, IntPtr? startAddress = null, IntPtr? stopAddress = null)
+    {
+        var currentAddress = (ulong)(startAddress?.ToInt64() ?? IntPtr.Zero.ToInt64());
+        var lastAddress = (ulong)(stopAddress?.ToInt64() ?? IntPtr.MaxValue.ToInt64());
+        var memInfoClass = (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation;
+        const int memoryWorkingSetEx = 4;
+        var mbi = new MEMORY_BASIC_INFORMATION64();
+        GetSystemInfo(out var systemInfo);
+        var pageSize = systemInfo.pageSize; // always 0x1000?
+
+        while (NtQueryVirtualMemory(hProcess, (IntPtr)currentAddress, memInfoClass, ref mbi, Marshal.SizeOf(mbi), out _) == NTSTATUS.Success
+            && currentAddress < lastAddress && (currentAddress + mbi.RegionSize) > currentAddress)
+        {
+            var workingSetSuccess = false;
+
+            if (mbi.State == MEMORY_STATE.MEM_COMMIT &&
+                !mbi.Protect.HasFlag(MEMORY_PROTECTION.PAGE_NOACCESS) &&
+                !mbi.Protect.HasFlag(MEMORY_PROTECTION.PAGE_GUARD))
+            {
+                var pageCount = mbi.RegionSize / pageSize;
+                var pages = new MEMORY_WORKING_SET_EX_INFORMATION[pageCount];
+
+                for (ulong i = 0; i < pageCount; i++)
+                {
+                    var pageAddr = mbi.BaseAddress + i * pageSize;
+                    var ws = new MEMORY_WORKING_SET_EX_INFORMATION
+                    {
+                        VirtualAddress = (IntPtr)pageAddr
+                    };
+                    pages[i] = ws;
+                }
+
+                var pageArrayHandle = GCHandle.Alloc(pages, GCHandleType.Pinned);
+
+                try
+                {
+                    var pageArrayPtr = pageArrayHandle.AddrOfPinnedObject();
+                    if (NtQueryVirtualMemory(hProcess, IntPtr.Zero, memoryWorkingSetEx, pageArrayPtr, Marshal.SizeOf<MEMORY_WORKING_SET_EX_INFORMATION>() * (int)pageCount, out _) == NTSTATUS.Success)
+                    {
+                        if (pages.Any(x => x.IsValid))
+                        {
+                            workingSetSuccess = true;
+                        }
+                    }
+                }
+                finally
+                {
+                    pageArrayHandle.Free();
+                }
+            }
+
+            if (workingSetSuccess)
+            {
+                yield return mbi;
+            }
+
             currentAddress = mbi.BaseAddress + mbi.RegionSize;
         }
     }

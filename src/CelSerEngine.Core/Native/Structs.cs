@@ -44,6 +44,26 @@ public static class Structs
         public uint __alignment2;
     }
 
+    // https://learn.microsoft.com/en-us/windows/win32/api/psapi/ns-psapi-psapi_working_set_ex_block
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MEMORY_WORKING_SET_EX_INFORMATION
+    {
+        public IntPtr VirtualAddress;
+        public ulong Flags;
+
+        public readonly bool IsValid => (Flags & (1UL << 0)) != 0;
+        public readonly uint ShareCount => (uint)((Flags >> 1) & 0x7);
+        public readonly MEMORY_PROTECTION Win32Protection => (MEMORY_PROTECTION)((Flags >> 4) & 0x7FF);
+        public readonly bool Shared => (Flags & (1UL << 15)) != 0;
+        public readonly uint Node => (uint)((Flags >> 16) & 0x3F);
+        public readonly bool Locked => (Flags & (1UL << 22)) != 0;
+        public readonly bool LargePage => (Flags & (1UL << 23)) != 0;
+        public readonly bool Bad => (Flags & (1UL << 31)) != 0;
+
+        // Invalid-page view
+        public readonly bool InvalidShared => !IsValid && ((Flags & (1UL << 15)) != 0);
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct OBJECT_ATTRIBUTES
     {

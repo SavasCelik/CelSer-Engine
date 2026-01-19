@@ -16,6 +16,11 @@ public interface INativeApi
     public IList<VirtualMemoryRegion> GatherVirtualMemoryRegions(SafeProcessHandle hProcess);
     public void UpdateAddresses(SafeProcessHandle hProcess, IEnumerable<IMemorySegment> virtualAddresses, CancellationToken token = default);
     public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateMemoryRegions(SafeProcessHandle hProcess, IntPtr? startAddress = null, IntPtr? stopAddress = null);
+
+    /// <summary>
+    /// Returns memory regions that contain pages currently resident in physical RAM (i.e. not paged out)
+    /// </summary>
+    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateResidentMemoryRegions(SafeProcessHandle hProcess, IntPtr? startAddress = null, IntPtr? stopAddress = null);
     public IList<ModuleInfo> GetProcessModules(SafeProcessHandle hProcess);
     public IntPtr GetStackStart(SafeProcessHandle hProcess, int threadNr, ModuleInfo? kernel32Module = null);
 }
