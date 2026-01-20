@@ -6,16 +6,9 @@ import { DotNetObject } from "@/utils/useDotNet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Row } from "@tanstack/react-table";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "./ui/form";
+import { Form } from "./ui/form";
 import { Loader2Icon } from "lucide-react";
 import {
   Select,
@@ -25,6 +18,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { scanValueTypes } from "@/constants/ScanValueTypes";
+import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 
 type TrackedItemSimpleFormProps = {
   rows: Row<TrackedItem>[];
@@ -34,7 +28,9 @@ type TrackedItemSimpleFormProps = {
 };
 
 const formSchema = z.object({
-  newValue: z.string(),
+  newValue: z.string().refine((val) => val.trim().length > 0, {
+    message: "Value cannot be empty",
+  }),
 });
 type FormDataType = z.infer<typeof formSchema>;
 
@@ -91,50 +87,69 @@ export default function TrackedItemSimpleForm({
   return (
     <Form {...form}>
       <form>
-        <FormField
-          control={form.control}
-          name="newValue"
-          render={({ field }) => (
-            <FormItem className="grid grid-cols-5 items-center gap-0 py-4">
-              <FormLabel>{trackedItemKeyDisplayText}</FormLabel>
-              {isDataTypeDialog ? (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger {...field} className="col-span-4 w-full">
+        <FieldGroup>
+          <Controller
+            name="newValue"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field
+                data-invalid={fieldState.invalid}
+                className="grid grid-cols-5 gap-y-1"
+                orientation="horizontal"
+              >
+                <FieldLabel htmlFor={field.name}>
+                  {trackedItemKeyDisplayText}
+                </FieldLabel>
+                {isDataTypeDialog ? (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger
+                      {...field}
+                      id={field.name}
+                      className="col-span-4"
+                      aria-invalid={fieldState.invalid}
+                    >
                       <SelectValue placeholder="Value Type" />
                     </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {scanValueTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <FormControl>
-                  <Input {...field} className="col-span-4" />
-                </FormControl>
-              )}
-              <FormMessage className="col-span-5 col-start-2" />
-            </FormItem>
-          )}
-        />
-        <DialogFooter>
-          <Button
-            type="submit"
-            onClick={form.handleSubmit(onSaveChanges)}
-            disabled={
-              !form.formState.isValid || editTrackedItemsMutation.isPending
-            }
-          >
-            {editTrackedItemsMutation.isPending && (
-              <Loader2Icon className="animate-spin" />
+                    <SelectContent>
+                      {scanValueTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    className="col-span-4"
+                    id={field.name}
+                    {...field}
+                    aria-invalid={fieldState.invalid}
+                  />
+                )}
+                {fieldState.invalid && (
+                  <FieldError
+                    className="col-span-4 col-start-2"
+                    errors={[fieldState.error]}
+                  />
+                )}
+              </Field>
             )}
-            Save changes
-          </Button>
-        </DialogFooter>
+          />
+          <DialogFooter>
+            <Button
+              type="submit"
+              onClick={form.handleSubmit(onSaveChanges)}
+              disabled={
+                !form.formState.isValid || editTrackedItemsMutation.isPending
+              }
+            >
+              {editTrackedItemsMutation.isPending && (
+                <Loader2Icon className="animate-spin" />
+              )}
+              Save changes
+            </Button>
+          </DialogFooter>
+        </FieldGroup>
       </form>
     </Form>
   );
