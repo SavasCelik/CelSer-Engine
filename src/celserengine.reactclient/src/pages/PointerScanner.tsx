@@ -9,14 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Loader2Icon } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +21,7 @@ import {
 } from "@tanstack/react-query";
 import { useDotNet } from "@/utils/useDotNet";
 import React from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import {
   Column,
   ColumnDef,
@@ -53,6 +45,21 @@ import { cn } from "@/lib/utils";
 import TablePagination from "@/components/TablePagination";
 import { TableColumnHeader } from "@/components/TableColumnHeader";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+} from "@/components/ui/field";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 type PointerScanResult = {
   moduleNameWithBaseOffset: string;
@@ -465,250 +472,380 @@ export default function PointerScanner() {
             <DialogTitle>Pointer scanner options</DialogTitle>
             <DialogDescription></DialogDescription>
           </DialogHeader>
-          <Form {...form}>
-            <form className="grid grid-cols-3 gap-2">
-              <FormField
-                control={form.control}
-                name="scanAddress"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Scan Address:</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="maxOffset"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max Offset Value:</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="maxLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max Level:</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="maxParallelWorkers"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max Parallel Workers:</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="col-span-3">
-                <FormField
+          <form>
+            <FieldGroup className="gap-4">
+              <FieldGroup>
+                <Controller
+                  name="scanAddress"
                   control={form.control}
-                  name="requireAlignedPointers"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel>Addresses must be 32-bit aligned</FormLabel>
-                      <FormMessage />
-                    </FormItem>
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={field.name}>Scan Address</FieldLabel>
+                      <Input
+                        {...field}
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
-              </div>
-              <div className="col-span-3 flex items-center gap-2">
-                <FormField
-                  control={form.control}
-                  name="limitToMaxOffsetsPerNode"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                <div className="grid grid-cols-3 gap-4">
+                  <Controller
+                    name="maxOffset"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>Max Offset</FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
                         />
-                      </FormControl>
-                      <FormLabel>Limit to max offsets per node:</FormLabel>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="maxOffsetsPerNode"
-                  render={({ field }) => {
-                    const limitToMaxOffsetsPerNodeValue = form.watch(
-                      "limitToMaxOffsetsPerNode"
-                    );
-
-                    return (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            disabled={!limitToMaxOffsetsPerNodeValue}
-                            {...field}
-                            className="w-16"
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="maxLevel"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>Max Level</FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="maxParallelWorkers"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Max Parallel Workers
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                </div>
+              </FieldGroup>
+              <FieldSeparator />
+              <FieldSet>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="advanced-options">
+                    <AccordionTrigger className="p-0">
+                      <FieldLegend>Advanced options</FieldLegend>
+                    </AccordionTrigger>
+                    <AccordionContent className="m-1">
+                      <FieldGroup className="grid grid-cols-2">
+                        <div className="flex flex-col gap-2">
+                          <Controller
+                            name="requireAlignedPointers"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field
+                                data-invalid={fieldState.invalid}
+                                orientation="horizontal"
+                                className="h-7"
+                              >
+                                <Checkbox
+                                  id={field.name}
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                                <FieldLabel
+                                  htmlFor={field.name}
+                                  className="font-normal"
+                                >
+                                  Addresses must be 32-bit aligned
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
-                />
-              </div>
-              <div className="col-span-3">
-                <FormField
-                  control={form.control}
-                  name="preventLoops"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel>No looping pointers</FormLabel>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="allowThreadStacksAsStatic"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel>Allow thread stacks as static</FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="threadStacks"
-                render={({ field }) => {
-                  const allowThreadStacksAsStaticValue = form.watch(
-                    "allowThreadStacksAsStatic"
-                  );
-
-                  return (
-                    <FormItem>
-                      <FormLabel>Number of threads</FormLabel>
-                      <FormControl>
-                        <Input
-                          disabled={!allowThreadStacksAsStaticValue}
-                          {...field}
-                          className="w-16"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
-              />
-              <FormField
-                control={form.control}
-                name="stackSize"
-                render={({ field }) => {
-                  const allowThreadStacksAsStaticValue = form.watch(
-                    "allowThreadStacksAsStatic"
-                  );
-
-                  return (
-                    <FormItem>
-                      <FormLabel>Thread's stack size</FormLabel>
-                      <FormControl>
-                        <Input
-                          disabled={!allowThreadStacksAsStaticValue}
-                          {...field}
-                          className="w-16"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
-              />
-              <FormField
-                control={form.control}
-                name="allowReadOnlyPointers"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel>Include read-only pointers</FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="onlyOneStaticInPath"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel>
-                      Stop traversing a path when a static has been found
-                    </FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="onlyResidentMemory"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormLabel>Only scan resident memory</FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
+                          <Controller
+                            name="preventLoops"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field
+                                data-invalid={fieldState.invalid}
+                                orientation="horizontal"
+                              >
+                                <Checkbox
+                                  id={field.name}
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                                <FieldLabel
+                                  htmlFor={field.name}
+                                  className="font-normal"
+                                >
+                                  No looping pointers
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
+                          />
+                          <Controller
+                            name="allowReadOnlyPointers"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field
+                                data-invalid={fieldState.invalid}
+                                orientation="horizontal"
+                              >
+                                <Checkbox
+                                  id={field.name}
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                                <FieldLabel
+                                  htmlFor={field.name}
+                                  className="font-normal"
+                                >
+                                  Include read-only pointers
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
+                          />
+                          <Controller
+                            name="onlyOneStaticInPath"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field
+                                data-invalid={fieldState.invalid}
+                                orientation="horizontal"
+                              >
+                                <Checkbox
+                                  id={field.name}
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                                <FieldLabel
+                                  htmlFor={field.name}
+                                  className="font-normal"
+                                >
+                                  Stop traversing a path when a static has been
+                                  found
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
+                          />
+                          <Controller
+                            name="onlyResidentMemory"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field
+                                data-invalid={fieldState.invalid}
+                                orientation="horizontal"
+                              >
+                                <Checkbox
+                                  id={field.name}
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                                <FieldLabel
+                                  htmlFor={field.name}
+                                  className="font-normal"
+                                >
+                                  Only scan resident memory
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-1">
+                            <Controller
+                              name="limitToMaxOffsetsPerNode"
+                              control={form.control}
+                              render={({ field, fieldState }) => (
+                                <Field
+                                  data-invalid={fieldState.invalid}
+                                  orientation="horizontal"
+                                  className="h-7 w-50"
+                                >
+                                  <Checkbox
+                                    id={field.name}
+                                    name={field.name}
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    aria-invalid={fieldState.invalid}
+                                  />
+                                  <FieldLabel
+                                    htmlFor={field.name}
+                                    className="font-normal"
+                                  >
+                                    Limit to max offsets per node
+                                  </FieldLabel>
+                                  {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                  )}
+                                </Field>
+                              )}
+                            />
+                            <Controller
+                              name="maxOffsetsPerNode"
+                              control={form.control}
+                              render={({ field, fieldState }) => (
+                                <Field
+                                  data-invalid={fieldState.invalid}
+                                  orientation="horizontal"
+                                  className="w-16"
+                                >
+                                  <Input
+                                    className="h-7"
+                                    {...field}
+                                    id={field.name}
+                                    aria-invalid={fieldState.invalid}
+                                    disabled={
+                                      !form.watch("limitToMaxOffsetsPerNode")
+                                    }
+                                  />
+                                  {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                  )}
+                                </Field>
+                              )}
+                            />
+                          </div>
+                          <Controller
+                            name="allowThreadStacksAsStatic"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field
+                                data-invalid={fieldState.invalid}
+                                orientation="horizontal"
+                              >
+                                <Checkbox
+                                  id={field.name}
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                  aria-invalid={fieldState.invalid}
+                                />
+                                <FieldLabel
+                                  htmlFor={field.name}
+                                  className="font-normal"
+                                >
+                                  Allow thread stacks as static
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </Field>
+                            )}
+                          />
+                          <div className="flex flex-col gap-1 ps-7">
+                            <Controller
+                              name="threadStacks"
+                              control={form.control}
+                              render={({ field, fieldState }) => (
+                                <Field
+                                  data-invalid={fieldState.invalid}
+                                  orientation="horizontal"
+                                  data-disabled={
+                                    !form.watch("allowThreadStacksAsStatic")
+                                  }
+                                >
+                                  <FieldLabel
+                                    htmlFor={field.name}
+                                    className="w-70 font-normal"
+                                  >
+                                    Number of threads
+                                  </FieldLabel>
+                                  <Input
+                                    {...field}
+                                    id={field.name}
+                                    aria-invalid={fieldState.invalid}
+                                    className="h-7"
+                                    disabled={
+                                      !form.watch("allowThreadStacksAsStatic")
+                                    }
+                                  />
+                                  {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                  )}
+                                </Field>
+                              )}
+                            />
+                            <Controller
+                              name="stackSize"
+                              control={form.control}
+                              render={({ field, fieldState }) => (
+                                <Field
+                                  data-invalid={fieldState.invalid}
+                                  orientation="horizontal"
+                                  data-disabled={
+                                    !form.watch("allowThreadStacksAsStatic")
+                                  }
+                                >
+                                  <FieldLabel
+                                    htmlFor={field.name}
+                                    className="w-70 font-normal"
+                                  >
+                                    Thread's stack size
+                                  </FieldLabel>
+                                  <Input
+                                    {...field}
+                                    id={field.name}
+                                    aria-invalid={fieldState.invalid}
+                                    className="h-7"
+                                    disabled={
+                                      !form.watch("allowThreadStacksAsStatic")
+                                    }
+                                  />
+                                  {fieldState.invalid && (
+                                    <FieldError errors={[fieldState.error]} />
+                                  )}
+                                </Field>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </FieldGroup>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </FieldSet>
+            </FieldGroup>
+          </form>
           <DialogFooter>
             <Button
               type="submit"
