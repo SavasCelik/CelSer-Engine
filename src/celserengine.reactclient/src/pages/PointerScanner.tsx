@@ -557,8 +557,10 @@ export default function PointerScanner() {
               <FieldSet>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="advanced-options">
-                    <AccordionTrigger className="p-0">
-                      <FieldLegend>Advanced options</FieldLegend>
+                    <AccordionTrigger className="mb-3 p-0">
+                      <FieldLegend className="mb-0">
+                        Advanced options
+                      </FieldLegend>
                     </AccordionTrigger>
                     <AccordionContent className="m-1">
                       <FieldGroup className="grid grid-cols-2">
