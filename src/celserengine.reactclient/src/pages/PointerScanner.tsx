@@ -60,6 +60,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type PointerScanResult = {
   moduleNameWithBaseOffset: string;
@@ -569,16 +574,44 @@ export default function PointerScanner() {
                               >
                                 <Checkbox
                                   id={field.name}
+                                  name={field.name}
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
                                   aria-invalid={fieldState.invalid}
                                 />
-                                <FieldLabel
-                                  htmlFor={field.name}
-                                  className="font-normal"
+                                <Tooltip
+                                  delayDuration={500}
+                                  disableHoverableContent={true}
                                 >
-                                  Addresses must be 32-bit aligned
-                                </FieldLabel>
+                                  <TooltipTrigger asChild>
+                                    <FieldLabel
+                                      htmlFor={field.name}
+                                      className="font-normal"
+                                    >
+                                      Addresses must be 32-bit aligned
+                                    </FieldLabel>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      Limits pointer scanning to 32-bit aligned
+                                      addresses (divisible by 4), which is
+                                      typical for valid pointers and can reduce
+                                      scan noise
+                                    </p>
+                                    <p>
+                                      Disable to include unaligned addresses
+                                    </p>
+
+                                    <p className="mt-2">
+                                      <strong>Pro:</strong> Faster, cleaner
+                                      results
+                                    </p>
+                                    <p>
+                                      <strong>Con:</strong> Some valid pointers
+                                      may be skipped.
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 {fieldState.invalid && (
                                   <FieldError errors={[fieldState.error]} />
                                 )}
@@ -595,16 +628,58 @@ export default function PointerScanner() {
                               >
                                 <Checkbox
                                   id={field.name}
+                                  name={field.name}
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
                                   aria-invalid={fieldState.invalid}
                                 />
-                                <FieldLabel
-                                  htmlFor={field.name}
-                                  className="font-normal"
+                                <Tooltip
+                                  delayDuration={500}
+                                  disableHoverableContent={true}
                                 >
-                                  No looping pointers
-                                </FieldLabel>
+                                  <TooltipTrigger asChild>
+                                    <FieldLabel
+                                      htmlFor={field.name}
+                                      className="font-normal"
+                                    >
+                                      No looping pointers
+                                    </FieldLabel>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      Removes pointer paths that loop back on
+                                      themselves
+                                    </p>
+                                    <p>
+                                      For example,
+                                      <code className="px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
+                                        base →{" "}
+                                        <span className="underline decoration-emerald-500 decoration-2">
+                                          p1
+                                        </span>{" "}
+                                        → p2 → p3 →{" "}
+                                        <span className="underline decoration-emerald-500 decoration-2">
+                                          p1
+                                        </span>{" "}
+                                        → p4
+                                      </code>
+                                      is unnecessary, since
+                                      <code className="px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
+                                        base → p1 → p4
+                                      </code>
+                                      works just as well
+                                    </p>
+
+                                    <p className="mt-2">
+                                      <strong>Pro:</strong> Fewer results and
+                                      less disk space used
+                                    </p>
+                                    <p>
+                                      <strong>Con:</strong> Slightly slower
+                                      scans due to extra checks
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 {fieldState.invalid && (
                                   <FieldError errors={[fieldState.error]} />
                                 )}
@@ -621,16 +696,40 @@ export default function PointerScanner() {
                               >
                                 <Checkbox
                                   id={field.name}
+                                  name={field.name}
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
                                   aria-invalid={fieldState.invalid}
                                 />
-                                <FieldLabel
-                                  htmlFor={field.name}
-                                  className="font-normal"
+                                <Tooltip
+                                  delayDuration={500}
+                                  disableHoverableContent={true}
                                 >
-                                  Include read-only pointers
-                                </FieldLabel>
+                                  <TooltipTrigger asChild>
+                                    <FieldLabel
+                                      htmlFor={field.name}
+                                      className="font-normal"
+                                    >
+                                      Include read-only pointers
+                                    </FieldLabel>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      Includes read-only memory when scanning
+                                      for pointer paths. This allows paths that
+                                      pass through read-only blocks to be found
+                                    </p>
+
+                                    <p className="mt-2">
+                                      <strong>Pro:</strong> Works even when
+                                      pointers are marked read-only
+                                    </p>
+                                    <p>
+                                      <strong>Con:</strong> Takes longer and
+                                      adds lots of likely useless results
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 {fieldState.invalid && (
                                   <FieldError errors={[fieldState.error]} />
                                 )}
@@ -647,17 +746,40 @@ export default function PointerScanner() {
                               >
                                 <Checkbox
                                   id={field.name}
+                                  name={field.name}
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
                                   aria-invalid={fieldState.invalid}
                                 />
-                                <FieldLabel
-                                  htmlFor={field.name}
-                                  className="font-normal"
+                                <Tooltip
+                                  delayDuration={500}
+                                  disableHoverableContent={true}
                                 >
-                                  Stop traversing a path when a static has been
-                                  found
-                                </FieldLabel>
+                                  <TooltipTrigger asChild>
+                                    <FieldLabel
+                                      htmlFor={field.name}
+                                      className="font-normal"
+                                    >
+                                      Stop traversing a path when a static has
+                                      been found
+                                    </FieldLabel>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      Don't follow a pointer path past the first
+                                      static pointer found
+                                    </p>
+
+                                    <p className="mt-2">
+                                      <strong>Pro:</strong> Faster scan with
+                                      fewer results
+                                    </p>
+                                    <p>
+                                      <strong>Con:</strong> Some pointer paths
+                                      beyond the first static may be skipped
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 {fieldState.invalid && (
                                   <FieldError errors={[fieldState.error]} />
                                 )}
@@ -674,16 +796,39 @@ export default function PointerScanner() {
                               >
                                 <Checkbox
                                   id={field.name}
+                                  name={field.name}
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
                                   aria-invalid={fieldState.invalid}
                                 />
-                                <FieldLabel
-                                  htmlFor={field.name}
-                                  className="font-normal"
+                                <Tooltip
+                                  delayDuration={500}
+                                  disableHoverableContent={true}
                                 >
-                                  Only scan resident memory
-                                </FieldLabel>
+                                  <TooltipTrigger asChild>
+                                    <FieldLabel
+                                      htmlFor={field.name}
+                                      className="font-normal"
+                                    >
+                                      Only scan resident memory
+                                    </FieldLabel>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      Scan only resident memory (memory
+                                      currently loaded in RAM)
+                                    </p>
+
+                                    <p className="mt-2">
+                                      <strong>Pro:</strong> Limits scan to
+                                      resident memory
+                                    </p>
+                                    <p>
+                                      <strong>Con:</strong> Paged out memory is
+                                      ignored
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 {fieldState.invalid && (
                                   <FieldError errors={[fieldState.error]} />
                                 )}
@@ -709,12 +854,34 @@ export default function PointerScanner() {
                                     onCheckedChange={field.onChange}
                                     aria-invalid={fieldState.invalid}
                                   />
-                                  <FieldLabel
-                                    htmlFor={field.name}
-                                    className="font-normal"
+                                  <Tooltip
+                                    delayDuration={500}
+                                    disableHoverableContent={true}
                                   >
-                                    Limit to max offsets per node
-                                  </FieldLabel>
+                                    <TooltipTrigger asChild>
+                                      <FieldLabel
+                                        htmlFor={field.name}
+                                        className="font-normal"
+                                      >
+                                        Limit offsets per node
+                                      </FieldLabel>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>
+                                        Restrict the number of offsets that can
+                                        be followed from each pointer node
+                                      </p>
+
+                                      <p className="mt-2">
+                                        <strong>Pro:</strong> Very fast and
+                                        produces the shortest pointer paths
+                                      </p>
+                                      <p>
+                                        <strong>Con:</strong> Some pointer paths
+                                        may be skipped if the limit is reached
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                   {fieldState.invalid && (
                                     <FieldError errors={[fieldState.error]} />
                                   )}
@@ -756,16 +923,39 @@ export default function PointerScanner() {
                               >
                                 <Checkbox
                                   id={field.name}
+                                  name={field.name}
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
                                   aria-invalid={fieldState.invalid}
                                 />
-                                <FieldLabel
-                                  htmlFor={field.name}
-                                  className="font-normal"
+                                <Tooltip
+                                  delayDuration={500}
+                                  disableHoverableContent={true}
                                 >
-                                  Allow thread stacks as static
-                                </FieldLabel>
+                                  <TooltipTrigger asChild>
+                                    <FieldLabel
+                                      htmlFor={field.name}
+                                      className="font-normal"
+                                    >
+                                      Allow thread stacks as static
+                                    </FieldLabel>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      Allow thread stack memory to be considered
+                                      static
+                                    </p>
+
+                                    <p className="mt-2">
+                                      <strong>Pro:</strong> Thread stack
+                                      addresses can be used as base pointers
+                                    </p>
+                                    <p>
+                                      <strong>Con:</strong> Some stack pointers
+                                      may be temporary and become invalid
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                                 {fieldState.invalid && (
                                   <FieldError errors={[fieldState.error]} />
                                 )}
@@ -845,22 +1035,22 @@ export default function PointerScanner() {
                 </Accordion>
               </FieldSet>
             </FieldGroup>
+            <DialogFooter>
+              <Button
+                type="submit"
+                onClick={form.handleSubmit(onSubmit)}
+                disabled={startPointerScanMutation.isPending}
+              >
+                {startPointerScanMutation.isPending && (
+                  <Loader2Icon className="animate-spin" />
+                )}
+                OK
+              </Button>
+              <DialogClose asChild>
+                <Button variant="secondary">Cancel</Button>
+              </DialogClose>
+            </DialogFooter>
           </form>
-          <DialogFooter>
-            <Button
-              type="submit"
-              onClick={form.handleSubmit(onSubmit)}
-              disabled={startPointerScanMutation.isPending}
-            >
-              {startPointerScanMutation.isPending && (
-                <Loader2Icon className="animate-spin" />
-              )}
-              OK
-            </Button>
-            <DialogClose asChild>
-              <Button variant="secondary">Cancel</Button>
-            </DialogClose>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
