@@ -16,6 +16,7 @@ public class ReactWebViewManager : IDisposable
     private readonly ConcurrentDictionary<long, object> _trackedRefsById;
     private readonly JsonSerializerOptions _jsonSerializerOptions;
     private long _nextObjectReferenceId;
+    private bool _disposed;
 
     public ReactWebViewManager(IServiceProvider serviceProvider, WebView2 webView)
     {
@@ -212,6 +213,9 @@ public class ReactWebViewManager : IDisposable
 
     private void EndInvokeDotNet(ResponseMessage responseMessage)
     {
+        if (_disposed)
+            return;
+
         //_webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, _jsonSerializerOptions));
         _webView.Dispatcher.Invoke(() =>
         {
@@ -268,6 +272,7 @@ public class ReactWebViewManager : IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
         DisposeTrackedRefs();
     }
 }
