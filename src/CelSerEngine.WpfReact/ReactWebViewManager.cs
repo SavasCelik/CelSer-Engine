@@ -14,6 +14,7 @@ public class ReactWebViewManager : IDisposable
     private readonly WebView2 _webView;
     private readonly TaskGenericsUtil _taskGenericsUtil;
     private readonly ConcurrentDictionary<long, object> _trackedRefsById;
+    private readonly ConcurrentDictionary<int, CancellationTokenSource> _ctsByCallId;
     private readonly JsonSerializerOptions _jsonSerializerOptions;
     private long _nextObjectReferenceId;
 
@@ -32,6 +33,7 @@ public class ReactWebViewManager : IDisposable
             }
         };
         _trackedRefsById = new ConcurrentDictionary<long, object>();
+        _ctsByCallId = new ConcurrentDictionary<int, CancellationTokenSource>();
         webView.CoreWebView2.WebMessageReceived += MessageReceived;
         webView.CoreWebView2.NavigationStarting += (sender, e) =>
         {
@@ -62,6 +64,10 @@ public class ReactWebViewManager : IDisposable
         else if (receivedMessage.MethodName == "BindComponentReferences")
         {
             BindComponentReferences(receivedMessage);
+        }
+        else if (receivedMessage.MethodName == "AbortInvocation")
+        {
+            AbortInvocation(receivedMessage);
         }
         else if (receivedMessage.DotNetObjectId != null)
         {
@@ -150,6 +156,15 @@ public class ReactWebViewManager : IDisposable
         EndInvokeDotNet(receivedMessage.AsyncCallId, true);
     }
 
+    private void AbortInvocation(ReceivedMessage receivedMessage)
+    {
+        if (_ctsByCallId.Remove(receivedMessage.AsyncCallId, out var cts))
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+    }
+
     private void BeginInvokeDotNet(ReceivedMessage receivedMessage)
     {
         var instance = _trackedRefsById[receivedMessage.DotNetObjectId!.Value];
@@ -170,6 +185,14 @@ public class ReactWebViewManager : IDisposable
         {
             if (paramsSend.Length <= i)
             {
+                if (methodParams[i].ParameterType == typeof(CancellationToken) && i == methodParams.Length - 1)
+                {
+                    var cts = new CancellationTokenSource();
+                    convertedParams[i] = cts.Token;
+                    _ctsByCallId.TryAdd(receivedMessage.AsyncCallId, cts);
+                    continue;
+                }
+
                 throw new Exception(methodParams[i].HasDefaultValue 
                     ? "Optional parameters are not supported"
                     : $"Expected argument missing {i} for method {method.Name}");
@@ -212,6 +235,10 @@ public class ReactWebViewManager : IDisposable
 
     private void EndInvokeDotNet(ResponseMessage responseMessage)
     {
+        if (_ctsByCallId.Remove(responseMessage.AsyncCallId,out var cts))
+        {
+            cts.Dispose();
+        }
         //_webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, _jsonSerializerOptions));
         _webView.Dispatcher.Invoke(() =>
         {
@@ -258,6 +285,14 @@ public class ReactWebViewManager : IDisposable
     /// </summary>
     private void DisposeTrackedRefs()
     {
+        foreach (var cts in _ctsByCallId.Values)
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+
+        _ctsByCallId.Clear();
+
         foreach (var trackedRefDisposable in _trackedRefsById.Values.OfType<IDisposable>())
         {
             trackedRefDisposable.Dispose();

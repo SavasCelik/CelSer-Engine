@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { jsInteropObj } from "./JsInterop";
 
+type InvokeMethodOptions = {
+  signal?: AbortSignal;
+};
+
 export class DotNetObject {
   constructor(
     private objectId: number,
@@ -8,10 +12,19 @@ export class DotNetObject {
     private componentId: string
   ) {}
   invokeMethod<T>(methodName: string, ...args: any[]) {
+    let options: InvokeMethodOptions | undefined;
+
+    // Check if last arg is options
+    const lastArg = args[args.length - 1];
+    if (lastArg && typeof lastArg === "object" && "signal" in lastArg) {
+      options = args.pop();
+    }
+
     return jsInteropObj.invokeDotNetMethodAsync<T>(
       this.objectId,
       methodName,
-      JSON.stringify(args)
+      JSON.stringify(args),
+      options?.signal
     );
   }
 

@@ -32,12 +32,65 @@ class JsInterop {
   invokeDotNetMethodAsync<T>(
     dotNetObjectId?: number | null,
     methodName?: string,
-    methodArguments?: any
+    methodArguments?: any,
+    signal?: AbortSignal
   ): Promise<T> {
+    if (signal?.aborted) {
+      return Promise.reject(
+        new DOMException("The operation was aborted.", "AbortError")
+      );
+    }
+
     const asyncCallId = this._requestId++;
     const resultPromise = new Promise<T>((resolve, reject) => {
-      this._pendingAsyncCalls[asyncCallId] = { resolve, reject };
+      let abortHandler: (() => void) | undefined;
+
+      const wrappedResolve = (value: T | PromiseLike<T>) => {
+        if (signal && abortHandler) {
+          signal.removeEventListener("abort", abortHandler);
+        }
+        resolve(value);
+      };
+
+      const wrappedReject = (reason?: any) => {
+        if (signal && abortHandler) {
+          signal.removeEventListener("abort", abortHandler);
+        }
+        reject(reason);
+      };
+
+      this._pendingAsyncCalls[asyncCallId] = {
+        resolve: wrappedResolve,
+        reject: wrappedReject,
+      };
+
+      if (signal) {
+        if (signal.aborted) {
+          wrappedReject(
+            new DOMException("The operation was aborted.", "AbortError")
+          );
+          delete this._pendingAsyncCalls[asyncCallId];
+          return;
+        }
+
+        abortHandler = () => {
+          const abortMessage = JSON.stringify({
+            asyncCallId,
+            dotNetObjectId: null,
+            methodName: "AbortInvocation",
+            methodArguments: null,
+          });
+          (window as any).chrome?.webview.postMessage(abortMessage);
+          // wrappedReject(
+          //   new DOMException("The operation was aborted.", "AbortError")
+          // );
+          // delete this._pendingAsyncCalls[asyncCallId];
+        };
+
+        signal.addEventListener("abort", abortHandler, { once: true });
+      }
     });
+
     const message = JSON.stringify({
       asyncCallId,
       dotNetObjectId,
@@ -47,14 +100,17 @@ class JsInterop {
 
     if ((window as any).chrome?.webview) {
       (window as any).chrome.webview.postMessage(message);
-    }
-    else {
+    } else {
       console.info("invokeDotNetMethodAsync", message);
-      this.handleResponse(new MessageEvent("message", { data: {
-        asyncCallId,
-        isSuccess: true,
-        responseJson: JSON.stringify("chrome.webview is not available.")
-      }}));
+      this.handleResponse(
+        new MessageEvent("message", {
+          data: {
+            asyncCallId,
+            isSuccess: true,
+            responseJson: JSON.stringify("chrome.webview is not available."),
+          },
+        })
+      );
     }
 
     return resultPromise;
@@ -128,8 +184,7 @@ if ((window as any).chrome?.webview) {
   (window as any).chrome.webview.addEventListener("message", (event: any) =>
     jsInteropObj.handleResponse(event)
   );
-}
-else {
+} else {
   console.info("chrome.webview is not available.");
 }
 
