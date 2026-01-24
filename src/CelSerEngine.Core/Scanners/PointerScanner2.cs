@@ -86,17 +86,6 @@ public abstract class PointerScanner2
             // Scan was cancelled, just exit gracefully
         }
 
-        var foundPointers =
-            results.SelectMany(x => x?.GetResults().Select(r => new Pointer
-            {
-                ModuleName = _modules[r.ModuleIndex].ShortName,
-                BaseAddress = _modules[r.ModuleIndex].BaseAddress,
-                BaseOffset = (int)r.Offset,
-                Offsets = r.TempResults
-            }
-            ) ?? []
-            ).ToList();
-
         if (storageType == StorageType.File)
         {
             await using var writer = new BinaryWriter(File.Open(fileName!, FileMode.Create));
@@ -109,10 +98,26 @@ public abstract class PointerScanner2
             }
 
             writer.Write(PointerScanOptions.MaxLevel);
-            writer.Write(pointersFoundTotal);
-        }
+            writer.Write(results.Sum(x => x?.GetResultsCount() ?? 0));
 
-        return foundPointers;
+            return [];
+        }
+        else
+        {
+
+            var foundPointers =
+                results.SelectMany(x => x?.GetResults().Select(r => new Pointer
+                {
+                    ModuleName = _modules[r.ModuleIndex].ShortName,
+                    BaseAddress = _modules[r.ModuleIndex].BaseAddress,
+                    BaseOffset = (int)r.Offset,
+                    Offsets = r.TempResults
+                }
+                ) ?? []
+                ).ToList();
+
+            return foundPointers;
+        }
     }
 
     private static IResultStorage CreateStorageForWorker(StorageType storageType, int workerId, string? fileName) =>

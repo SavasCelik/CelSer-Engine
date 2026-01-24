@@ -5,6 +5,7 @@ public class FileStorage : IResultStorage
     private readonly FileStream _fileStream;
     private readonly BufferedStream _bufferedStream;
     private readonly BinaryWriter _binaryWriter;
+    private int _count;
 
     public FileStorage(string fileName)
     {
@@ -23,6 +24,7 @@ public class FileStorage : IResultStorage
         {
             _binaryWriter.Write7BitEncodedInt(tempResult.ToInt32());
         }
+        _count++;
     }
 
     public List<ResultPointer> GetResults() => [];
@@ -34,4 +36,6 @@ public class FileStorage : IResultStorage
         await _fileStream.DisposeAsync();
         GC.SuppressFinalize(this);
     }
+
+    public int GetResultsCount() => _count;
 }
