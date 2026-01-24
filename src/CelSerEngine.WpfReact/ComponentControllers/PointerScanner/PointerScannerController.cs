@@ -5,12 +5,13 @@ using System.Globalization;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.PointerScanner;
 
-public class PointerScannerController : ReactControllerBase
+public class PointerScannerController : ReactControllerBase, IDisposable
 {
     private readonly ProcessSelectionTracker _processSelectionTracker;
     private readonly TrackedItemNotifier _trackedItemNotifier;
     private readonly INativeApi _nativeApi;
     private readonly List<Pointer> _pointerScanResults;
+    private CancellationTokenSource? _scanCancellationTokenSource;
 
     public PointerScannerController(INativeApi nativeApi, ProcessSelectionTracker processSelectionTracker, TrackedItemNotifier trackedItemNotifier)
     {
@@ -26,6 +27,9 @@ public class PointerScannerController : ReactControllerBase
         {
             throw new ArgumentException("Invalid scan address format. Please provide a valid hexadecimal address.");
         }
+
+        _scanCancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = _scanCancellationTokenSource.Token;
 
         await InMemoryPointerScan(new PointerScanOptions
         {
@@ -43,16 +47,16 @@ public class PointerScannerController : ReactControllerBase
             AllowReadOnlyPointers = pointerScanOptionsDto.AllowReadOnlyPointers,
             OnlyOneStaticInPath = pointerScanOptionsDto.OnlyOneStaticInPath,
             OnlyResidentMemory = pointerScanOptionsDto.OnlyResidentMemory,
-        });
+        }, cancellationToken);
     }
 
-    private async Task InMemoryPointerScan(PointerScanOptions pointerScanOptions)
+    private async Task InMemoryPointerScan(PointerScanOptions pointerScanOptions, CancellationToken cancellationToken)
     {
         var pointerScanner = new DefaultPointerScanner(_nativeApi, pointerScanOptions);
         //Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
         //    pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
         //var stopwatch = Stopwatch.StartNew();
-        _pointerScanResults.AddRange(await pointerScanner.StartPointerScanAsync(_processSelectionTracker.SelectedProcessHandle));
+        _pointerScanResults.AddRange(await pointerScanner.StartPointerScanAsync(_processSelectionTracker.SelectedProcessHandle, cancellationToken: cancellationToken));
         //stopwatch.Stop();
         //Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
     }
@@ -89,6 +93,17 @@ public class PointerScannerController : ReactControllerBase
         var foundPointers = await pointerScanner.RescanPointersAsync(_pointerScanResults, searchedAddress, _processSelectionTracker.SelectedProcessHandle);
         _pointerScanResults.Clear();
         _pointerScanResults.AddRange(foundPointers);
+    }
+
+    public async Task CancelScanAsync()
+    {
+        var cts = Interlocked.Exchange(ref _scanCancellationTokenSource, null);
+
+        if (cts != null)
+        {
+            await cts.CancelAsync();
+            cts.Dispose();
+        }
     }
 
     public void ApplySingleSorting(TableSorting[] tableSortings)
@@ -190,6 +205,15 @@ public class PointerScannerController : ReactControllerBase
         if (selectedItem != null)
         {
             _trackedItemNotifier.RaiseItemAdded(selectedItem);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_scanCancellationTokenSource != null)
+        {
+            _scanCancellationTokenSource.Cancel();
+            _scanCancellationTokenSource.Dispose();
         }
     }
 }

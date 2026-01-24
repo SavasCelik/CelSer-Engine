@@ -59,34 +59,43 @@ public abstract class PointerScanner2
             StartLevel = 0,
             ValueToFind = PointerScanOptions.SearchedAddress
         };
-        await channel.Writer.WriteAsync(rootElement, cancellationToken);
-        var pendingCounter = new PendingCounter(startValue: 1);
         int workerCount = Math.Max(PointerScanOptions.MaxParallelWorkers, Environment.ProcessorCount);
         var results = new IResultStorage[workerCount];
 
-        await Parallel.ForEachAsync(Enumerable.Range(0, workerCount),
-            new ParallelOptions
-            {
-                MaxDegreeOfParallelism = workerCount,
-                CancellationToken = cancellationToken
-            },
-            async (workerIndex, _) =>
-            {
-                await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerIndex, fileName);
-                var scanWorker = new PointerScanWorker(this, workerStorage, channel, pendingCounter, cancellationToken);
-                results[workerIndex] = await scanWorker.StartAsync();
-            }
-        );
+        try
+        {
+            await channel.Writer.WriteAsync(rootElement, cancellationToken);
+            var pendingCounter = new PendingCounter(startValue: 1);
+
+            await Parallel.ForEachAsync(Enumerable.Range(0, workerCount),
+                new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = workerCount,
+                    CancellationToken = cancellationToken
+                },
+                async (workerIndex, token) =>
+                {
+                    await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerIndex, fileName);
+                    var scanWorker = new PointerScanWorker(this, workerStorage, channel, pendingCounter, token);
+                    results[workerIndex] = await scanWorker.StartAsync();
+                }
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Scan was cancelled, just exit gracefully
+        }
 
         var foundPointers =
-            results.SelectMany(x => x.GetResults().Select(r => new Pointer
+            results.SelectMany(x => x?.GetResults().Select(r => new Pointer
             {
                 ModuleName = _modules[r.ModuleIndex].ShortName,
                 BaseAddress = _modules[r.ModuleIndex].BaseAddress,
                 BaseOffset = (int)r.Offset,
                 Offsets = r.TempResults
             }
-            )).ToList();
+            ) ?? []
+            ).ToList();
 
         if (storageType == StorageType.File)
         {

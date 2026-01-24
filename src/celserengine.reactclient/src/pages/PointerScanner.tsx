@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, X } from "lucide-react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSearchParams } from "react-router";
@@ -209,6 +209,16 @@ export default function PointerScanner() {
     },
   });
 
+  const cancelScanMutation = useMutation({
+    mutationFn: () => {
+      if (!dotNetObj) {
+        return Promise.reject();
+      }
+
+      return dotNetObj.invokeMethod("CancelScanAsync");
+    },
+  });
+
   const rescanMutation = useMutation({
     mutationFn: (address?: string) => {
       if (!dotNetObj) {
@@ -382,6 +392,10 @@ export default function PointerScanner() {
 
   const rescanInputRef = React.useRef<HTMLInputElement>(null);
 
+  const isCancellingScan =
+    cancelScanMutation.isPending ||
+    (cancelScanMutation.isSuccess && startPointerScanMutation.isPending);
+
   return (
     <>
       <div className="bg-card flex h-screen flex-col gap-2 p-2">
@@ -429,7 +443,40 @@ export default function PointerScanner() {
               rescanMutation.isPending ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={columns.length}>
-                    <Loader2Icon className="m-auto animate-spin" />
+                    {!isDialogOpen && (
+                      <div className="flex flex-col items-center justify-center gap-4">
+                        <Loader2Icon
+                          className="text-primary animate-spin"
+                          size={60}
+                          absoluteStrokeWidth={true}
+                        />
+                        <div className="text-center">
+                          {isCancellingScan ? (
+                            <p className="text-sm font-medium">
+                              Scan is being cancelled...
+                            </p>
+                          ) : (
+                            <>
+                              <p className="text-sm font-medium">
+                                Scanning memory...
+                              </p>
+                              <p className="text-muted-foreground mt-1 text-xs">
+                                This may take a moment
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          disabled={isCancellingScan}
+                          onClick={() => cancelScanMutation.mutate()}
+                          className="mt-2"
+                        >
+                          <X />
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
