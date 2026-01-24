@@ -21,10 +21,10 @@ import {
   useIsMutating,
   useQuery,
 } from "@tanstack/react-query";
-import { DotNetObject } from "../utils/useDotNet";
-import { Skeleton } from "./ui/skeleton";
+import { DotNetObject } from "@/utils/useDotNet";
+import { Skeleton } from "../ui/skeleton";
 import { useTableRowSelection } from "@/hooks/use-table-row-selection";
-import TablePagination from "./TablePagination";
+import TablePagination from "../TablePagination";
 
 type RusultItem = {
   address: string;

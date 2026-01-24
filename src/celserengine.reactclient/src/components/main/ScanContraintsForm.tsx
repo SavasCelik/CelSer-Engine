@@ -18,10 +18,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "../ui/select";
 import { Check, Loader2Icon, Search, X } from "lucide-react";
-import { Toggle } from "./ui/toggle";
-import { DotNetObject } from "../utils/useDotNet";
+import { Toggle } from "../ui/toggle";
+import { DotNetObject } from "@/utils/useDotNet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { scanValueTypes } from "@/constants/ScanValueTypes";

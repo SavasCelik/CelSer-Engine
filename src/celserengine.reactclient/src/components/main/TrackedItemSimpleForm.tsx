@@ -1,6 +1,6 @@
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "./ui/input";
+import { Input } from "../ui/input";
 import { TrackedItem } from "@/types/TrackedItem";
 import { DotNetObject } from "@/utils/useDotNet";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import { Row } from "@tanstack/react-table";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "./ui/form";
+import { Form } from "../ui/form";
 import { Loader2Icon } from "lucide-react";
 import {
   Select,
@@ -16,9 +16,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "../ui/select";
 import { scanValueTypes } from "@/constants/ScanValueTypes";
-import { Field, FieldError, FieldGroup, FieldLabel } from "./ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 
 type TrackedItemSimpleFormProps = {
   rows: Row<TrackedItem>[];

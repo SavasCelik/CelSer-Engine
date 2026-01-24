@@ -1,6 +1,6 @@
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "./ui/input";
+import { Input } from "../ui/input";
 import { TrackedItem } from "@/types/TrackedItem";
 import { DotNetObject } from "@/utils/useDotNet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,7 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "./ui/form";
+} from "../ui/form";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -23,14 +23,14 @@ import {
   Minus,
   Plus,
 } from "lucide-react";
-import { ButtonGroup } from "./ui/button-group";
+import { ButtonGroup } from "../ui/button-group";
 import { cn } from "@/lib/utils";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
-} from "./ui/input-group";
+} from "../ui/input-group";
 import { useEffect } from "react";
 import {
   Select,
@@ -38,7 +38,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
+} from "../ui/select";
 import { scanValueTypes } from "@/constants/ScanValueTypes";
 
 const formSchema = z.object({

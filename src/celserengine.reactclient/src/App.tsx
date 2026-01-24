@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
-import ScanResultItemsTable from "./components/ScanResultItemsTable";
-import TrackedItemsTable from "./components/TrackedItemsTable";
-import ScanConstraintsForm from "./components/ScanContraintsForm";
+import ScanResultItemsTable from "./components/main/ScanResultItemsTable";
+import TrackedItemsTable from "./components/main/TrackedItemsTable";
+import ScanConstraintsForm from "./components/main/ScanContraintsForm";
 import { useDotNet } from "./utils/useDotNet";
 import { Button } from "./components/ui/button";
 import SelectProcessIcon from "./assets/SelectProcess.png";
