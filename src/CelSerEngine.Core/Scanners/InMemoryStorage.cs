@@ -11,6 +11,6 @@ public class InMemoryStorage : IResultStorage
 
     public List<ResultPointer> GetResults() => _results;
 
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    public void Dispose() => _results.Clear();
     public int GetResultsCount() => _results.Count;
 }

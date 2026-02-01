@@ -1,41 +1,43 @@
-﻿namespace CelSerEngine.Core.Scanners;
+﻿using CelSerEngine.Core.Scanners.Serialization;
+
+namespace CelSerEngine.Core.Scanners;
 
 public class FileStorage : IResultStorage
 {
-    private readonly FileStream _fileStream;
-    private readonly BufferedStream _bufferedStream;
-    private readonly BinaryWriter _binaryWriter;
+    private readonly IPointerWriter _pointerWriter;
     private int _count;
 
-    public FileStorage(string fileName)
+    public FileStorage(string fileName, int maxModuleIndex, uint maxModuleOffset, int maxLevel, int maxOffset, bool useBitWriter = true)
     {
         const int bufferSize = 15 * 1024 * 1024; // 15 MB buffer size before writing to disk
-        _fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write);
-        _bufferedStream = new BufferedStream(_fileStream, bufferSize);
-        _binaryWriter = new BinaryWriter(_bufferedStream);
+        var fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.Read, bufferSize: bufferSize);
+        
+        if (useBitWriter)
+        {
+            var layout = new PointerBitLayout(maxModuleIndex, maxModuleOffset, maxLevel, maxOffset);
+            _pointerWriter = new PointerBitWriter(fileStream, layout);
+        }
+        else
+        {
+            var layout = new Pointer7BitLayout(maxModuleIndex, maxModuleOffset, maxLevel, maxOffset);
+            _pointerWriter = new Pointer7BitWriter(fileStream, layout);
+        }
+
     }
 
     public void Save(int level, int moduleIndex, IntPtr baseOffset, ReadOnlySpan<IntPtr> offsets)
     {
-        _binaryWriter.Write7BitEncodedInt(moduleIndex);
-        _binaryWriter.Write7BitEncodedInt(baseOffset.ToInt32());
-        _binaryWriter.Write7BitEncodedInt(level + 1);
-        foreach (var tempResult in offsets)
-        {
-            _binaryWriter.Write7BitEncodedInt(tempResult.ToInt32());
-        }
+        _pointerWriter.Write(level, moduleIndex, baseOffset.ToInt32(), offsets);
         _count++;
     }
 
     public List<ResultPointer> GetResults() => [];
 
-    public async ValueTask DisposeAsync()
+    public int GetResultsCount() => _count;
+
+    public void Dispose()
     {
-        await _binaryWriter.DisposeAsync();
-        await _bufferedStream.DisposeAsync();
-        await _fileStream.DisposeAsync();
+        _pointerWriter.Dispose();
         GC.SuppressFinalize(this);
     }
-
-    public int GetResultsCount() => _count;
 }

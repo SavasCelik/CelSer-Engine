@@ -43,6 +43,7 @@ public abstract class PointerScanner2
         if (storageType == StorageType.File)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+            ClearFiles(fileName);
         }
 
         _modules = NativeApi.GetProcessModules(processHandle);
@@ -75,7 +76,7 @@ public abstract class PointerScanner2
                 },
                 async (workerIndex, token) =>
                 {
-                    await using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerIndex, fileName);
+                    using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerIndex, fileName);
                     var scanWorker = new PointerScanWorker(this, workerStorage, channel, pendingCounter, token);
                     results[workerIndex] = await scanWorker.StartAsync();
                 }
@@ -97,7 +98,9 @@ public abstract class PointerScanner2
                 writer.Write(moduleInfo.BaseAddress);
             }
 
+            writer.Write(_modules.Max(x => x.Size));
             writer.Write(PointerScanOptions.MaxLevel);
+            writer.Write(PointerScanOptions.MaxOffset);
             writer.Write(results.Sum(x => x?.GetResultsCount() ?? 0));
 
             return [];
@@ -120,13 +123,32 @@ public abstract class PointerScanner2
         }
     }
 
-    private static IResultStorage CreateStorageForWorker(StorageType storageType, int workerId, string? fileName) =>
+    private IResultStorage CreateStorageForWorker(StorageType storageType, int workerId, string? fileName) =>
         storageType switch
         {
             StorageType.InMemory => new InMemoryStorage(),
-            StorageType.File => new FileStorage($"{fileName}.{workerId}"),
+            StorageType.File => new FileStorage($"{fileName}.{workerId}", _modules.Count, _modules.Max(x => x.Size),
+                                                PointerScanOptions.MaxLevel, PointerScanOptions.MaxOffset),
             _ => throw new InvalidOperationException("Unsupported storage type")
         };
+
+    private void ClearFiles(string fileName)
+    {
+        var dir = Path.GetDirectoryName(fileName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(dir);
+
+        if (!Directory.Exists(dir))
+        {
+            throw new DirectoryNotFoundException($"Directory not found: {dir}");
+        }
+
+        var fileNamesToDelete = Path.GetFileName(fileName) + ".*";
+
+        foreach (var filePath in Directory.EnumerateFiles(dir, fileNamesToDelete))
+        {
+            File.Delete(filePath);
+        }
+    }
 
     public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> firstScanPointers, IntPtr searchedAddress, SafeProcessHandle processHandle)
     {
