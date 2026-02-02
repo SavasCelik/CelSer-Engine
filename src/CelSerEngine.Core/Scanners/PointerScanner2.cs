@@ -61,7 +61,7 @@ public abstract class PointerScanner2
             StartLevel = 0,
             ValueToFind = PointerScanOptions.SearchedAddress
         };
-        int workerCount = Math.Max(PointerScanOptions.MaxParallelWorkers, Environment.ProcessorCount);
+        int workerCount = Math.Min(PointerScanOptions.MaxParallelWorkers, Environment.ProcessorCount);
         var results = new IResultStorage[workerCount];
 
         try
@@ -412,7 +412,7 @@ public abstract class PointerScanner2
 
         if (!isStack)
         {
-            //TODO this probably could just check for BaseAddress == address
+            //TODO could just return here when module is found
             moduleBaseAddress = _modules.Where(x => address >= x.BaseAddress && address < x.BaseAddress + x.Size).Select(x => x.BaseAddress).FirstOrDefault();
         }
 
