@@ -11,6 +11,6 @@ public class InMemoryStorage : IResultStorage
 
     public List<ResultPointer> GetResults() => _results;
 
-    public void Dispose() => _results.Clear();
+    public void Dispose() {}
     public int GetResultsCount() => _results.Count;
 }
