@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace CelSerEngine.Core.Scanners.Serialization;
 
@@ -29,9 +28,10 @@ public sealed class PointerBitLayout : IPointerLayout
         int maxLevel,
         int maxOffset)
     {
-        Debug.Assert(maxModuleIndex > 0);
-        Debug.Assert(maxLevel > 0);
-        Debug.Assert(maxOffset > 0);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxModuleIndex);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxLevel);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxLevel, 30); // no one want that
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxOffset);
 
         // the exact size of an entry cannot be determined in advance
         // therefore, we calculate the "worst-case size" for each component
@@ -41,12 +41,12 @@ public sealed class PointerBitLayout : IPointerLayout
         MaxBitCountLevel = BitOperations.Log2((uint)maxLevel) + 1;
         MaxBitCountOffset = BitOperations.Log2((uint)maxOffset) + 1;
 
-        int totalBitCount =
+        int totalBitCount = checked(
             MaxBitCountModuleIndex +
             MaxBitCountModuleBaseOffset +
             SignBitCount +
             MaxBitCountLevel +
-            MaxBitCountOffset * maxLevel;
+            MaxBitCountOffset * maxLevel);
 
         // round up the bit count to the nearest whole byte
         EntrySizeInBytes = (totalBitCount + 7) / 8;

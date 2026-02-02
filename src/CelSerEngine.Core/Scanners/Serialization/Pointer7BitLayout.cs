@@ -20,9 +20,10 @@ public sealed class Pointer7BitLayout : IPointerLayout
         int maxLevel,
         int maxOffset)
     {
-        Debug.Assert(maxModuleIndex > 0);
-        Debug.Assert(maxLevel > 0);
-        Debug.Assert(maxOffset > 0);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxModuleIndex);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxLevel);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxLevel, 30); // no one want that
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxOffset);
 
         // the exact size of an entry cannot be determined in advance
         // therefore, we calculate the "worst-case size" for each component
@@ -31,7 +32,7 @@ public sealed class Pointer7BitLayout : IPointerLayout
         var maxByteCountMaxModuleOffset = 10;
         var maxByteCountMaxLevel = Get7BitEncodedIntSize(maxLevel);
         var maxByteCountMaxOffset = Get7BitEncodedIntSize(maxOffset);
-        EntrySizeInBytes = maxByteCountMaxModuleIndex + maxByteCountMaxModuleOffset + maxByteCountMaxLevel + maxByteCountMaxOffset * maxLevel;
+        EntrySizeInBytes = checked(maxByteCountMaxModuleIndex + maxByteCountMaxModuleOffset + maxByteCountMaxLevel + maxByteCountMaxOffset * maxLevel);
     }
 
     private static int Get7BitEncodedIntSize(int value) =>
