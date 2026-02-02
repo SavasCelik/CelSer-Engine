@@ -30,7 +30,7 @@ public sealed class PointerBitLayout : IPointerLayout
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxModuleIndex);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxLevel);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxLevel, 30); // no one want that
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(maxLevel, IPointerLayout.MaxSupportedLevel); // no one want that
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxOffset);
 
         // the exact size of an entry cannot be determined in advance

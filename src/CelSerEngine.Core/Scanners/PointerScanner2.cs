@@ -29,6 +29,7 @@ public abstract class PointerScanner2
 
     public PointerScanner2(INativeApi nativeApi, PointerScanOptions pointerScanOptions)
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(pointerScanOptions.MaxLevel, PointerScanOptions.MaxSupportedMaxLevel);
         NativeApi = nativeApi;
         PointerScanOptions = pointerScanOptions;
         _modules = [];

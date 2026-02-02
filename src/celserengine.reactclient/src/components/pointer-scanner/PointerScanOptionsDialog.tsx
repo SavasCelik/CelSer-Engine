@@ -34,6 +34,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 import z from "zod";
 
+const maxSupportedMaxLevel = 30;
 const formSchema = z
   .object({
     scanAddress: z.string(),
@@ -50,10 +51,15 @@ const formSchema = z
     maxLevel: z.string().refine(
       (val) => {
         const num = Number(val);
-        return !isNaN(num) && Number.isInteger(num) && num > 0;
+        return (
+          !isNaN(num) &&
+          Number.isInteger(num) &&
+          num > 0 &&
+          num <= maxSupportedMaxLevel
+        );
       },
       {
-        message: "Max level must be a positive integer",
+        message: "Max level must be a positive integer and less than 31",
       }
     ),
     maxParallelWorkers: z.string().refine(

@@ -1,9 +1,11 @@
-﻿using Microsoft.Win32.SafeHandles;
+﻿using CelSerEngine.Core.Scanners.Serialization;
+using Microsoft.Win32.SafeHandles;
 
 namespace CelSerEngine.Core.Models;
 
 public class PointerScanOptions
 {
+    public const int MaxSupportedMaxLevel = IPointerLayout.MaxSupportedLevel;
     public int ProcessId { get; set; }
     public SafeProcessHandle ProcessHandle { get; set; }
     public IntPtr SearchedAddress { get; set; }
