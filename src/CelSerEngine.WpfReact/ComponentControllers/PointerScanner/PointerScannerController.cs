@@ -1,6 +1,7 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
+using Microsoft.Win32;
 using System.Globalization;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.PointerScanner;
@@ -9,16 +10,21 @@ public class PointerScannerController : ReactControllerBase, IDisposable
 {
     private readonly ProcessSelectionTracker _processSelectionTracker;
     private readonly TrackedItemNotifier _trackedItemNotifier;
+    private readonly MainWindow _mainWindow;
     private readonly INativeApi _nativeApi;
     private readonly List<Pointer> _pointerScanResults;
     private CancellationTokenSource? _scanCancellationTokenSource;
+    private PointerScanResultReader? _pointerScanResultReader;
+    private bool _useFileStorage;
 
-    public PointerScannerController(INativeApi nativeApi, ProcessSelectionTracker processSelectionTracker, TrackedItemNotifier trackedItemNotifier)
+    public PointerScannerController(INativeApi nativeApi, ProcessSelectionTracker processSelectionTracker, TrackedItemNotifier trackedItemNotifier, MainWindow mainWindow)
     {
         _nativeApi = nativeApi;
         _pointerScanResults = [];
         _processSelectionTracker = processSelectionTracker;
         _trackedItemNotifier = trackedItemNotifier;
+        _mainWindow = mainWindow;
+        _useFileStorage = false;
     }
 
     public async Task StartPointerScan(PointerScanOptionsDto pointerScanOptionsDto)
@@ -30,8 +36,7 @@ public class PointerScannerController : ReactControllerBase, IDisposable
 
         _scanCancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = _scanCancellationTokenSource.Token;
-
-        await InMemoryPointerScan(new PointerScanOptions
+        var pointerScanOptions = new PointerScanOptions
         {
             SearchedAddress = searchedAddress,
             MaxOffset = pointerScanOptionsDto.MaxOffset,
@@ -47,7 +52,49 @@ public class PointerScannerController : ReactControllerBase, IDisposable
             AllowReadOnlyPointers = pointerScanOptionsDto.AllowReadOnlyPointers,
             OnlyOneStaticInPath = pointerScanOptionsDto.OnlyOneStaticInPath,
             OnlyResidentMemory = pointerScanOptionsDto.OnlyResidentMemory,
-        }, cancellationToken);
+        };
+
+        if (_useFileStorage)
+        {
+            await FileStoragePointerScan(pointerScanOptions);
+        }
+        else
+        {
+            await InMemoryPointerScan(pointerScanOptions, cancellationToken);
+        }
+    }
+
+    private async Task FileStoragePointerScan(PointerScanOptions pointerScanOptions)
+    {
+        var fileName = "";
+        await _mainWindow.Dispatcher.InvokeAsync(() =>
+        {
+
+            var saveFileDlg = new SaveFileDialog
+            {
+                DefaultExt = PointerScanner2.PointerListExtName, // Default file extension
+                Filter = $"Pointer List|*{PointerScanner2.PointerListExtName}" // Filter files by extension
+            };
+
+            var result = saveFileDlg.ShowDialog();
+            if (result == true)
+            {
+                fileName = saveFileDlg.FileName;
+            }
+        });
+
+        if (string.IsNullOrEmpty(fileName))
+            return;
+
+        var pointerScanner = new DefaultPointerScanner(_nativeApi, pointerScanOptions);
+        //Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
+        //    pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        await pointerScanner.StartPointerScanAsync(_processSelectionTracker.SelectedProcessHandle, StorageType.File, fileName);
+        stopwatch.Stop();
+        //Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
+        //_pointerScanResultReader = new PointerScanResultReader(fileName);
+        _pointerScanResultReader = new PointerScanResultReader(fileName);
     }
 
     private async Task InMemoryPointerScan(PointerScanOptions pointerScanOptions, CancellationToken cancellationToken)
@@ -63,7 +110,27 @@ public class PointerScannerController : ReactControllerBase, IDisposable
 
     public object GetPointerScanResults(int page, int pageSize)
     {
-        var pointerScanResultsPage = GetPointerScanResultItemsByPage(page, pageSize).ToList();
+        List<Pointer> pointerScanResultsPage;
+        var totalCount = 0;
+
+        if (_useFileStorage)
+        {
+            if (_pointerScanResultReader != null)
+            {
+                pointerScanResultsPage = _pointerScanResultReader.ReadPointers(page * pageSize, pageSize).ToList();
+                totalCount = _pointerScanResultReader.TotalItemCount;
+            }
+            else
+            {
+                pointerScanResultsPage = [];
+            }
+        }
+        else
+        {
+            pointerScanResultsPage = GetPointerScanResultItemsByPage(page, pageSize).ToList();
+            totalCount = _pointerScanResults.Count;
+        }
+
         _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, pointerScanResultsPage);
 
         return new
@@ -75,7 +142,7 @@ public class PointerScannerController : ReactControllerBase, IDisposable
                 Offsets = x.Offsets.Select(x => x.ToString("X")).Reverse().ToArray(),
                 PointingToWithValue = $"{x.PointingTo.ToString("X8")} = {x.Value}"
             }),
-            TotalCount = _pointerScanResults.Count
+            TotalCount = totalCount
         };
     }
 
@@ -215,5 +282,7 @@ public class PointerScannerController : ReactControllerBase, IDisposable
             _scanCancellationTokenSource.Cancel();
             _scanCancellationTokenSource.Dispose();
         }
+
+        _pointerScanResultReader?.Dispose();
     }
 }

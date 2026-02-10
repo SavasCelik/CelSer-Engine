@@ -8,7 +8,7 @@ public class PointerScanWorker
 {
     public int PointersFound { get; set; }
 
-    private readonly PointerScanner2 _pointerScanner;
+    private readonly DefaultPointerScanner _pointerScanner;
     private readonly IResultStorage _resultStorage;
     private readonly CancellationToken _cancellationToken;
     private readonly Channel<PathQueueElement> _channel;
@@ -19,10 +19,14 @@ public class PointerScanWorker
     private List<ResultPointer> _results = new List<ResultPointer>();
     private int _maxLevel;
     private int _structSize;
+    private readonly bool _preventLoops;
+    private readonly bool _onlyOneStaticInPath;
+    private readonly bool _limitToMaxOffsetsPerNode;
+    private readonly int _maxOffsetsPerNode;
 
     public PointerScanWorker(PointerScanner2 pointerScanner, IResultStorage resultStorage, Channel<PathQueueElement> channel, PendingCounter pendingCounter, CancellationToken cancellationToken)
     {
-        _pointerScanner = pointerScanner;
+        _pointerScanner = (DefaultPointerScanner)pointerScanner;
         _resultStorage = resultStorage;
         _cancellationToken = cancellationToken;
         _channel = channel;
@@ -31,26 +35,35 @@ public class PointerScanWorker
         _maxLevel = pointerScanner.PointerScanOptions.MaxLevel;
         _tempResults = new IntPtr[_maxLevel];
         _valueList = new UIntPtr[_maxLevel];
+        _preventLoops = pointerScanner.PointerScanOptions.PreventLoops;
+        _onlyOneStaticInPath = pointerScanner.PointerScanOptions.OnlyOneStaticInPath;
+        _limitToMaxOffsetsPerNode = pointerScanner.PointerScanOptions.LimitToMaxOffsetsPerNode;
+        _maxOffsetsPerNode = pointerScanner.PointerScanOptions.MaxOffsetsPerNode;
     }
 
     public async Task<IResultStorage> StartAsync()
     {
         try
         {
-            while (await _channel.Reader.WaitToReadAsync(_cancellationToken))
+            var reader = _channel.Reader;
+            while (await reader.WaitToReadAsync(_cancellationToken))
             {
-                while (_channel.Reader.TryRead(out var element))
+                while (reader.TryRead(out var element))
                 {
                     try
                     {
-                        Array.Copy(element.TempResults, _tempResults, _maxLevel);
+                        var startLevel = element.StartLevel;
+                        Array.Copy(element.TempResults, _tempResults, startLevel);
 
-                        if (_pointerScanner.PointerScanOptions.PreventLoops)
+
+                        if (_preventLoops)
                         {
-                            Array.Copy(element.ValueList, _valueList, _maxLevel);
+                            Array.Copy(element.ValueList, _valueList, startLevel);
                         }
 
-                        ReverseScan(element.ValueToFind, element.StartLevel);
+                        var valueToFind = element.ValueToFind;
+                        element.Dispose();
+                        ReverseScan(valueToFind, startLevel);
                     }
                     finally
                     {
@@ -91,7 +104,7 @@ public class PointerScanWorker
             }
         }
 
-        if (_pointerScanner.PointerScanOptions.PreventLoops)
+        if (_preventLoops)
         {
             //check if this valuetofind is already in the list
             for (var i = 0; i <= level - 1; i++)
@@ -106,15 +119,14 @@ public class PointerScanWorker
         }
 
         var dontGoDeeper = false;
-        PointerList? plist = null;
+        var pointerScanner = _pointerScanner;
+        //PointerList? plist = pointerScanner.FindPointerValue(startValue, ref stopValue);
+        var currentIndex = pointerScanner.BinarySearchClosestLowerKey(stopValue, startValue);
+        PointerList? plist = pointerScanner.GetPointerValueByIndex(currentIndex);
+        stopValue = plist?.PointerValue ?? 0;
 
         while (stopValue >= startValue)
         {
-            if (plist == null)
-            {
-                plist = _pointerScanner.FindPointerValue(startValue, ref stopValue);
-            }
-
             if (plist == null)
             {
                 _pathsEvaluated++;
@@ -124,12 +136,14 @@ public class PointerScanWorker
             _tempResults[level] = valueToFind - stopValue; //store the offset &/SCK: stopvalue = plist.PointerValue
 
             //go through the list of addresses that have this address(stopvalue) as their value
-            for (var j = 0; j <= plist.Pos - 1; j++)
+            var pListPos = plist.Pos - 1;
+            for (var j = 0; j <= pListPos; j++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 _pathsEvaluated++;
+                ref var plistList = ref plist.List[j];
 
-                if (plist.List[j].StaticData == null) //this removes a lot of other possible paths. Perhaps a feature to remove this check ?
+                if (plistList.StaticData == null) //this removes a lot of other possible paths. Perhaps a feature to remove this check ?
                 {
                     if (!dontGoDeeper)
                     {
@@ -159,21 +173,25 @@ public class PointerScanWorker
                                 {
                                     //still room
 
-                                    var newElement = new PathQueueElement(_pointerScanner.PointerScanOptions.MaxLevel);
+                                    var newElement = new PathQueueElement(_maxLevel);
                                     Array.Copy(_tempResults, newElement.TempResults, _maxLevel);
 
-                                    if (_pointerScanner.PointerScanOptions.PreventLoops)
+                                    if (_preventLoops)
                                     {
                                         Array.Copy(_valueList, newElement.ValueList, _maxLevel);
                                     }
 
                                     newElement.StartLevel = level + 1;
-                                    newElement.ValueToFind = plist.List[j].Address;
+                                    newElement.ValueToFind = plistList.Address;
 
                                     if (_channel.Writer.TryWrite(newElement))
                                     {
                                         Interlocked.Increment(ref _pendingCounter.Value);
                                         addedToQueue = true;
+                                    }
+                                    else
+                                    {
+                                        newElement.Dispose();
                                     }
                                 }
                             }
@@ -181,7 +199,7 @@ public class PointerScanWorker
                             if (!addedToQueue)
                             {
                                 //I'll have to do it myself
-                                ReverseScan(plist.List[j].Address, level + 1);
+                                ReverseScan(plistList.Address, level + 1);
                                 ///done with this branch 
                             }
                         }
@@ -200,29 +218,31 @@ public class PointerScanWorker
                 else
                 {
                     //found a static one 
-                    StorePath(level, plist.List[j].StaticData.ModuleIndex, plist.List[j].StaticData.Offset);
+#if DEBUG
+                    StorePath(level, plist.List[j].StaticData.Value.ModuleIndex, plist.List[j].StaticData.Value.Offset);
+#endif
 
-                    if (_pointerScanner.PointerScanOptions.OnlyOneStaticInPath)
+                    if (_onlyOneStaticInPath)
                     {
                         dontGoDeeper = true;
                     }
                 }
             }
 
-            if (_pointerScanner.PointerScanOptions.LimitToMaxOffsetsPerNode) //check if the current iteration is less than maxOffsetsPerNode 
+            if (_limitToMaxOffsetsPerNode) //check if the current iteration is less than maxOffsetsPerNode 
             {
                 if (level > 0)
                 {
                     differentOffsetsInThisNode++;
                 }
 
-                if (differentOffsetsInThisNode >= _pointerScanner.PointerScanOptions.MaxOffsetsPerNode)
+                if (differentOffsetsInThisNode >= _maxOffsetsPerNode)
                 {
                     return; //the max node has been reached 
                 }
             }
 
-            plist = plist.Previous;
+            plist = pointerScanner.GetPointerValueByIndex(--currentIndex);
 
             if (plist != null)
             {

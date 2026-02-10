@@ -1,28 +1,22 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using Microsoft.Win32.SafeHandles;
-using System;
-
 namespace CelSerEngine.Core.Scanners;
 
-public class DefaultPointerScanner : PointerScanner2
+public sealed class Ds3 : Ps3
 {
-    private Dictionary<IntPtr, PointerList> _pointerDict;
-    internal IntPtr[] _keyArray;
-    internal PointerList[] _pListArray;
+    private SortedDictionary<IntPtr, PointerList> _pointerDict;
+    private IntPtr[] _keyArray;
 
-    public DefaultPointerScanner(INativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
+    public Ds3(INativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
     {
-        _pointerDict = new Dictionary<IntPtr, PointerList>();
+        _pointerDict = new SortedDictionary<IntPtr, PointerList>();
         _keyArray = Array.Empty<IntPtr>();
-        _pListArray = [];
     }
 
     protected override void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, SafeProcessHandle processHandle)
     {
         var buffer = new byte[memoryRegions.Max(x => x.MemorySize)];
-        var requireAlignedPointers = PointerScanOptions.RequireAlignedPointers;
-        var increaseValue = requireAlignedPointers ? 4 : 1;
 
         foreach (var memoryRegion in memoryRegions)
         {
@@ -30,11 +24,11 @@ public class DefaultPointerScanner : PointerScanner2
                 continue;
 
             var lastAddress = (int)memoryRegion.MemorySize - IntPtr.Size;
-            for (var i = 0; i <= lastAddress; i += increaseValue)
+            for (var i = 0; i <= lastAddress; i += 4)
             {
                 var currentPointer = (IntPtr)BitConverter.ToUInt64(buffer, i);
 
-                if ((!requireAlignedPointers || currentPointer % 4 == 0) && IsPointer(currentPointer, memoryRegions))
+                if (currentPointer % 4 == 0 && IsPointer(currentPointer, memoryRegions))
                 {
                     AddPointer(currentPointer, memoryRegion.BaseAddress + i);
                 }
@@ -120,14 +114,9 @@ public class DefaultPointerScanner : PointerScanner2
     protected override void FillLinkedList()
     {
         PointerList? current = null;
-        var keysSorted = _pointerDict.Keys.Order().ToArray();
-        var pListList = new List<PointerList>(keysSorted.Length);
 
-        foreach (var key in keysSorted)
+        foreach (var (key, value) in _pointerDict)
         {
-            var value = _pointerDict[key];
-            pListList.Add(value);
-
             if (current == null)
             {
                 current = value;
@@ -139,10 +128,8 @@ public class DefaultPointerScanner : PointerScanner2
             current = value;
         }
 
-        _keyArray = keysSorted;
-        _pListArray = pListList.ToArray();
-        //_keyArray = new IntPtr[_pointerDict.Keys.Count];
-        //_pointerDict.Keys.CopyTo(_keyArray, 0);
+        _keyArray = new IntPtr[_pointerDict.Keys.Count];
+        _pointerDict.Keys.CopyTo(_keyArray, 0);
     }
 
     internal override PointerList? FindPointerValue(nint startValue, ref nint stopValue)
@@ -169,7 +156,7 @@ public class DefaultPointerScanner : PointerScanner2
         return result;
     }
 
-    public int BinarySearchClosestLowerKey(IntPtr searchedKey, IntPtr minValue)
+    private int BinarySearchClosestLowerKey(IntPtr searchedKey, IntPtr minValue)
     {
         int low = 0;
         int high = _keyArray.Length - 1;
@@ -194,15 +181,5 @@ public class DefaultPointerScanner : PointerScanner2
         }
 
         return closestLowerIndex; // Return index of the closest lower key
-    }
-
-    internal PointerList? GetPointerValueByIndex(int plistIndex)
-    {
-        if (plistIndex >= 0 && plistIndex < _pListArray.Length)
-        {
-            return _pListArray[plistIndex];
-        }
-
-        return null;
     }
 }

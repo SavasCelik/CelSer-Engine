@@ -1,10 +1,12 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
+using CelSerEngine.Core.Scanners;
 using CelSerEngine.Shared.Services.MemoryScan;
 using CelSerEngine.WpfReact.ComponentControllers.ScanResultItems;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using static CelSerEngine.Core.Native.Enums;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.App;
@@ -72,6 +74,13 @@ public class AppController : ReactControllerBase, IDisposable
         var selectedProcess = new ProcessAdapter(process);
         _processSelectionTracker.SelectedProcess = selectedProcess;
         selectedProcess.ProcessHandle = _nativeApi.OpenProcess(selectedProcess.Process.Id);
+
+
+        var psNative = new PsNative(_nativeApi);
+        var sw = Stopwatch.StartNew();
+        psNative.Start(selectedProcess.ProcessHandle, 0x2381AFF7AF8, 5, 8096);
+        sw.Stop();
+        
     }
 
     public async Task FirstScanAsync(MemoryScanSettings memoryScanSettings)

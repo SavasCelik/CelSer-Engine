@@ -85,10 +85,10 @@ public class CheatEnginePointerScanner : PointerScanner2
                 plist.MaxSize = plist.List.Length;
             }
 
-            if (plist.List[plist.Pos] == null)
-            {
-                plist.List[plist.Pos] = new PointerData();
-            }
+            //if (plist.List[plist.Pos] == null)
+            //{
+            //    plist.List[plist.Pos] = new PointerData();
+            //}
 
             plist.List[plist.Pos].Address = pointerWithThisValue;
 

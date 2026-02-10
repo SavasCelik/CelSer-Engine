@@ -4,21 +4,23 @@ using CelSerEngine.Core.Native;
 using Microsoft.Win32.SafeHandles;
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Channels;
 using static CelSerEngine.Core.Native.Enums;
 using static CelSerEngine.Core.Native.Structs;
 
 namespace CelSerEngine.Core.Scanners;
 
-public sealed class PendingCounter(int startValue) { public int Value = startValue; }
-
-public abstract class PointerScanner2
+public abstract class Ps3
 {
     public const string PointerListExtName = ".ptrlist";
-    public const int MaxQueueSize = 64;
 
+    private readonly bool _useStacks;
     private IList<ModuleInfo> _modules;
-    private readonly List<IntPtr> _threadStackList;
+    private int _threadStacks = 2;
+    private List<IntPtr> _stackList = new(2);
+    public const int MaxQueueSize = 64;
+    public const bool NoLoop = true;
+    public const bool LimitToMaxOffsetsPerNode = true;
+    public const int MaxOffsetsPerNode = 3;
     private bool _findValueInsteadOfAddress = false;
     private Dictionary<IntPtr, IntPtr> _pointerByMemoryAddress = new();
 
@@ -26,14 +28,15 @@ public abstract class PointerScanner2
     public PointerScanOptions PointerScanOptions { get; init; }
     internal PathQueueElement[] PathQueue { get; set; } = new PathQueueElement[MaxQueueSize];
     public int PathQueueLength { get; set; } = 0;
+    public object pathqueueCS = new();
+    public Semaphore MySemaphore = new Semaphore(0, MaxQueueSize);
 
-    public PointerScanner2(INativeApi nativeApi, PointerScanOptions pointerScanOptions)
+    public Ps3(INativeApi nativeApi, PointerScanOptions pointerScanOptions)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(pointerScanOptions.MaxLevel, PointerScanOptions.MaxSupportedMaxLevel);
         NativeApi = nativeApi;
         PointerScanOptions = pointerScanOptions;
+        _useStacks = true;
         _modules = [];
-        _threadStackList = new List<IntPtr>(pointerScanOptions.ThreadStacks);
     }
 
     public async Task<IList<Pointer>> StartPointerScanAsync(SafeProcessHandle processHandle, StorageType storageType = StorageType.InMemory, string? fileName = null, CancellationToken cancellationToken = default)
@@ -44,7 +47,6 @@ public abstract class PointerScanner2
         if (storageType == StorageType.File)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
-            ClearFiles(fileName);
         }
 
         _modules = NativeApi.GetProcessModules(processHandle);
@@ -55,38 +57,68 @@ public abstract class PointerScanner2
         InitializeEmptyPathQueue();
 
         var pointersFoundTotal = 0;
-        var channel = Channel.CreateBounded<PathQueueElement>(MaxQueueSize);
-        var rootElement = new PathQueueElement(PointerScanOptions.MaxLevel)
-        {
-            StartLevel = 0,
-            ValueToFind = PointerScanOptions.SearchedAddress
-        };
-        int workerCount = Math.Min(PointerScanOptions.MaxParallelWorkers, Environment.ProcessorCount);
-        var results = new IResultStorage[workerCount];
+        var foundPointers = new List<Pointer>();
+        var workerList = new List<Psw3>();
+        var workerThreadList = new List<Thread>();
 
-        try
+        for (var i = 0; i < PointerScanOptions.MaxParallelWorkers; i++)
         {
-            await channel.Writer.WriteAsync(rootElement, cancellationToken);
-            var pendingCounter = new PendingCounter(startValue: 1);
+            var wStorage = CreateStorageForWorker(storageType, i, fileName);
+            var workerObj = new Psw3(this, wStorage, cancellationToken);
+            workerList.Add(workerObj);
+            var threads = new Thread(() => { workerObj.Start(); });
+            threads.Start();
+            workerThreadList.Add(threads);
+        }
 
-            await Parallel.ForEachAsync(Enumerable.Range(0, workerCount),
-                new ParallelOptions
+        while (true)
+        {
+            await Task.Delay(500, cancellationToken);
+
+            if (PathQueueLength == 0)
+            {
+                lock (pathqueueCS)
                 {
-                    MaxDegreeOfParallelism = workerCount,
-                    CancellationToken = cancellationToken
-                },
-                async (workerIndex, token) =>
-                {
-                    using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerIndex, fileName);
-                    var scanWorker = new PointerScanWorker(this, workerStorage, channel, pendingCounter, token);
-                    results[workerIndex] = await scanWorker.StartAsync();
+                    if (PathQueueLength == 0)
+                    {
+                        var allDone = workerList.All(x => x.IsDone);
+
+                        if (allDone)
+                        {
+                            break;
+                        }
+                    }
                 }
-            );
+            }
         }
-        catch (OperationCanceledException)
-        {
-            // Scan was cancelled, just exit gracefully
-        }
+
+        return
+                workerList.SelectMany(x => x._resultStorage.GetResults()
+                .Select(x => new Pointer
+                {
+                    ModuleName = _modules[x.ModuleIndex].ShortName,
+                    BaseAddress = _modules[x.ModuleIndex].BaseAddress,
+                    BaseOffset = (int)x.Offset,
+                    Offsets = x.TempResults
+                })).ToList();
+
+        //await Task.Factory.StartNew(async () =>
+        //{
+        //    const int workerId = 1; // currently only single worker is supported
+        //    using IResultStorage workerStorage = CreateStorageForWorker(storageType, workerId, fileName);
+        //    var scanWorker = new Psw3(this, workerStorage, cancellationToken);
+        //    var scanResult = scanWorker.Start();
+        //    var workersResultPointers = workerStorage.GetResults()
+        //        .Select(x => new Pointer
+        //        {
+        //            ModuleName = _modules[x.ModuleIndex].ShortName,
+        //            BaseAddress = _modules[x.ModuleIndex].BaseAddress,
+        //            BaseOffset = (int)x.Offset,
+        //            Offsets = x.TempResults
+        //        }).ToList();
+        //    pointersFoundTotal += scanWorker.PointersFound;
+        //    foundPointers.AddRange(workersResultPointers);
+        //}, cancellationToken);
 
         if (storageType == StorageType.File)
         {
@@ -99,57 +131,20 @@ public abstract class PointerScanner2
                 writer.Write(moduleInfo.BaseAddress);
             }
 
-            writer.Write(_modules.Max(x => x.Size));
             writer.Write(PointerScanOptions.MaxLevel);
-            writer.Write(PointerScanOptions.MaxOffset);
-            writer.Write(results.Sum(x => x?.GetResultsCount() ?? 0));
-
-            return [];
+            writer.Write(pointersFoundTotal);
         }
-        else
-        {
 
-            var foundPointers =
-                results.SelectMany(x => x?.GetResults().Select(r => new Pointer
-                {
-                    ModuleName = _modules[r.ModuleIndex].ShortName,
-                    BaseAddress = _modules[r.ModuleIndex].BaseAddress,
-                    BaseOffset = (int)r.Offset,
-                    Offsets = r.TempResults
-                }
-                ) ?? []
-                ).ToList();
-
-            return foundPointers;
-        }
+        return foundPointers;
     }
 
-    private IResultStorage CreateStorageForWorker(StorageType storageType, int workerId, string? fileName) =>
+    private static IResultStorage CreateStorageForWorker(StorageType storageType, int workerId, string? fileName) =>
         storageType switch
         {
             StorageType.InMemory => new InMemoryStorage(),
-            StorageType.File => new FileStorage($"{fileName}.{workerId}", _modules.Count, _modules.Max(x => x.Size),
-                                                PointerScanOptions.MaxLevel, PointerScanOptions.MaxOffset),
+            //StorageType.File => new FileStorage($"{fileName}.{workerId}"),
             _ => throw new InvalidOperationException("Unsupported storage type")
         };
-
-    private void ClearFiles(string fileName)
-    {
-        var dir = Path.GetDirectoryName(fileName);
-        ArgumentException.ThrowIfNullOrWhiteSpace(dir);
-
-        if (!Directory.Exists(dir))
-        {
-            throw new DirectoryNotFoundException($"Directory not found: {dir}");
-        }
-
-        var fileNamesToDelete = Path.GetFileName(fileName) + ".*";
-
-        foreach (var filePath in Directory.EnumerateFiles(dir, fileNamesToDelete))
-        {
-            File.Delete(filePath);
-        }
-    }
 
     public async Task<IList<Pointer>> RescanPointersAsync(IEnumerable<Pointer> firstScanPointers, IntPtr searchedAddress, SafeProcessHandle processHandle)
     {
@@ -179,11 +174,8 @@ public abstract class PointerScanner2
 
     private IReadOnlyList<VirtualMemoryRegion2> GetMemoryRegions(SafeProcessHandle processHandle)
     {
-        var memoryRegionsEnumerable = PointerScanOptions.OnlyResidentMemory
-            ? NativeApi.EnumerateResidentMemoryRegions(processHandle)
-            : NativeApi.EnumerateMemoryRegions(processHandle);
-
-        var memoryRegions = memoryRegionsEnumerable
+        var memoryRegions = NativeApi
+            .EnumerateMemoryRegions(processHandle)
             .Where(m =>
                 !IsSystemModule(m)
                 && m.State == MEMORY_STATE.MEM_COMMIT
@@ -191,27 +183,17 @@ public abstract class PointerScanner2
                 && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_GUARD)
                 && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_NOACCESS)
             )
-            .Select(m =>
+            .Select(m => new VirtualMemoryRegion2
             {
-                var isReadOnly = m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_READONLY)
-                                 || m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE)
-                                 || m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE_READ);
-
-                return new VirtualMemoryRegion2
-                {
-                    BaseAddress = (IntPtr)m.BaseAddress,
-                    MemorySize = m.RegionSize,
-                    InModule = TryGetModule((IntPtr)m.BaseAddress, out _),
-                    ValidPointerRange = !m.AllocationProtect.HasFlag(MEMORY_PROTECTION.PAGE_WRITECOMBINE)
-                                        && (PointerScanOptions.AllowReadOnlyPointers || !isReadOnly)
-                };
+                BaseAddress = (IntPtr)m.BaseAddress,
+                MemorySize = m.RegionSize,
+                InModule = TryGetModule((IntPtr)m.BaseAddress, out _),
+                ValidPointerRange = !m.AllocationProtect.HasFlag(MEMORY_PROTECTION.PAGE_WRITECOMBINE)
+                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_READONLY)
+                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE)
+                    && !m.Protect.HasFlag(MEMORY_PROTECTION.PAGE_EXECUTE_READ)
             })
             .ToList();
-
-        if (PointerScanOptions.OnlyResidentMemory)
-        {
-            memoryRegions = memoryRegions.Where(x => x.ValidPointerRange).ToList();
-        }
 
         if (memoryRegions.Count == 0)
             throw new Exception("No memory found in the specified region");
@@ -258,16 +240,17 @@ public abstract class PointerScanner2
     {
         var kernel32 = _modules.FirstOrDefault(x => x.Name.Contains("kernel32.dll", StringComparison.InvariantCultureIgnoreCase));
 
-        for (int i = 0; i < _threadStackList.Capacity; i++)
+        for (int i = 0; i < _threadStacks; i++)
         {
             var threadStackStart = NativeApi.GetStackStart(processHandle, i, kernel32);
 
             if (threadStackStart == IntPtr.Zero)
             {
+                _threadStacks = i;
                 break;
             }
 
-            _threadStackList.Add(threadStackStart);
+            _stackList.Add(threadStackStart);
             _modules.Add(new ModuleInfo { ModuleIndex = _modules.Count, Name = $"THREADSTACK{i}", BaseAddress = threadStackStart });
         }
     }
@@ -393,18 +376,17 @@ public abstract class PointerScanner2
     protected bool isStatic(IntPtr address, [NotNullWhen(true)] out ModuleInfo? moduleInfo)
     {
         moduleInfo = null;
+        const int stackSize = 4096;
         var isStack = false;
         var moduleBaseAddress = IntPtr.Zero;
 
-        if (PointerScanOptions.AllowThreadStacksAsStatic)
+        if (_useStacks)
         {
-            var stackSize = PointerScanOptions.StackSize;
-
-            foreach (var threadStack in _threadStackList)
+            for (var i = 0; i <= _threadStacks - 1; i++)
             {
-                if (address.InRange(threadStack - stackSize, threadStack))
+                if (address.InRange(_stackList[i] - stackSize, _stackList[i]))
                 {
-                    moduleBaseAddress = threadStack;
+                    moduleBaseAddress = _stackList[i];
                     isStack = true;
                 }
             }
@@ -412,7 +394,7 @@ public abstract class PointerScanner2
 
         if (!isStack)
         {
-            //TODO could just return here when module is found
+            //TODO this probably could just check for BaseAddress == address
             moduleBaseAddress = _modules.Where(x => address >= x.BaseAddress && address < x.BaseAddress + x.Size).Select(x => x.BaseAddress).FirstOrDefault();
         }
 
@@ -430,42 +412,46 @@ public abstract class PointerScanner2
 
     public void InitializeEmptyPathQueue()
     {
-        //for (var i = 0; i <= MaxQueueSize - 1; i++)
-        //{
-        //    for (var j = 0; j <= PointerScanOptions.MaxLevel + 1; j++)
-        //    {
-        //        if (PathQueue[i] == null)
-        //        {
-        //            PathQueue[i] = new PathQueueElement(PointerScanOptions.MaxLevel);
-        //        }
+        for (var i = 0; i <= MaxQueueSize - 1; i++)
+        {
+            for (var j = 0; j <= PointerScanOptions.MaxLevel + 1; j++)
+            {
+                if (PathQueue[i] == null)
+                {
+                    PathQueue[i] = new PathQueueElement(PointerScanOptions.MaxLevel);
+                }
 
-        //        PathQueue[i].TempResults[j] = new IntPtr(0xcececece);
-        //    }
+                PathQueue[i].TempResults[j] = new IntPtr(0xcececece);
+            }
 
-        //    if (PointerScanOptions.PreventLoops)
-        //    {
-        //        for (var j = 0; j < PointerScanOptions.MaxLevel + 1; j++)
-        //        {
-        //            if (PathQueue[i] == null)
-        //            {
-        //                PathQueue[i] = new PathQueueElement(PointerScanOptions.MaxLevel);
-        //            }
-        //            PathQueue[i].ValueList[j] = new UIntPtr(0xcececececececece);
-        //        }
-        //    }
-        //}
+            if (NoLoop)
+            {
+                for (var j = 0; j < PointerScanOptions.MaxLevel + 1; j++)
+                {
+                    if (PathQueue[i] == null)
+                    {
+                        PathQueue[i] = new PathQueueElement(PointerScanOptions.MaxLevel);
+                    }
+                    PathQueue[i].ValueList[j] = new UIntPtr(0xcececececececece);
+                }
+            }
+        }
 
-        //if (PointerScanOptions.MaxLevel > 0)
-        //{
-        //    if (true) // if (initializer) then //don't start the scan if it's a worker system
-        //    {
-        //        if (!_findValueInsteadOfAddress)
-        //        {
-        //            PathQueue[PathQueueLength].StartLevel = 0;
-        //            PathQueue[PathQueueLength].ValueToFind = PointerScanOptions.SearchedAddress;
-        //            PathQueueLength++;
-        //        }
-        //    }
-        //}
+        if (PointerScanOptions.MaxLevel > 0)
+        {
+            if (true) // if (initializer) then //don't start the scan if it's a worker system
+            {
+                if (!_findValueInsteadOfAddress)
+                {
+                    lock (pathqueueCS)
+                    {
+                        PathQueue[PathQueueLength].StartLevel = 0;
+                        PathQueue[PathQueueLength].ValueToFind = PointerScanOptions.SearchedAddress;
+                        PathQueueLength++;
+                        MySemaphore.Release(1);
+                    }
+                }
+            }
+        }
     }
 }

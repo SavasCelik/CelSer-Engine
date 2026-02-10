@@ -1,11 +1,13 @@
 ﻿namespace CelSerEngine.Core.Scanners;
 
-public class CheatEnginePointerWorker
+public class Psw3
 {
     public int PointersFound { get; set; }
+    public bool Terminated { get; set; }
+    public bool IsDone { get; set; }
 
-    private readonly PointerScanner2 _pointerScanner;
-    private readonly IResultStorage _resultStorage;
+    private readonly Ps3 _pointerScanner;
+    public readonly IResultStorage _resultStorage;
     private readonly CancellationToken _cancellationToken;
     private IntPtr[] _tempResults;
     private UIntPtr[] _valueList;
@@ -14,7 +16,7 @@ public class CheatEnginePointerWorker
     private int _maxLevel;
     private int _structSize;
 
-    public CheatEnginePointerWorker(PointerScanner2 pointerScanner, IResultStorage resultStorage, CancellationToken cancellationToken)
+    public Psw3(Ps3 pointerScanner, IResultStorage resultStorage, CancellationToken cancellationToken)
     {
         _pointerScanner = pointerScanner;
         _resultStorage = resultStorage;
@@ -27,23 +29,29 @@ public class CheatEnginePointerWorker
 
     public IList<ResultPointer> Start()
     {
-        while (true)
+        while (!Terminated)
         {
+            _pointerScanner.MySemaphore.WaitOne(500);
             var valueToFind = IntPtr.Zero;
             var startLevel = 0;
 
-            if (_pointerScanner.PathQueueLength > 0)
+            lock (_pointerScanner.pathqueueCS)
             {
-                _pointerScanner.PathQueueLength--;
-                var i = _pointerScanner.PathQueueLength;
-                valueToFind = _pointerScanner.PathQueue[i].ValueToFind;
-                startLevel = _pointerScanner.PathQueue[i].StartLevel;
-                Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, _maxLevel);
-
-                if (_pointerScanner.PointerScanOptions.PreventLoops)
+                if (_pointerScanner.PathQueueLength > 0)
                 {
-                    Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, _maxLevel);
+                    _pointerScanner.PathQueueLength--;
+                    var i = _pointerScanner.PathQueueLength;
+                    valueToFind = _pointerScanner.PathQueue[i].ValueToFind;
+                    startLevel = _pointerScanner.PathQueue[i].StartLevel;
+                    Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, _maxLevel);
+
+                    if (Ps3.NoLoop)
+                    {
+                        Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, _maxLevel);
+                    }
                 }
+
+                IsDone = false;
             }
 
             try
@@ -54,10 +62,9 @@ public class CheatEnginePointerWorker
             {
                 break;
             }
-
-            if (_pointerScanner.PathQueueLength == 0)
+            finally
             {
-                break;
+                IsDone = true;
             }
         }
 
@@ -87,7 +94,7 @@ public class CheatEnginePointerWorker
             }
         }
 
-        if (_pointerScanner.PointerScanOptions.PreventLoops)
+        if (Ps3.NoLoop)
         {
             //check if this valuetofind is already in the list
             for (var i = 0; i <= level - 1; i++)
@@ -140,10 +147,10 @@ public class CheatEnginePointerWorker
                             if (
                                 ((level + 3 < _maxLevel) &&
                                     (
-                                        ((_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 3))) ||
-                                        ((level <= 2) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 8))) ||
-                                        ((level <= 1) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 16))) ||
-                                        ((level == 0) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - 1))
+                                        ((_pointerScanner.PathQueueLength < Ps3.MaxQueueSize - (Ps3.MaxQueueSize / 3))) ||
+                                        ((level <= 2) && (_pointerScanner.PathQueueLength < Ps3.MaxQueueSize - (Ps3.MaxQueueSize / 8))) ||
+                                        ((level <= 1) && (_pointerScanner.PathQueueLength < Ps3.MaxQueueSize - (Ps3.MaxQueueSize / 16))) ||
+                                        ((level == 0) && (_pointerScanner.PathQueueLength < Ps3.MaxQueueSize - 1))
                                     )
                                 )
                                 || (_pointerScanner.PathQueueLength == 0)) // completely empty
@@ -151,21 +158,25 @@ public class CheatEnginePointerWorker
                                 //there's room and not a crappy work item. Add it
                                 //if locked then
 
-                                if (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - 1)
+                                lock (_pointerScanner.pathqueueCS)
                                 {
-                                    //still room
-
-                                    Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, _maxLevel);
-
-                                    if (_pointerScanner.PointerScanOptions.PreventLoops)
+                                    if (_pointerScanner.PathQueueLength < Ps3.MaxQueueSize - 1)
                                     {
-                                        Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, _maxLevel);
-                                    }
+                                        //still room
 
-                                    _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].StartLevel = level + 1;
-                                    _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueToFind = plist.List[j].Address;
-                                    _pointerScanner.PathQueueLength++;
-                                    addedToQueue = true;
+                                        Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, _maxLevel);
+
+                                        if (Ps3.NoLoop)
+                                        {
+                                            Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, _maxLevel);
+                                        }
+
+                                        _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].StartLevel = level + 1;
+                                        _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueToFind = plist.List[j].Address;
+                                        _pointerScanner.PathQueueLength++;
+                                        _pointerScanner.MySemaphore.Release(1);
+                                        addedToQueue = true;
+                                    }
                                 }
                             }
 
@@ -191,19 +202,19 @@ public class CheatEnginePointerWorker
                 else
                 {
                     //found a static one 
-                    //StorePath(level, plist.List[j].StaticData.ModuleIndex, plist.List[j].StaticData.Offset);
+                    StorePath(level, plist.List[j].StaticData.Value.ModuleIndex, plist.List[j].StaticData.Value.Offset);
                     //if onlyOneStaticInPath then DontGoDeeper:= true;
                 }
             }
 
-            if (_pointerScanner.PointerScanOptions.LimitToMaxOffsetsPerNode) //check if the current iteration is less than maxOffsetsPerNode 
+            if (Ps3.LimitToMaxOffsetsPerNode) //check if the current iteration is less than maxOffsetsPerNode 
             {
                 if (level > 0)
                 {
                     differentOffsetsInThisNode++;
                 }
 
-                if (differentOffsetsInThisNode >= _pointerScanner.PointerScanOptions.MaxOffsetsPerNode)
+                if (differentOffsetsInThisNode >= Ps3.MaxOffsetsPerNode)
                 {
                     return; //the max node has been reached 
                 }

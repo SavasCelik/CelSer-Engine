@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CelSerEngine.WpfReact": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
