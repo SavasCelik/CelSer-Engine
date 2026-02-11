@@ -1,18 +1,21 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using Microsoft.Win32.SafeHandles;
+using System.Collections.Frozen;
 
 namespace CelSerEngine.Core.Scanners;
 
 public class DefaultPointerScanner : PointerScanner2
 {
     private Dictionary<IntPtr, PointerList> _pointerDict;
+    private FrozenDictionary<IntPtr, PointerList> _frozenPointerDict;
     private IntPtr[] _keyArray;
 
     public DefaultPointerScanner(INativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
     {
-        _pointerDict = new Dictionary<IntPtr, PointerList>();
-        _keyArray = Array.Empty<IntPtr>();
+        _pointerDict = [];
+        _frozenPointerDict = FrozenDictionary<IntPtr, PointerList>.Empty;
+        _keyArray = [];
     }
 
     protected override void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, SafeProcessHandle processHandle)
@@ -116,12 +119,13 @@ public class DefaultPointerScanner : PointerScanner2
 
     protected override void FillLinkedList()
     {
+        _keyArray = _pointerDict.Keys.Order().ToArray();
         PointerList? current = null;
-        var keysSorted = _pointerDict.Keys.Order().ToArray();
 
-        foreach (var key in keysSorted)
+        foreach (var key in _keyArray)
         {
-            var value = _pointerDict[key];
+            var value = _pointerDict[key]; 
+
             if (current == null)
             {
                 current = value;
@@ -133,15 +137,16 @@ public class DefaultPointerScanner : PointerScanner2
             current = value;
         }
 
-        _keyArray = keysSorted;
-        //_keyArray = new IntPtr[_pointerDict.Keys.Count];
-        //_pointerDict.Keys.CopyTo(_keyArray, 0);
+        // use FrozenDictionary for faster read-only lookups
+        _frozenPointerDict = _pointerDict.ToFrozenDictionary();
+        // avoid holding duplicate references
+        _pointerDict = [];
     }
 
     internal override PointerList? FindPointerValue(nint startValue, ref nint stopValue)
     {
         var closestLowerKey = IntPtr.MaxValue;
-        if (!_pointerDict.TryGetValue(stopValue, out var result))
+        if (!_frozenPointerDict.TryGetValue(stopValue, out var result))
         {
             int closestLowerKeyIndex = BinarySearchClosestLowerKey(stopValue, startValue);
             if (closestLowerKeyIndex >= 0)
@@ -152,7 +157,7 @@ public class DefaultPointerScanner : PointerScanner2
 
             if (closestLowerKey != IntPtr.MaxValue)
             {
-                result = _pointerDict[closestLowerKey];
+                result = _frozenPointerDict[closestLowerKey];
             }
         }
 
