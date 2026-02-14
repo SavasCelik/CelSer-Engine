@@ -16,4 +16,5 @@ public class PointerScanOptionsDto
     public bool AllowReadOnlyPointers { get; set; }
     public bool OnlyOneStaticInPath { get; set; }
     public bool OnlyResidentMemory { get; set; }
+    public string StoragePath { get; set; } = "";
 }

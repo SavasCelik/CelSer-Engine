@@ -87,6 +87,7 @@ const formSchema = z
     allowReadOnlyPointers: z.boolean(),
     onlyOneStaticInPath: z.boolean(),
     onlyResidentMemory: z.boolean(),
+    storagePath: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.limitToMaxOffsetsPerNode) {
@@ -202,7 +203,14 @@ export default function PointerScanOptionsDialog({
     disabled: startPointerScanMutation.isPending,
   });
 
-  function onSubmit(data: FormDataType) {
+  async function onSubmit(data: FormDataType) {
+    const storage = await dotNetObj?.invokeMethod<string>("SelectStorage");
+
+    if (!storage) {
+      return;
+    }
+
+    data.storagePath = storage;
     startPointerScanMutation.mutate(data);
     setMaxOffsetCols(Number(data.maxLevel));
   }

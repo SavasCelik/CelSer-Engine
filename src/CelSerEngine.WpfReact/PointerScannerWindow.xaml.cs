@@ -20,6 +20,7 @@ public partial class PointerScannerWindow : Window
         serviceCollection.AddSingleton(processSelectionTracker);
         var trackedItemNotifier = mainServiceProvider.GetRequiredService<TrackedItemNotifier>();
         serviceCollection.AddSingleton(trackedItemNotifier);
+        serviceCollection.AddSingleton(this);
 
         var services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", services);
