@@ -1,7 +1,9 @@
 ﻿using CelSerEngine.Core.Models;
 using CelSerEngine.Core.Native;
 using CelSerEngine.Core.Scanners;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.PointerScanner;
@@ -12,14 +14,21 @@ public class PointerScannerController : ReactControllerBase, IDisposable
     private readonly TrackedItemNotifier _trackedItemNotifier;
     private readonly PointerScannerWindow _pointerScannerWindow;
     private readonly INativeApi _nativeApi;
+    private readonly ILogger<PointerScannerController> _logger;
     private readonly List<Pointer> _pointerScanResults;
     private CancellationTokenSource? _scanCancellationTokenSource;
     private readonly bool _useFileStorage;
     private PointerScanResultReader? _pointerScanResultReader;
 
-    public PointerScannerController(INativeApi nativeApi, ProcessSelectionTracker processSelectionTracker, TrackedItemNotifier trackedItemNotifier, PointerScannerWindow pointerScannerWindow)
+    public PointerScannerController(
+        INativeApi nativeApi,
+        ILogger<PointerScannerController> logger,
+        ProcessSelectionTracker processSelectionTracker,
+        TrackedItemNotifier trackedItemNotifier,
+        PointerScannerWindow pointerScannerWindow)
     {
         _nativeApi = nativeApi;
+        _logger = logger;
         _pointerScanResults = [];
         _processSelectionTracker = processSelectionTracker;
         _trackedItemNotifier = trackedItemNotifier;
@@ -96,25 +105,24 @@ public class PointerScannerController : ReactControllerBase, IDisposable
     private async Task FileStoragePointerScan(PointerScanOptions pointerScanOptions, string fileName, CancellationToken cancellationToken)
     {
         var pointerScanner = new DefaultPointerScanner(_nativeApi, pointerScanOptions);
-        //Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
-        //    pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
-        //var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        _logger.LogDebug("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
+            pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
+        var stopwatch = Stopwatch.StartNew();
         await pointerScanner.StartPointerScanAsync(_processSelectionTracker.SelectedProcessHandle, StorageType.File, fileName);
-        //stopwatch.Stop();
-        //Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
-        //_pointerScanResultReader = new PointerScanResultReader(fileName);
+        stopwatch.Stop();
+        _logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
         _pointerScanResultReader = new PointerScanResultReader(fileName);
     }
 
     private async Task InMemoryPointerScan(PointerScanOptions pointerScanOptions, CancellationToken cancellationToken)
     {
         var pointerScanner = new DefaultPointerScanner(_nativeApi, pointerScanOptions);
-        //Logger.LogInformation("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
-        //    pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
-        //var stopwatch = Stopwatch.StartNew();
+        _logger.LogDebug("Starting pointer scan with options: MaxLevel = {MaxLevel}, MaxOffset = {MaxOffset}, SearchedAddress = {SearchedAddress}",
+            pointerScanOptions.MaxLevel, pointerScanOptions.MaxOffset.ToString("X"), pointerScanOptions.SearchedAddress.ToString("X"));
+        var stopwatch = Stopwatch.StartNew();
         _pointerScanResults.AddRange(await pointerScanner.StartPointerScanAsync(_processSelectionTracker.SelectedProcessHandle, cancellationToken: cancellationToken));
-        //stopwatch.Stop();
-        //Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
+        stopwatch.Stop();
+        _logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
     }
 
     public PointerScanResultsPageDto GetPointerScanResults(int page, int pageSize)
