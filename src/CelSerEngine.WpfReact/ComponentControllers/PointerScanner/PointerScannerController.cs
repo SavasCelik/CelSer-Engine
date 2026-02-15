@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Globalization;
+using System.Windows.Controls;
 
 namespace CelSerEngine.WpfReact.ComponentControllers.PointerScanner;
 
@@ -277,10 +278,34 @@ public class PointerScannerController : ReactControllerBase, IDisposable
     {
         var itemIndex = pageIndex * pageSize + rowIndex;
 
-        if (itemIndex < 0 || itemIndex >= _pointerScanResults.Count)
+        if (itemIndex < 0)
+        {
+            _logger.LogError("Index is negative '{index}'", itemIndex);
             return;
+        }
 
-        var selectedItem = _pointerScanResults[itemIndex];
+        Pointer selectedItem;
+
+        if (_useFileStorage)
+        {
+            if (_pointerScanResultReader == null || itemIndex >= _pointerScanResultReader.TotalItemCount)
+            {
+                _logger.LogError("PointerScanResultReader is null or desired index '{index}' is out of range", itemIndex);
+                return;
+            }
+
+            selectedItem = _pointerScanResultReader.ReadPointers(itemIndex, 1).First();
+        }
+        else
+        {
+            if (itemIndex >= _pointerScanResults.Count)
+            {
+                _logger.LogError("Desired index '{index}' is out of range", itemIndex);
+                return;
+            }
+
+            selectedItem = _pointerScanResults[itemIndex];
+        }
 
         if (selectedItem != null)
         {
