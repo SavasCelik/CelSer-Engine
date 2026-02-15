@@ -2,6 +2,8 @@
 using Microsoft.Web.WebView2.Core;
 using System.IO;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using WebView2Control = Microsoft.Web.WebView2.Wpf.WebView2;
@@ -80,9 +82,20 @@ public class ReactWebView : Control, IDisposable
                 options: new CoreWebView2EnvironmentOptions() { AreBrowserExtensionsEnabled = true });
         await _webview!.EnsureCoreWebView2Async(_coreWebView2Environment);
         ApplyDefaultWebViewSettings();
+
+        var jsonOptions = new JsonSerializerOptions // could also allow passing json options via services and only create a default one, when not provided
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters =
+            {
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+            }
+        };
+
         var reactJsRuntime = Services.GetRequiredService<ReactJsRuntime>();
-        reactJsRuntime.AttachToWebView(_webview.CoreWebView2);
-        _webViewManager = new ReactWebViewManager(Services, _webview);
+        reactJsRuntime.AttachToWebViewAndJsonOptions(_webview.CoreWebView2, jsonOptions);
+        _webViewManager = new ReactWebViewManager(Services, _webview, jsonOptions);
         ReactWebViewInitialized?.Invoke(this, EventArgs.Empty);
     }
 
