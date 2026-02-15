@@ -3,10 +3,13 @@ import { Progress } from "@/components/ui/progress";
 import ScanResultItemsTable from "./components/main/ScanResultItemsTable";
 import TrackedItemsTable from "./components/main/TrackedItemsTable";
 import ScanConstraintsForm from "./components/main/ScanContraintsForm";
+import LogDisplayer from "./components/main/LogDisplayer";
 import { useDotNet } from "./utils/useDotNet";
 import { Button } from "./components/ui/button";
 import SelectProcessIcon from "./assets/SelectProcess.png";
 import { cn } from "./lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { AppWindowIcon, LogsIcon } from "lucide-react";
 
 const componentId = "App";
 const noProcessSelectedText = "- No Process Selected -";
@@ -86,9 +89,38 @@ function App() {
         </div>
 
         {/* Bottom table */}
-        <div className="mt-2 flex-1 overflow-auto rounded-lg border">
-          <TrackedItemsTable />
-        </div>
+        {/* <div className="mt-2 flex-1 overflow-auto rounded-lg border"> */}
+        <Tabs
+          defaultValue="tracked-items"
+          className="mt-2 min-h-0 flex-1 gap-1"
+        >
+          <TabsContent
+            value="tracked-items"
+            className="min-h-0 overflow-hidden rounded-lg border data-[state=inactive]:hidden"
+            forceMount
+          >
+            <TrackedItemsTable />
+          </TabsContent>
+          <TabsContent
+            value="logs"
+            className="min-h-0 overflow-hidden rounded-lg border data-[state=inactive]:hidden"
+            forceMount
+          >
+            <LogDisplayer />
+          </TabsContent>
+
+          <TabsList className="mx-auto w-full max-w-3xs group-data-[orientation=horizontal]/tabs:h-7.5">
+            <TabsTrigger value="tracked-items">
+              <AppWindowIcon />
+              Tracked Items
+            </TabsTrigger>
+            <TabsTrigger value="logs">
+              <LogsIcon />
+              Logs
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {/* </div> */}
       </div>
     </>
   );

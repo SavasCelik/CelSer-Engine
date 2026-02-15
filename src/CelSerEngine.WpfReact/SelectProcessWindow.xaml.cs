@@ -1,5 +1,8 @@
 ﻿using CelSerEngine.Core.Native;
+using CelSerEngine.WpfReact.Loggers;
+using CelSerEngine.WpfReact.Trackers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Windows;
 
 namespace CelSerEngine.WpfReact
@@ -18,6 +21,8 @@ namespace CelSerEngine.WpfReact
             serviceCollection.AddSingleton(nativeApi);
             var processSelectionTracker = mainWindow.Services.GetRequiredService<ProcessSelectionTracker>();
             serviceCollection.AddSingleton(processSelectionTracker);
+            var logManager = mainWindow.Services.GetRequiredService<LogTracker>();
+            serviceCollection.AddLogging(x => x.ClearProviders().AddProvider(new DefaultLoggerProvider(logManager)).SetMinimumLevel(LogLevel.Debug));
 
             var services = serviceCollection.BuildServiceProvider();
             Resources.Add("services", services);
