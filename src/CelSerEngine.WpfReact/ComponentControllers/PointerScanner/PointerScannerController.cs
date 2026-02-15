@@ -117,8 +117,11 @@ public class PointerScannerController : ReactControllerBase, IDisposable
         //Logger.LogInformation("Pointer scan completed in {ElapsedMilliseconds} ms", stopwatch.ElapsedMilliseconds);
     }
 
-    public object GetPointerScanResults(int page, int pageSize)
+    public PointerScanResultsPageDto GetPointerScanResults(int page, int pageSize)
     {
+        if (_pointerScanResultReader == null && _pointerScanResults.Count == 0)
+            return new PointerScanResultsPageDto();
+
         Pointer[] pointerScanResultsPage;
         var totalCount = 0;
 
@@ -135,7 +138,7 @@ public class PointerScannerController : ReactControllerBase, IDisposable
 
         _nativeApi.UpdateAddresses(_processSelectionTracker.SelectedProcessHandle, pointerScanResultsPage);
 
-        return new
+        return new PointerScanResultsPageDto
         {
             Items = pointerScanResultsPage
             .Select(x => new PointerScanResultDto
@@ -143,7 +146,7 @@ public class PointerScannerController : ReactControllerBase, IDisposable
                 ModuleNameWithBaseOffset = x.ModuleNameWithBaseOffset,
                 Offsets = x.Offsets.Select(x => x.ToString("X")).Reverse().ToArray(),
                 PointingToWithValue = $"{x.PointingTo.ToString("X8")} = {x.Value}"
-            }),
+            }).ToList(),
             TotalCount = totalCount
         };
     }
@@ -279,6 +282,8 @@ public class PointerScannerController : ReactControllerBase, IDisposable
 
     public void Dispose()
     {
+        _pointerScanResultReader?.Dispose();
+
         if (_scanCancellationTokenSource != null)
         {
             _scanCancellationTokenSource.Cancel();
