@@ -154,7 +154,6 @@ export default function PointerScanOptionsDialog({
       if (!dotNetObj) {
         return Promise.reject();
       }
-      onOpenChange(false);
 
       const pointerScanOptions = {
         ...data,
@@ -204,9 +203,11 @@ export default function PointerScanOptionsDialog({
   });
 
   async function onSubmit(data: FormDataType) {
+    onOpenChange(false);
     const storage = await dotNetObj?.invokeMethod<string>("SelectStorage");
 
     if (!storage) {
+      onOpenChange(true);
       return;
     }
 
