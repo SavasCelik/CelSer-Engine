@@ -6,4 +6,15 @@ public class PointerScanOptionsDto
     public bool RequireAlignedPointers { get; set; }
     public int MaxLevel { get; set; }
     public int MaxOffset { get; set; }
+    public int MaxParallelWorkers { get; set; }
+    public bool LimitToMaxOffsetsPerNode { get; set; }
+    public int MaxOffsetsPerNode { get; set; }
+    public bool PreventLoops { get; set; }
+    public bool AllowThreadStacksAsStatic { get; set; }
+    public int ThreadStacks { get; set; }
+    public int StackSize { get; set; }
+    public bool AllowReadOnlyPointers { get; set; }
+    public bool OnlyOneStaticInPath { get; set; }
+    public bool OnlyResidentMemory { get; set; }
+    public string StoragePath { get; set; } = "";
 }

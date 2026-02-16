@@ -59,7 +59,7 @@ public class NewPointerScannerBenchmark
             });
     }
 
-    [Benchmark]
+    //[Benchmark]
     public async Task CheatEnginePointerScannerLevel4()
     {
         var scanOpts = new PointerScanOptions()
@@ -68,7 +68,8 @@ public class NewPointerScannerBenchmark
             ProcessHandle = new SafeProcessHandle(),
             MaxLevel = 4,
             MaxOffset = 0x1000,
-            SearchedAddress = new IntPtr(0x014FA308)
+            SearchedAddress = new IntPtr(0x014FA308),
+            MaxParallelWorkers = Environment.ProcessorCount
         };
         var scanner = new CheatEnginePointerScanner(_stubNativeApi.Object, scanOpts);
         var foundPointers = await scanner.StartPointerScanAsync(scanOpts.ProcessHandle);
@@ -76,15 +77,16 @@ public class NewPointerScannerBenchmark
     }
 
     [Benchmark]
-    public async Task DefaultPointerScannerLevel4()
+    public async Task DefaultPointerScannerLevel5()
     {
         var scanOpts = new PointerScanOptions()
         {
             ProcessId = "DoesNotMatter".GetHashCode(),
             ProcessHandle = new SafeProcessHandle(),
-            MaxLevel = 4,
-            MaxOffset = 0x1000,
-            SearchedAddress = new IntPtr(0x014FA308)
+            MaxLevel = 5,
+            MaxOffset = 0x3000,
+            SearchedAddress = new IntPtr(0x014FA308),
+            MaxParallelWorkers = Environment.ProcessorCount
         };
         var scanner = new DefaultPointerScanner(_stubNativeApi.Object, scanOpts);
         var foundPointers = await scanner.StartPointerScanAsync(scanOpts.ProcessHandle);
@@ -100,7 +102,8 @@ public class NewPointerScannerBenchmark
             ProcessHandle = new SafeProcessHandle(),
             MaxLevel = 6,
             MaxOffset = 0x1000,
-            SearchedAddress = new IntPtr(0x014FA308)
+            SearchedAddress = new IntPtr(0x014FA308),
+            MaxParallelWorkers = Environment.ProcessorCount
         };
         var scanner = new CheatEnginePointerScanner(_stubNativeApi.Object, scanOpts);
         var foundPointers = await scanner.StartPointerScanAsync(scanOpts.ProcessHandle);
@@ -115,8 +118,9 @@ public class NewPointerScannerBenchmark
             ProcessId = "DoesNotMatter".GetHashCode(),
             ProcessHandle = new SafeProcessHandle(),
             MaxLevel = 6,
-            MaxOffset = 0x1000,
-            SearchedAddress = new IntPtr(0x014FA308)
+            MaxOffset = 0x1500,
+            SearchedAddress = new IntPtr(0x014FA308),
+            MaxParallelWorkers = Environment.ProcessorCount
         };
         var scanner = new DefaultPointerScanner(_stubNativeApi.Object, scanOpts);
         var foundPointers = await scanner.StartPointerScanAsync(scanOpts.ProcessHandle);

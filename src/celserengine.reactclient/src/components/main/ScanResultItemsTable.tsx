@@ -21,10 +21,10 @@ import {
   useIsMutating,
   useQuery,
 } from "@tanstack/react-query";
-import { DotNetObject } from "../utils/useDotNet";
-import { Skeleton } from "./ui/skeleton";
+import { DotNetObject } from "@/utils/useDotNet";
+import { Skeleton } from "../ui/skeleton";
 import { useTableRowSelection } from "@/hooks/use-table-row-selection";
-import TablePagination from "./TablePagination";
+import TablePagination from "../TablePagination";
 
 type RusultItem = {
   address: string;
@@ -120,9 +120,9 @@ function ScanResultItemsTable({ dotNetObj }: ScanResultItemsTableProps) {
 
   return (
     <>
-      <div className="flex min-h-[455px] flex-1 flex-col">
+      <div className="flex min-h-113.75 flex-1 flex-col">
         <div className="text-center text-sm">Found: {totalCount}</div>
-        <div className="flex-1 overflow-auto rounded-lg border-1">
+        <div className="flex-1 overflow-auto rounded-lg border">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

@@ -20,7 +20,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   FrozenRowsFeature,
   FrozenRowsState,
-} from "../tanstack-table-features/FrozenRows";
+} from "@/tanstack-table-features/FrozenRows";
 import { useTableRowSelection } from "@/hooks/use-table-row-selection";
 import { TrackedItem } from "@/types/TrackedItem";
 import {

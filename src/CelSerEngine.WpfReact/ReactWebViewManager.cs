@@ -16,21 +16,14 @@ public class ReactWebViewManager : IDisposable
     private readonly ConcurrentDictionary<long, object> _trackedRefsById;
     private readonly JsonSerializerOptions _jsonSerializerOptions;
     private long _nextObjectReferenceId;
+    private bool _disposed;
 
-    public ReactWebViewManager(IServiceProvider serviceProvider, WebView2 webView)
+    public ReactWebViewManager(IServiceProvider serviceProvider, WebView2 webView, JsonSerializerOptions jsonSerializerOptions)
     {
         _serviceProvider = serviceProvider;
         _webView = webView;
         _taskGenericsUtil = new TaskGenericsUtil();
-        _jsonSerializerOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            Converters =
-            {
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-            }
-        };
+        _jsonSerializerOptions = jsonSerializerOptions;
         _trackedRefsById = new ConcurrentDictionary<long, object>();
         webView.CoreWebView2.WebMessageReceived += MessageReceived;
         webView.CoreWebView2.NavigationStarting += (sender, e) =>
@@ -212,6 +205,9 @@ public class ReactWebViewManager : IDisposable
 
     private void EndInvokeDotNet(ResponseMessage responseMessage)
     {
+        if (_disposed)
+            return;
+
         //_webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, _jsonSerializerOptions));
         _webView.Dispatcher.Invoke(() =>
         {
@@ -268,6 +264,7 @@ public class ReactWebViewManager : IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
         DisposeTrackedRefs();
     }
 }

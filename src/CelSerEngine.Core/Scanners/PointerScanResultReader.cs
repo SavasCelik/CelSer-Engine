@@ -1,67 +1,100 @@
 ﻿using CelSerEngine.Core.Models;
+using CelSerEngine.Core.Scanners.Serialization;
+using System.Diagnostics;
 
 namespace CelSerEngine.Core.Scanners;
 
-public class PointerScanResultReader : IDisposable
+public sealed class PointerScanResultReader : IDisposable
 {
-    public int TotalItemCount { get; set; }
-    public int MaxLevel { get; set; }
+    private sealed record PointerFileInfo(int StartIndex, int Count, IPointerReader Reader);
+    private sealed record PointerScanResultMetaData(int TotalItemCount, int MaxModuleIndex, uint MaxModuleOffset, int MaxLevel, int MaxOffset);
 
-    private readonly BinaryReader _reader;
+    public int TotalItemCount => _metaData.TotalItemCount;
+    private readonly PointerScanResultMetaData _metaData;
+    private readonly List<PointerFileInfo> _pointerFiles;
     private readonly List<ModuleInfo> _modules;
 
     public PointerScanResultReader(string fileName)
     {
+        ArgumentNullException.ThrowIfNull(fileName);
+
+        if (!File.Exists(fileName))
+            throw new FileNotFoundException($"File not found: {fileName}");
+
         _modules = [];
-        GatherMetaData(fileName);
-        const int workerId = 1; // currently only single worker is supported
-        _reader = new BinaryReader(File.OpenRead($"{fileName}.{workerId}"));
+        _metaData = GetMetaData(fileName);
+        _pointerFiles = [];
+        GatherFiles(fileName);
     }
 
-    public IEnumerable<Pointer> ReadPointers(int startIndex, int amount)
+    /// <summary>
+    /// Reads a contiguous range of pointers starting at <paramref name="startIndex"/>.
+    /// <para>
+    /// Pointers are stored across multiple underlying files. This method transparently
+    /// reads from one or more files as needed to satisfy the request.
+    /// </para>
+    /// </summary>
+    /// <param name="startIndex">
+    /// The zero-based start index of the first pointer to read.
+    /// </param>
+    /// <param name="amount">
+    /// The maximum number of pointers to read.
+    /// </param>
+    /// <returns>
+    /// An array containing up to <paramref name="amount"/> pointers starting at
+    /// <paramref name="startIndex"/>.  
+    /// If fewer pointers are available than requested, the returned array
+    /// will contain only the pointers that could be read.
+    /// </returns>
+    public Pointer[] ReadPointers(int startIndex, int amount)
     {
-        var pointers = new List<Pointer>();
-        var currentIndex = 0;
+        if (amount <= 0)
+            return [];
 
-        while (_reader.BaseStream.Position < _reader.BaseStream.Length)
+        var pointers = new Pointer[amount];
+        var added = 0;
+        var endIndex = startIndex + amount;
+
+        foreach (var pointerFile in _pointerFiles)
         {
-            var moduleIndex = _reader.Read7BitEncodedInt();
-            var baseOffset = _reader.Read7BitEncodedInt();
-            var level = _reader.Read7BitEncodedInt();
-            var offsets = new IntPtr[level];
+            if (endIndex <= pointerFile.StartIndex || startIndex >= pointerFile.StartIndex + pointerFile.Count)
+                continue;
 
-            for (var i = 0; i < level; i++)
-            {
-                offsets[i] = new IntPtr(_reader.Read7BitEncodedInt());
-            }
+            var readIndex = startIndex + added;
+            var fileStartIndex = readIndex - pointerFile.StartIndex;
 
-            if (startIndex <= currentIndex && currentIndex - startIndex < amount)
-            {
-                pointers.Add(new Pointer
-                {
-                    ModuleName = _modules[moduleIndex].Name,
-                    BaseAddress = _modules[moduleIndex].BaseAddress,
-                    BaseOffset = baseOffset,
-                    Offsets = offsets
-                });
-            }
+            Debug.Assert(fileStartIndex >= 0);
+            Debug.Assert(fileStartIndex < pointerFile.Count);
 
-            currentIndex++;
+            var remaining = amount - added;
+            var count = Math.Min(pointerFile.Count - fileStartIndex, remaining);
+            pointerFile.Reader.ReadExactly(pointers.AsSpan(added, count), fileStartIndex);
+            added += count;
 
-            if (currentIndex - startIndex >= amount)
-            {
+            if (added == amount)
                 break;
-            }
         }
 
-        _reader.BaseStream.Position = 0;
-
-        return pointers;
+        return pointers[..added];
     }
 
-    private void GatherMetaData(string fileName)
+    private PointerScanResultMetaData GetMetaData(string fileName)
     {
         using var reader = new BinaryReader(File.OpenRead(fileName));
+        var magic = reader.ReadUInt64();
+
+        if (magic != PointerScanner2.Magic)
+        {
+            throw new InvalidDataException($"File is corrupted.");
+        }
+
+        var scanVersion = reader.ReadUInt32();
+
+        if (scanVersion != PointerScanner2.Version)
+        {
+            throw new InvalidDataException($"Invalid file header. Expected version {PointerScanner2.Version}, found {scanVersion} in '{fileName}'.");
+        }
+
         var modulesCount = reader.ReadInt32();
         _modules.Capacity = modulesCount;
 
@@ -72,9 +105,42 @@ public class PointerScanResultReader : IDisposable
             _modules.Add(new ModuleInfo { Name = shortName, BaseAddress = new IntPtr(baseAddress) });
         }
 
-        MaxLevel = reader.ReadInt32();
-        TotalItemCount = reader.ReadInt32();
+        var maxModuleOffset = reader.ReadUInt32();
+        var maxLevel = reader.ReadInt32();
+        var maxOffset = reader.ReadInt32();
+        var totalItemCount = reader.ReadInt32();
+
+        return new PointerScanResultMetaData(totalItemCount, modulesCount, maxModuleOffset, maxLevel, maxOffset);
     }
 
-    public void Dispose() => _reader.Dispose();
+    private void GatherFiles(string fileName)
+    {
+        var directory = Path.GetDirectoryName(fileName)!;
+        var workerFileNames = Path.GetFileName(fileName) + ".*";
+        var filesPaths = Directory.EnumerateFiles(directory, workerFileNames).Where(x => x != fileName).OrderBy(x => x, StringComparer.OrdinalIgnoreCase);
+        var pointerBitLayout = new PointerBitLayout(_metaData.MaxModuleIndex, _metaData.MaxModuleOffset, _metaData.MaxLevel, _metaData.MaxOffset);
+        var startIndex = 0;
+
+        foreach (var filePath in filesPaths)
+        {
+            var fileInfo = new FileInfo(filePath);
+
+            if (fileInfo.Length == 0)
+                continue;
+
+            var reader = new PointerBitReader(File.OpenRead(filePath), pointerBitLayout, _modules);
+            var pointerCount = (int)(reader.BaseStream.Length / pointerBitLayout.EntrySizeInBytes);
+            _pointerFiles.Add(new PointerFileInfo(startIndex, pointerCount, reader));
+
+            startIndex += pointerCount;
+        }
+    }
+
+    public void Dispose()
+    {
+        foreach (var pointerFile in _pointerFiles)
+        {
+            pointerFile.Reader.Dispose();
+        }
+    }
 }

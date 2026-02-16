@@ -5,11 +5,13 @@ namespace CelSerEngine.WpfReact;
 
 public class ReactJsRuntime
 {
-    public CoreWebView2? _coreWebView2;
+    private CoreWebView2? _coreWebView2;
+    private JsonSerializerOptions? _jsonSerializerOptions;
 
-    public void AttachToWebView(CoreWebView2 coreWebView2)
+    public void AttachToWebViewAndJsonOptions(CoreWebView2 coreWebView2, JsonSerializerOptions jsonOptions)
     {
         _coreWebView2 = coreWebView2;
+        _jsonSerializerOptions = jsonOptions;
     }
 
     public async Task<T?> InvokeAsync<T>(string objectId, string functionName, params object[] args)
@@ -34,7 +36,10 @@ public class ReactJsRuntime
         if (_coreWebView2 == null)
             throw new NullReferenceException(nameof(_coreWebView2));
 
-        var argsJson = "[" + string.Join(", ", args.Select(arg => JsonSerializer.Serialize(arg))) + "]";
+        if (_jsonSerializerOptions == null)
+            throw new NullReferenceException(nameof(_jsonSerializerOptions));
+
+        var argsJson = "[" + string.Join(", ", args.Select(arg => JsonSerializer.Serialize(arg, _jsonSerializerOptions))) + "]";
         var script = $"window.jsInterop.invokeComponentMethod('{objectId}','{functionName}', {argsJson})";
         return await _coreWebView2.ExecuteScriptAsync(script);
     }

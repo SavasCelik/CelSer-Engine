@@ -4,15 +4,17 @@ using Microsoft.Win32.SafeHandles;
 
 namespace CelSerEngine.Core.Scanners;
 
-public class DefaultPointerScanner : PointerScanner2
+public sealed class DefaultPointerScanner : PointerScanner2
 {
-    private SortedDictionary<IntPtr, PointerList> _pointerDict;
+    private Dictionary<IntPtr, PointerList> _pointerDict;
     private IntPtr[] _keyArray;
+    private PointerList[] _valueArray;
 
     public DefaultPointerScanner(INativeApi nativeApi, PointerScanOptions pointerScanOptions) : base(nativeApi, pointerScanOptions)
     {
-        _pointerDict = new SortedDictionary<IntPtr, PointerList>();
-        _keyArray = Array.Empty<IntPtr>();
+        _pointerDict = [];
+        _keyArray = [];
+        _valueArray = [];
     }
 
     protected override void FindPointersInMemoryRegions(IReadOnlyList<VirtualMemoryRegion2> memoryRegions, SafeProcessHandle processHandle)
@@ -68,7 +70,7 @@ public class DefaultPointerScanner : PointerScanner2
         if (isStatic(pointerWithThisValue, out var mi))
         {
             var staticData = new StaticData()
-            {
+        {
                 ModuleIndex = mi.ModuleIndex,
                 Offset = pointerWithThisValue - mi.BaseAddress
             };
@@ -116,10 +118,15 @@ public class DefaultPointerScanner : PointerScanner2
 
     protected override void FillLinkedList()
     {
+        _keyArray = _pointerDict.Keys.Order().ToArray();
         PointerList? current = null;
+        var valueList = new List<PointerList>(_keyArray.Length);
 
-        foreach (var (key, value) in _pointerDict)
+        foreach (var key in _keyArray)
         {
+            var value = _pointerDict[key];
+            valueList.Add(value);
+
             if (current == null)
             {
                 current = value;
@@ -131,32 +138,46 @@ public class DefaultPointerScanner : PointerScanner2
             current = value;
         }
 
-        _keyArray = new IntPtr[_pointerDict.Keys.Count];
-        _pointerDict.Keys.CopyTo(_keyArray, 0);
+        _valueArray = valueList.ToArray();
+
+        // not needed anymore
+        _pointerDict = [];
     }
 
     internal override PointerList? FindPointerValue(nint startValue, ref nint stopValue)
     {
-        var closestLowerKey = IntPtr.MaxValue;
-        if (!_pointerDict.TryGetValue(stopValue, out var result))
+        int closestLowerKeyIndex = BinarySearchClosestLowerKey(stopValue, startValue);
+
+        if (closestLowerKeyIndex >= 0)
         {
-            int closestLowerKeyIndex = BinarySearchClosestLowerKey(stopValue, startValue);
-            if (closestLowerKeyIndex >= 0)
-            {
-                closestLowerKey = _keyArray[closestLowerKeyIndex];
-                //_closest.Add(startValue, closestLowerKey);
-            }
-
-            if (closestLowerKey != IntPtr.MaxValue)
-            {
-                result = _pointerDict[closestLowerKey];
-            }
-        }
-
-        if (result != null)
+            var result = _valueArray[closestLowerKeyIndex];
             stopValue = result.PointerValue;
 
-        return result;
+            return result;
+        }
+
+        return null;
+
+        //var closestLowerKey = IntPtr.MaxValue;
+        //if (!_frozenPointerDict.TryGetValue(stopValue, out var result))
+        //{
+        //    int closestLowerKeyIndex = BinarySearchClosestLowerKey(stopValue, startValue);
+        //    if (closestLowerKeyIndex >= 0)
+        //    {
+        //        closestLowerKey = _keyArray[closestLowerKeyIndex];
+        //        //_closest.Add(startValue, closestLowerKey);
+        //    }
+
+        //    if (closestLowerKey != IntPtr.MaxValue)
+        //    {
+        //        result = _frozenPointerDict[closestLowerKey];
+        //    }
+        //}
+
+        //if (result != null)
+        //    stopValue = result.PointerValue;
+
+        //return result;
     }
 
     private int BinarySearchClosestLowerKey(IntPtr searchedKey, IntPtr minValue)

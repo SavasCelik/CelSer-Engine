@@ -1,4 +1,7 @@
-﻿namespace CelSerEngine.Core.Scanners;
+﻿using CelSerEngine.Core.Models;
+using System.Threading.Channels;
+
+namespace CelSerEngine.Core.Scanners;
 
 public class PointerScanWorker
 {
@@ -7,63 +10,67 @@ public class PointerScanWorker
     private readonly PointerScanner2 _pointerScanner;
     private readonly IResultStorage _resultStorage;
     private readonly CancellationToken _cancellationToken;
-    private IntPtr[] _tempResults;
-    private UIntPtr[] _valueList;
+    private readonly Channel<PathQueueElement> _channel;
+    private readonly PendingCounter _pendingCounter;
+    private readonly IntPtr[] _tempResults;
+    private readonly UIntPtr[] _valueList;
     private int _pathsEvaluated = 0;
     private List<ResultPointer> _results = new List<ResultPointer>();
-    private int _maxLevel;
-    private int _structSize;
+    private readonly PointerScanOptions _pointerScanOptions;
+    private readonly int _maxLevel;
+    private readonly int _structSize;
 
-    public PointerScanWorker(PointerScanner2 pointerScanner, IResultStorage resultStorage, CancellationToken cancellationToken)
+    public PointerScanWorker(PointerScanner2 pointerScanner, IResultStorage resultStorage, Channel<PathQueueElement> channel, PendingCounter pendingCounter, CancellationToken cancellationToken)
     {
         _pointerScanner = pointerScanner;
         _resultStorage = resultStorage;
         _cancellationToken = cancellationToken;
-        _structSize = pointerScanner.PointerScanOptions.MaxOffset;
-        _maxLevel = pointerScanner.PointerScanOptions.MaxLevel;
+        _channel = channel;
+        _pendingCounter = pendingCounter;
+        _pointerScanOptions = pointerScanner.PointerScanOptions;
+        _structSize = _pointerScanOptions.MaxOffset;
+        _maxLevel = _pointerScanOptions.MaxLevel;
         _tempResults = new IntPtr[_maxLevel];
         _valueList = new UIntPtr[_maxLevel];
     }
 
-    public IList<ResultPointer> Start()
+    public async Task<IResultStorage> StartAsync()
     {
-        while (true)
+        try
         {
-            var valueToFind = IntPtr.Zero;
-            var startLevel = 0;
-
-            if (_pointerScanner.PathQueueLength > 0)
+            while (await _channel.Reader.WaitToReadAsync(_cancellationToken))
             {
-                _pointerScanner.PathQueueLength--;
-                var i = _pointerScanner.PathQueueLength;
-                valueToFind = _pointerScanner.PathQueue[i].ValueToFind;
-                startLevel = _pointerScanner.PathQueue[i].StartLevel;
-                Array.Copy(_pointerScanner.PathQueue[i].TempResults, _tempResults, _maxLevel);
-
-                if (PointerScanner2.NoLoop)
+                while (_channel.Reader.TryRead(out var element))
                 {
-                    Array.Copy(_pointerScanner.PathQueue[i].ValueList, _valueList, _maxLevel);
+                    try
+                    {
+                        var startLevel = element.StartLevel;
+                        Array.Copy(element.TempResults, _tempResults, startLevel);
+
+                        if (_pointerScanOptions.PreventLoops)
+                        {
+                            Array.Copy(element.ValueList, _valueList, startLevel);
+                        }
+                        var valueToFind = element.ValueToFind;
+
+                        ReverseScan(valueToFind, startLevel);
+                    }
+                    finally
+                    {
+                        if (Interlocked.Decrement(ref _pendingCounter.Value) == 0)
+                        {
+                            _channel.Writer.TryComplete();
+                        }
+                    }
                 }
             }
-
-            try
-            {
-                ReverseScan(valueToFind, startLevel);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-
-            if (_pointerScanner.PathQueueLength == 0)
-            {
-                break;
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Scan was cancelled, just exit gracefully
         }
 
-        //var sorted = _results.OrderBy(x => x.TempResults[0]).ThenBy(x => x.TempResults[1]).ToArray();
-
-        return _results;
+        return _resultStorage;
     }
 
     private void ReverseScan(IntPtr valueToFind, int level)
@@ -75,6 +82,7 @@ public class PointerScanWorker
         var startValue = IntPtr.Zero;
         var stopValue = IntPtr.Zero;
         var exactOffset = false;
+        var nextLevel = level + 1;
 
         if (!exactOffset)
         {
@@ -87,7 +95,7 @@ public class PointerScanWorker
             }
         }
 
-        if (PointerScanner2.NoLoop)
+        if (_pointerScanOptions.PreventLoops)
         {
             //check if this valuetofind is already in the list
             for (var i = 0; i <= level - 1; i++)
@@ -120,18 +128,20 @@ public class PointerScanWorker
             _tempResults[level] = valueToFind - stopValue; //store the offset &/SCK: stopvalue = plist.PointerValue
 
             //go through the list of addresses that have this address(stopvalue) as their value
-            for (var j = 0; j <= plist.Pos - 1; j++)
+            for (var j = 0; j < plist.Pos; j++)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 _pathsEvaluated++;
+                var pointerData = plist.List[j];
+                var pointerStaticData = pointerData.StaticData;
 
-                if (plist.List[j].StaticData == null) //this removes a lot of other possible paths. Perhaps a feature to remove this check ?
+                if (pointerStaticData == null) //this removes a lot of other possible paths. Perhaps a feature to remove this check ?
                 {
                     if (!dontGoDeeper)
                     {
                         //check if we should go deeper into these results (not if max level has been reached)
 
-                        if ((level + 1) < _maxLevel)
+                        if (nextLevel < _maxLevel)
                         {
                             var addedToQueue = false;
 
@@ -140,39 +150,45 @@ public class PointerScanWorker
                             if (
                                 ((level + 3 < _maxLevel) &&
                                     (
-                                        ((_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 3))) ||
-                                        ((level <= 2) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 8))) ||
-                                        ((level <= 1) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 16))) ||
-                                        ((level == 0) && (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - 1))
+                                        ((_pendingCounter.Value < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 3))) ||
+                                        ((level <= 2) && (_pendingCounter.Value < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 8))) ||
+                                        ((level <= 1) && (_pendingCounter.Value < PointerScanner2.MaxQueueSize - (PointerScanner2.MaxQueueSize / 16))) ||
+                                        ((level == 0) && (_pendingCounter.Value < PointerScanner2.MaxQueueSize - 1))
                                     )
                                 )
-                                || (_pointerScanner.PathQueueLength == 0)) // completely empty
+                                || (_pendingCounter.Value == 0)) // completely empty
                             {
                                 //there's room and not a crappy work item. Add it
                                 //if locked then
 
-                                if (_pointerScanner.PathQueueLength < PointerScanner2.MaxQueueSize - 1)
+                                if (_pendingCounter.Value < PointerScanner2.MaxQueueSize - 1)
                                 {
                                     //still room
 
-                                    Array.Copy(_tempResults, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].TempResults, _maxLevel);
+                                    var newElement = new PathQueueElement(_maxLevel);
 
-                                    if (PointerScanner2.NoLoop)
+                                    Array.Copy(_tempResults, newElement.TempResults, nextLevel);
+
+                                    if (_pointerScanOptions.PreventLoops)
                                     {
-                                        Array.Copy(_valueList, _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueList, _maxLevel);
+                                        Array.Copy(_valueList, newElement.ValueList, nextLevel);
                                     }
 
-                                    _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].StartLevel = level + 1;
-                                    _pointerScanner.PathQueue[_pointerScanner.PathQueueLength].ValueToFind = plist.List[j].Address;
-                                    _pointerScanner.PathQueueLength++;
-                                    addedToQueue = true;
+                                    newElement.StartLevel = nextLevel;
+                                    newElement.ValueToFind = pointerData.Address;
+
+                                    if (_channel.Writer.TryWrite(newElement))
+                                    {
+                                        Interlocked.Increment(ref _pendingCounter.Value);
+                                        addedToQueue = true;
+                                    }
                                 }
                             }
 
                             if (!addedToQueue)
                             {
                                 //I'll have to do it myself
-                                ReverseScan(plist.List[j].Address, level + 1);
+                                ReverseScan(pointerData.Address, nextLevel);
                                 ///done with this branch 
                             }
                         }
@@ -191,19 +207,23 @@ public class PointerScanWorker
                 else
                 {
                     //found a static one 
-                    StorePath(level, plist.List[j].StaticData.ModuleIndex, plist.List[j].StaticData.Offset);
-                    //if onlyOneStaticInPath then DontGoDeeper:= true;
+                    StorePath(level, pointerStaticData.ModuleIndex, pointerStaticData.Offset);
+
+                    if (_pointerScanOptions.OnlyOneStaticInPath)
+                    {
+                        dontGoDeeper = true;
+                    }
                 }
             }
 
-            if (PointerScanner2.LimitToMaxOffsetsPerNode) //check if the current iteration is less than maxOffsetsPerNode 
+            if (_pointerScanOptions.LimitToMaxOffsetsPerNode) //check if the current iteration is less than maxOffsetsPerNode 
             {
                 if (level > 0)
                 {
                     differentOffsetsInThisNode++;
                 }
 
-                if (differentOffsetsInThisNode >= PointerScanner2.MaxOffsetsPerNode)
+                if (differentOffsetsInThisNode >= _pointerScanOptions.MaxOffsetsPerNode)
                 {
                     return; //the max node has been reached 
                 }

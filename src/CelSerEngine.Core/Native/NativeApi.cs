@@ -1,12 +1,12 @@
-﻿using System.Diagnostics;
-using static CelSerEngine.Core.Native.Enums;
-using static CelSerEngine.Core.Native.Structs;
-using static CelSerEngine.Core.Native.Functions;
+﻿using CelSerEngine.Core.Extensions;
 using CelSerEngine.Core.Models;
-using System.Runtime.InteropServices;
-using CelSerEngine.Core.Extensions;
-using System.Buffers;
 using Microsoft.Win32.SafeHandles;
+using System.Buffers;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using static CelSerEngine.Core.Native.Enums;
+using static CelSerEngine.Core.Native.Functions;
+using static CelSerEngine.Core.Native.Structs;
 
 namespace CelSerEngine.Core.Native;
 
@@ -322,6 +322,62 @@ public sealed class NativeApi : INativeApi
         {
             yield return mbi;
             currentAddress = mbi.BaseAddress + mbi.RegionSize;
+        }
+    }
+
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    public IEnumerable<MEMORY_BASIC_INFORMATION64> EnumerateResidentMemoryRegions(SafeProcessHandle hProcess, IntPtr? startAddress = null, IntPtr? stopAddress = null)
+    {
+        // https://github.com/microsoft/TestApi/blob/92e28fa0b87803cdc1c668235e473f1baffb2c60/Development/Sources/TestApiCore/Code/LeakDetection/MemoryInterop.cs#L32
+        // the doc there uses 4 + i * 4 for flags, but it should be 8 + i * 8
+
+        GetSystemInfo(out var systemInfo);
+        var pageSize = systemInfo.pageSize; // always 0x1000?
+        var process = Process.GetProcessById(GetProcessId(hProcess));
+        var wsInfoLength = (int)(Marshal.SizeOf<PSAPI_WORKING_SET_INFORMATION>() +
+                                     Marshal.SizeOf<PSAPI_WORKING_SET_ENTRY>() * (process.WorkingSet64 / pageSize));
+        var workingSetPtr = Marshal.AllocHGlobal(wsInfoLength);
+
+        if (!QueryWorkingSet(hProcess, workingSetPtr, wsInfoLength))
+        {
+            throw new Exception("QueryWorkingSet failed to retrieve working set info");
+        }
+
+        var numberOfEntries = Marshal.ReadInt32(workingSetPtr);
+        var workingSet = new PSAPI_WORKING_SET_INFORMATION
+        {
+            NumberOfEntries = (UIntPtr)numberOfEntries,
+            WorkingSetInfo = new PSAPI_WORKING_SET_ENTRY[numberOfEntries]
+        };
+        var sizeOfNumberOfEntriesField = Marshal.SizeOf(workingSet.NumberOfEntries);
+        var sizeOfEntryField = Marshal.SizeOf<PSAPI_WORKING_SET_ENTRY>();
+
+        for (var i = 0; i < numberOfEntries; i++)
+        {
+            workingSet.WorkingSetInfo[i].Flags = (ulong)Marshal.ReadInt64(workingSetPtr, sizeOfNumberOfEntriesField + i * sizeOfEntryField);
+        }
+
+        Marshal.FreeHGlobal(workingSetPtr);
+        var memInfoClass = (int)MEMORY_INFORMATION_CLASS.MemoryBasicInformation;
+        var mbi = new MEMORY_BASIC_INFORMATION64();
+        var startAddressValue = startAddress ?? IntPtr.Zero;
+        var stopAddressValue = stopAddress ?? IntPtr.MaxValue;
+
+        foreach (var item in workingSet.WorkingSetInfo)
+        {
+            var address = (IntPtr)item.VirtualPage;
+
+            if (!address.InRange(startAddressValue, stopAddressValue))
+                continue;
+
+            if (NtQueryVirtualMemory(hProcess, address, memInfoClass, ref mbi, Marshal.SizeOf(mbi), out _) == NTSTATUS.Success)
+            {
+                mbi.RegionSize = pageSize;
+
+                yield return mbi;
+            }
         }
     }
 

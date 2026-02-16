@@ -133,7 +133,7 @@ public class AppController : ReactControllerBase, IDisposable
 
         _scanCancellationTokenSource = new CancellationTokenSource();
         var token = _scanCancellationTokenSource.Token;
-        _logger.LogInformation("First scan started...");
+        _logger.LogDebug("First scan started...");
         var sw = Stopwatch.StartNew();
         var results = await _memoryScanService.ScanProcessMemoryAsync(scanConstraint, _processSelectionTracker.SelectedProcessHandle, _progressBarUpdater, token);
         sw.Stop();

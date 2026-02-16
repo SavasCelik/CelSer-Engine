@@ -104,7 +104,7 @@ export default function SelectProcess() {
           />
         )}
       </div>
-      <div className="flex-1 overflow-auto rounded-lg border-1">
+      <div className="flex-1 overflow-auto rounded-lg border">
         <Table className={cn({ "h-full": query.isLoading })}>
           <TableHeader className="stickyTableHeader bg-muted">
             {selectProcessTable.getHeaderGroups().map((headerGroup) => (

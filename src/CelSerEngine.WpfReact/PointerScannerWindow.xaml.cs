@@ -1,5 +1,8 @@
 ﻿using CelSerEngine.Core.Native;
+using CelSerEngine.WpfReact.Loggers;
+using CelSerEngine.WpfReact.Trackers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Windows;
 
 namespace CelSerEngine.WpfReact;
@@ -20,6 +23,10 @@ public partial class PointerScannerWindow : Window
         serviceCollection.AddSingleton(processSelectionTracker);
         var trackedItemNotifier = mainServiceProvider.GetRequiredService<TrackedItemNotifier>();
         serviceCollection.AddSingleton(trackedItemNotifier);
+        var logManager = mainServiceProvider.GetRequiredService<LogTracker>();
+        serviceCollection.AddLogging(x => x.ClearProviders().AddProvider(new DefaultLoggerProvider(logManager)).SetMinimumLevel(LogLevel.Debug));
+
+        serviceCollection.AddSingleton(this);
 
         var services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", services);

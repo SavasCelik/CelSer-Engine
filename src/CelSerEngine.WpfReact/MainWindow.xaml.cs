@@ -1,6 +1,9 @@
 ﻿using CelSerEngine.Core.Native;
 using CelSerEngine.Shared.Services.MemoryScan;
+using CelSerEngine.WpfReact.Loggers;
+using CelSerEngine.WpfReact.Trackers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.IO;
 using System.Windows;
 
@@ -24,6 +27,10 @@ public partial class MainWindow : Window
         serviceCollection.AddSingleton<IMemoryScanService, MemoryScanService>();
         serviceCollection.AddSingleton<INativeApi, NativeApi>();
         serviceCollection.AddSingleton(this);
+
+        var logManager = new LogTracker();
+        serviceCollection.AddSingleton(logManager);
+        serviceCollection.AddLogging(x => x.ClearProviders().AddProvider(new DefaultLoggerProvider(logManager)).SetMinimumLevel(LogLevel.Debug));
 
         Services = serviceCollection.BuildServiceProvider();
         Resources.Add("services", Services);

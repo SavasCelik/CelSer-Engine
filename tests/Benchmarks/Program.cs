@@ -2,4 +2,4 @@
 using BenchmarkDotNet.Running;
 using Benchmarks;
 
-BenchmarkRunner.Run<PointerScannerBenchmark>();// (new DebugInProcessConfig());
+BenchmarkRunner.Run<PointerScanBm>();// (new DebugInProcessConfig());
