@@ -81,6 +81,20 @@ public sealed class PointerScanResultReader : IDisposable
     private PointerScanResultMetaData GetMetaData(string fileName)
     {
         using var reader = new BinaryReader(File.OpenRead(fileName));
+        var magic = reader.ReadUInt64();
+
+        if (magic != PointerScanner2.Magic)
+        {
+            throw new InvalidDataException($"File is corrupted.");
+        }
+
+        var scanVersion = reader.ReadUInt32();
+
+        if (scanVersion != PointerScanner2.Version)
+        {
+            throw new InvalidDataException($"Invalid file header. Expected version {PointerScanner2.Version}, found {scanVersion} in '{fileName}'.");
+        }
+
         var modulesCount = reader.ReadInt32();
         _modules.Capacity = modulesCount;
 

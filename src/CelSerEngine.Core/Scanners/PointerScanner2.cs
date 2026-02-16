@@ -14,6 +14,9 @@ public sealed class PendingCounter(int startValue) { public int Value = startVal
 
 public abstract class PointerScanner2
 {
+    // "CelSer" in ancient Greek encoded in UTF-16LE and truncated to 8 bytes. (used to identify CelSer pointer scan files)
+    public const ulong Magic = 0x9A03B503BB03A303;
+    public const uint Version = 1;
     public const string PointerListExtName = ".ptrlist";
     public const int MaxQueueSize = 64;
 
@@ -91,6 +94,8 @@ public abstract class PointerScanner2
         if (storageType == StorageType.File)
         {
             await using var writer = new BinaryWriter(File.Open(fileName!, FileMode.Create));
+            writer.Write(Magic);
+            writer.Write(Version);
             writer.Write(_modules.Count);
 
             foreach (ModuleInfo moduleInfo in _modules)
